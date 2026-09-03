@@ -1,0 +1,14 @@
+# Copia este archivo como "application.properties" en la misma carpeta
+# y completa los datos con tu configuracion local de PostgreSQL.
+
+spring.application.name=marketplace-backend
+
+# URL de conexion: host:puerto/nombre_de_la_base
+spring.datasource.url=jdbc:postgresql://localhost:5432/nombre_de_tu_base_de_datos
+
+# Usuario y contraseña de tu PostgreSQL local
+spring.datasource.username=tu_usuario
+spring.datasource.password=tu_password
+
+# Crea/actualiza las tablas automaticamente segun las entidades @Entity
+spring.jpa.hibernate.ddl-auto=update
