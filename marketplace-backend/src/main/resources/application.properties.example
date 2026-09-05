@@ -12,3 +12,10 @@ spring.datasource.password=tu_password
 
 # Crea/actualiza las tablas automaticamente segun las entidades @Entity
 spring.jpa.hibernate.ddl-auto=update
+
+# Clave secreta para firmar los JWT (usa una propia, de al menos 32 caracteres, no la subas real a git)
+jwt.secret.key=cambia-esta-clave-por-una-propia-de-al-menos-32-caracteres-para-hs256
+# Duracion del access token, en minutos
+jwt.expiration.time=60
+# Duracion del refresh token, en minutos (10080 = 7 dias)
+jwt.refresh.expiration.time=10080

@@ -4,6 +4,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
+
 // Acceso a datos de RolPermiso: asignación y consulta de permisos por rol
 public interface RolPermisoRepository extends JpaRepository<RolPermiso, RolPermisoId> {
 
@@ -16,4 +18,6 @@ public interface RolPermisoRepository extends JpaRepository<RolPermiso, RolPermi
     void deleteByRol_IdAndPermiso_Id(Long rolId, Long permisoId);
 
     Page<RolPermiso> findByRol_Id(Long rolId, Pageable pageable);
+
+    List<RolPermiso> findByRol_Id(Long rolId);
 }
