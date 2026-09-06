@@ -45,7 +45,6 @@ public class BarrioController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('GET_BARRIOS')")
     public ResponseEntity<StandardResponseDto<BarrioResponseDto>> get(@PathVariable Long id) {
         StandardResponseDto<BarrioResponseDto> response = new StandardResponseDto<>();
         response.setSuccess(true);
@@ -56,7 +55,6 @@ public class BarrioController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('LIST_BARRIOS')")
     public ResponseEntity<StandardResponseDto<List<BarrioResponseDto>>> findAll(@ModelAttribute BarrioFilterDto filter) {
         StandardResponseDto<List<BarrioResponseDto>> response = new StandardResponseDto<>();
         var result = barrioService.findAll(filter);

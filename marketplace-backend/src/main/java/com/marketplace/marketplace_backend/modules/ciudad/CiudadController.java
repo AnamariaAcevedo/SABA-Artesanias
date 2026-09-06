@@ -45,7 +45,6 @@ public class CiudadController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('GET_CIUDADES')")
     public ResponseEntity<StandardResponseDto<CiudadResponseDto>> get(@PathVariable Long id) {
         StandardResponseDto<CiudadResponseDto> response = new StandardResponseDto<>();
         response.setSuccess(true);
@@ -56,7 +55,6 @@ public class CiudadController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('LIST_CIUDADES')")
     public ResponseEntity<StandardResponseDto<List<CiudadResponseDto>>> findAll(@ModelAttribute CiudadFilterDto filter) {
         StandardResponseDto<List<CiudadResponseDto>> response = new StandardResponseDto<>();
         var result = ciudadService.findAll(filter);

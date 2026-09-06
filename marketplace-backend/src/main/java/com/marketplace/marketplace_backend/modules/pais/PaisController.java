@@ -45,7 +45,6 @@ public class PaisController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('GET_PAISES')")
     public ResponseEntity<StandardResponseDto<PaisResponseDto>> get(@PathVariable Long id) {
         StandardResponseDto<PaisResponseDto> response = new StandardResponseDto<>();
         response.setSuccess(true);
@@ -56,7 +55,6 @@ public class PaisController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('LIST_PAISES')")
     public ResponseEntity<StandardResponseDto<List<PaisResponseDto>>> findAll(@ModelAttribute PaisFilterDto filter) {
         StandardResponseDto<List<PaisResponseDto>> response = new StandardResponseDto<>();
         var result = paisService.findAll(filter);
