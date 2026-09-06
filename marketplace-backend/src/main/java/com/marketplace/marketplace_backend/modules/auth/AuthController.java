@@ -4,6 +4,7 @@ import com.marketplace.marketplace_backend.common.StandardResponseDto;
 import com.marketplace.marketplace_backend.modules.auth.dto.AuthResponseDto;
 import com.marketplace.marketplace_backend.modules.auth.dto.LoginRequestDto;
 import com.marketplace.marketplace_backend.modules.auth.dto.RefreshRequestDto;
+import com.marketplace.marketplace_backend.modules.auth.dto.RegistroRequestDto;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +34,16 @@ public class AuthController {
         StandardResponseDto<AuthResponseDto> response = new StandardResponseDto<>();
         response.setSuccess(true);
         response.setData(authService.generateRefreshToken(request.getRefreshToken(), request.getAccessToken()));
+        response.setErrors(null);
+        response.setPagination(null);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/registro")
+    public ResponseEntity<StandardResponseDto<AuthResponseDto>> registrar(@Valid @RequestBody RegistroRequestDto request) {
+        StandardResponseDto<AuthResponseDto> response = new StandardResponseDto<>();
+        response.setSuccess(true);
+        response.setData(authService.registrar(request));
         response.setErrors(null);
         response.setPagination(null);
         return ResponseEntity.ok(response);

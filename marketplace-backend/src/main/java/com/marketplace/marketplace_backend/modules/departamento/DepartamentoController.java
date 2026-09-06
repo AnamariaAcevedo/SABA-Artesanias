@@ -45,7 +45,6 @@ public class DepartamentoController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('GET_DEPARTAMENTOS')")
     public ResponseEntity<StandardResponseDto<DepartamentoResponseDto>> get(@PathVariable Long id) {
         StandardResponseDto<DepartamentoResponseDto> response = new StandardResponseDto<>();
         response.setSuccess(true);
@@ -56,7 +55,6 @@ public class DepartamentoController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('LIST_DEPARTAMENTOS')")
     public ResponseEntity<StandardResponseDto<List<DepartamentoResponseDto>>> findAll(@ModelAttribute DepartamentoFilterDto filter) {
         StandardResponseDto<List<DepartamentoResponseDto>> response = new StandardResponseDto<>();
         var result = departamentoService.findAll(filter);
