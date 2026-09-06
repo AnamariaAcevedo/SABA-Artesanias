@@ -27,4 +27,6 @@ public class UsuarioUpdateRequestDto {
     private String contacto;
 
     private Boolean activo;
+
+    private Long idDireccion;
 }

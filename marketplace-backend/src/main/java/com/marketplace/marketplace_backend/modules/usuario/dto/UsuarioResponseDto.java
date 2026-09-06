@@ -21,6 +21,8 @@ public class UsuarioResponseDto {
     private Long idRol;
     private String nombreRol;
     private String contacto;
+    private Long idDireccion;
+    private String nombreDireccion;
     private Boolean activo;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
