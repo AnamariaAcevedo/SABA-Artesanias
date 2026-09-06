@@ -1,6 +1,7 @@
 package com.marketplace.marketplace_backend.modules.usuario;
 
 import com.marketplace.marketplace_backend.common.BaseEntity;
+import com.marketplace.marketplace_backend.modules.direccion.Direccion;
 import com.marketplace.marketplace_backend.modules.rol.Rol;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -48,6 +49,10 @@ public class Usuario extends BaseEntity {
 
     @Column(nullable = false)
     private String contacto;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "direccion_id", nullable = false)
+    private Direccion direccion;
 
     @Column(name = "activo", nullable = false)
     private Boolean activo = true;

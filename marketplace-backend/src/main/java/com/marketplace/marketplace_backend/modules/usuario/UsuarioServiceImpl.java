@@ -1,6 +1,8 @@
 package com.marketplace.marketplace_backend.modules.usuario;
 
 import com.marketplace.marketplace_backend.common.PagedResult;
+import com.marketplace.marketplace_backend.modules.direccion.Direccion;
+import com.marketplace.marketplace_backend.modules.direccion.DireccionRepository;
 import com.marketplace.marketplace_backend.modules.rol.Rol;
 import com.marketplace.marketplace_backend.modules.rol.RolRepository;
 import com.marketplace.marketplace_backend.modules.usuario.dto.UsuarioCreateRequestDto;
@@ -26,6 +28,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
+    private final DireccionRepository direccionRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -42,6 +45,9 @@ public class UsuarioServiceImpl implements UsuarioService {
         Rol rol = rolRepository.findById(request.getIdRol())
                 .orElseThrow(() -> new EntityNotFoundException("Rol no encontrado con ID: " + request.getIdRol()));
 
+        Direccion direccion = direccionRepository.findById(request.getIdDireccion())
+                .orElseThrow(() -> new EntityNotFoundException("Dirección no encontrada"));
+
         Usuario usuario = new Usuario();
         usuario.setNombre(request.getNombre());
         usuario.setApellido(request.getApellido());
@@ -50,6 +56,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuario.setUsuario(request.getUsuario());
         usuario.setRol(rol);
         usuario.setContacto(request.getContacto());
+        usuario.setDireccion(direccion);
         usuario.setActivo(true);
 
         Usuario saved = usuarioRepository.save(usuario);
@@ -90,6 +97,12 @@ public class UsuarioServiceImpl implements UsuarioService {
             Rol rol = rolRepository.findById(request.getIdRol())
                     .orElseThrow(() -> new EntityNotFoundException("Rol no encontrado con ID: " + request.getIdRol()));
             usuario.setRol(rol);
+        }
+
+        if (request.getIdDireccion() != null) {
+            Direccion direccion = direccionRepository.findById(request.getIdDireccion())
+                    .orElseThrow(() -> new EntityNotFoundException("Dirección no encontrada"));
+            usuario.setDireccion(direccion);
         }
 
         Usuario updated = usuarioRepository.save(usuario);
@@ -167,6 +180,8 @@ public class UsuarioServiceImpl implements UsuarioService {
                 usuario.getRol().getId(),
                 usuario.getRol().getNombre(),
                 usuario.getContacto(),
+                usuario.getDireccion().getId(),
+                usuario.getDireccion().getNombre(),
                 usuario.getActivo(),
                 usuario.getCreatedAt(),
                 usuario.getUpdatedAt()
