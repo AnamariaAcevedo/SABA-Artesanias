@@ -109,7 +109,6 @@ public class AuthServiceImpl implements AuthService {
         usuario.setEmail(request.getEmail());
         usuario.setUsuario(request.getUsuario());
         usuario.setRol(rolCliente);
-        usuario.setContacto(request.getContacto());
         usuario.setDireccion(direccion);
         usuario.setActivo(true);
 

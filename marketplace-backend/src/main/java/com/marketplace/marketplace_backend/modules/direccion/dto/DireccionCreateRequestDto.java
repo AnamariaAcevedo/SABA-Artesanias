@@ -15,14 +15,14 @@ import lombok.Setter;
 // DTO para crear una direccion nueva
 public class DireccionCreateRequestDto {
 
-    @NotBlank(message = "El nombre de la dirección no puede estar vacío")
-    @Size(max = 100, message = "El nombre no puede tener más de 100 caracteres")
-    private String nombre;
+    @NotBlank(message = "La calle no puede estar vacía")
+    @Size(max = 100, message = "La calle no puede tener más de 100 caracteres")
+    private String calle;
 
-    @NotNull(message = "El número de casa es obligatorio")
+    // Casa o departamento: al menos uno de los dos debe venir completo
+    // (se valida en el service, no acá, porque depende del otro campo).
     private Integer nroCasa;
 
-    @NotBlank(message = "El número de departamento no puede estar vacío")
     @Size(max = 50, message = "El número de departamento no puede tener más de 50 caracteres")
     private String nroDepartamento;
 

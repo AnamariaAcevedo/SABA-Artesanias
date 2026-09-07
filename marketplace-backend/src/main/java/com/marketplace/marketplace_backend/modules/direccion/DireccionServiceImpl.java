@@ -29,11 +29,15 @@ public class DireccionServiceImpl implements DireccionService {
     @Override
     @Transactional
     public DireccionResponseDto create(DireccionCreateRequestDto request) {
+        if (request.getNroCasa() == null && (request.getNroDepartamento() == null || request.getNroDepartamento().isBlank())) {
+            throw new IllegalArgumentException("Debe indicar el número de casa o el número de departamento");
+        }
+
         Barrio barrio = barrioRepository.findById(request.getIdBarrio())
                 .orElseThrow(() -> new EntityNotFoundException("Barrio no encontrado"));
 
         Direccion direccion = new Direccion();
-        direccion.setNombre(request.getNombre());
+        direccion.setCalle(request.getCalle());
         direccion.setNroCasa(request.getNroCasa());
         direccion.setNroDepartamento(request.getNroDepartamento());
         direccion.setBarrio(barrio);
@@ -47,8 +51,8 @@ public class DireccionServiceImpl implements DireccionService {
         Direccion direccion = direccionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Dirección no encontrada"));
 
-        if (request.getNombre() != null) {
-            direccion.setNombre(request.getNombre());
+        if (request.getCalle() != null) {
+            direccion.setCalle(request.getCalle());
         }
 
         if (request.getNroCasa() != null) {
@@ -57,6 +61,10 @@ public class DireccionServiceImpl implements DireccionService {
 
         if (request.getNroDepartamento() != null) {
             direccion.setNroDepartamento(request.getNroDepartamento());
+        }
+
+        if (direccion.getNroCasa() == null && (direccion.getNroDepartamento() == null || direccion.getNroDepartamento().isBlank())) {
+            throw new IllegalArgumentException("Debe indicar el número de casa o el número de departamento");
         }
 
         if (request.getIdBarrio() != null) {
@@ -93,25 +101,25 @@ public class DireccionServiceImpl implements DireccionService {
 
         Pageable pageable = PageRequest.of(page - 1, perPage);
 
-        String nombre = filter.getNombre();
-        if (nombre != null) {
-            nombre = nombre.trim();
-            if (nombre.isEmpty()) nombre = null;
+        String calle = filter.getCalle();
+        if (calle != null) {
+            calle = calle.trim();
+            if (calle.isEmpty()) calle = null;
         }
 
         Long idBarrio = filter.getIdBarrio();
 
-        boolean hasNombre = nombre != null;
+        boolean hasCalle = calle != null;
         boolean hasIdBarrio = idBarrio != null;
 
         Page<Direccion> result;
 
-        if (!hasNombre && !hasIdBarrio) {
+        if (!hasCalle && !hasIdBarrio) {
             result = direccionRepository.findAllByOrderByIdAsc(pageable);
-        } else if (hasNombre && hasIdBarrio) {
-            result = direccionRepository.findByNombreContainingIgnoreCaseAndBarrio_Id(nombre, idBarrio, pageable);
-        } else if (hasNombre) {
-            result = direccionRepository.findByNombreContainingIgnoreCase(nombre, pageable);
+        } else if (hasCalle && hasIdBarrio) {
+            result = direccionRepository.findByCalleContainingIgnoreCaseAndBarrio_Id(calle, idBarrio, pageable);
+        } else if (hasCalle) {
+            result = direccionRepository.findByCalleContainingIgnoreCase(calle, pageable);
         } else {
             result = direccionRepository.findByBarrio_Id(idBarrio, pageable);
         }
@@ -131,7 +139,7 @@ public class DireccionServiceImpl implements DireccionService {
 
         return new DireccionResponseDto(
                 direccion.getId(),
-                direccion.getNombre(),
+                direccion.getCalle(),
                 direccion.getNroCasa(),
                 direccion.getNroDepartamento(),
                 barrio.getId(),

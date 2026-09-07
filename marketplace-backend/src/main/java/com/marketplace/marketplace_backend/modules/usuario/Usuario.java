@@ -47,9 +47,6 @@ public class Usuario extends BaseEntity {
     @JoinColumn(name = "rol_id", nullable = false)
     private Rol rol;
 
-    @Column(nullable = false)
-    private String contacto;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "direccion_id", nullable = false)
     private Direccion direccion;

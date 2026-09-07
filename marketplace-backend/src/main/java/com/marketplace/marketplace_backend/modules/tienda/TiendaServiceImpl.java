@@ -111,7 +111,7 @@ public class TiendaServiceImpl implements TiendaService {
                 tienda.getNombre(),
                 tienda.getDescripcion(),
                 tienda.getDireccion().getId(),
-                tienda.getDireccion().getNombre(),
+                tienda.getDireccion().getCalle(),
                 tienda.getCreatedAt(),
                 tienda.getUpdatedAt()
         );
