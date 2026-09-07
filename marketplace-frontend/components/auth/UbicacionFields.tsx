@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import styles from "./auth.module.css";
+import { useEffect, useId, useRef, useState } from "react";
+import styles from "./ubicacion.module.css";
 
 type Opcion = {
     id: number;
@@ -99,130 +99,104 @@ function useOpciones(ruta: string | null) {
     };
 }
 
-type SelectorProps = {
-    nombre: string;
+type ColumnaProps = {
     etiqueta: string;
-    ruta: string | null;
-    valor: string;
-    onChange: (valor: string) => void;
+    ruta: string;
+    seleccionado?: Opcion;
+    elegir: (opcion: Opcion) => void;
 };
 
-function Selector({
-                      nombre,
-                      etiqueta,
-                      ruta,
-                      valor,
-                      onChange,
-                  }: SelectorProps) {
+function Columna({ etiqueta, ruta, seleccionado, elegir }: ColumnaProps) {
     const { opciones, cargando, error, reintentar } = useOpciones(ruta);
-
-    const mensaje = !ruta
-        ? "Elegí primero el campo anterior"
-        : cargando
-            ? "Cargando…"
-            : error
-                ? "No disponible"
-                : opciones.length === 0
-                    ? "Sin opciones disponibles"
-                    : `Seleccioná ${etiqueta.toLowerCase()}`;
-
     return (
-        <div className={styles.field}>
-            <label htmlFor={nombre}>{etiqueta}:</label>
-
-            <select
-                id={nombre}
-                name={nombre}
-                value={valor}
-                onChange={(event) => onChange(event.target.value)}
-                disabled={!ruta || cargando || !!error || opciones.length === 0}
-                aria-busy={cargando}
-                aria-describedby={error ? `${nombre}-error` : undefined}
-                required
-            >
-                <option value="">{mensaje}</option>
-
+        <section className={styles.columna} aria-label={etiqueta} aria-busy={cargando}>
+            <h3>{etiqueta}</h3>
+            {cargando && <p role="status">Cargando…</p>}
+            {error && <div role="alert"><p>{error}</p><button type="button" className={styles.reintentar} onClick={reintentar}>Reintentar</button></div>}
+            {!cargando && !error && opciones.length === 0 && <p>No hay opciones disponibles.</p>}
+            <ul>
                 {opciones.map((opcion) => (
-                    <option key={opcion.id} value={opcion.id}>
-                        {opcion.nombre}
-                    </option>
+                    <li key={opcion.id}>
+                        <button type="button" className={styles.opcion} aria-pressed={seleccionado?.id === opcion.id}
+                            onClick={() => elegir(opcion)}>
+                            <span>{opcion.nombre}</span><span aria-hidden="true">{etiqueta === "Barrio" ? "✓" : "›"}</span>
+                        </button>
+                    </li>
                 ))}
-            </select>
-
-            {error && (
-                <div id={`${nombre}-error`} className={styles.error} role="alert">
-                    <p>{error}</p>
-                    <button type="button" onClick={reintentar}>
-                        Reintentar
-                    </button>
-                </div>
-            )}
-        </div>
+            </ul>
+        </section>
     );
 }
 
 export default function UbicacionFields() {
-    const [idPais, setIdPais] = useState("");
-    const [idDepartamento, setIdDepartamento] = useState("");
-    const [idCiudad, setIdCiudad] = useState("");
-    const [idBarrio, setIdBarrio] = useState("");
+    const [abierto, setAbierto] = useState(false);
+    const [seleccion, setSeleccion] = useState<Opcion[]>([]);
+    const contenedor = useRef<HTMLDivElement>(null);
+    const boton = useRef<HTMLButtonElement>(null);
+    const panel = useRef<HTMLDivElement>(null);
+    const id = useId();
+    const [pais, departamento, ciudad, barrio] = seleccion;
+    const resumen = seleccion.map((opcion) => opcion.nombre).join(" / ");
+
+    useEffect(() => {
+        if (!abierto) return;
+        const cerrarFuera = (event: PointerEvent) => {
+            if (!contenedor.current?.contains(event.target as Node)) setAbierto(false);
+        };
+        document.addEventListener("pointerdown", cerrarFuera);
+        return () => document.removeEventListener("pointerdown", cerrarFuera);
+    }, [abierto]);
+
+    useEffect(() => {
+        if (abierto) panel.current?.focus();
+    }, [abierto]);
+
+    function cerrar() {
+        setAbierto(false);
+        boton.current?.focus();
+    }
+
+    function elegir(nivel: number, opcion: Opcion) {
+        setSeleccion((actual) => [...actual.slice(0, nivel), opcion]);
+        if (nivel === 3) cerrar();
+    }
 
     return (
-        <fieldset>
-            <legend>Ubicación</legend>
-
-            <div className={styles.row}>
-                <Selector
-                    nombre="idPais"
-                    etiqueta="País"
-                    ruta="paises"
-                    valor={idPais}
-                    onChange={(valor) => {
-                        setIdPais(valor);
-                        setIdDepartamento("");
-                        setIdCiudad("");
-                        setIdBarrio("");
-                    }}
-                />
-
-                <Selector
-                    key={`departamento-${idPais}`}
-                    nombre="idDepartamento"
-                    etiqueta="Departamento"
-                    ruta={idPais ? `departamentos?idPais=${idPais}` : null}
-                    valor={idDepartamento}
-                    onChange={(valor) => {
-                        setIdDepartamento(valor);
-                        setIdCiudad("");
-                        setIdBarrio("");
-                    }}
-                />
-
-                <Selector
-                    key={`ciudad-${idDepartamento}`}
-                    nombre="idCiudad"
-                    etiqueta="Ciudad"
-                    ruta={
-                        idDepartamento
-                            ? `ciudades?idDepartamento=${idDepartamento}`
-                            : null
-                    }
-                    valor={idCiudad}
-                    onChange={(valor) => {
-                        setIdCiudad(valor);
-                        setIdBarrio("");
-                    }}
-                />
-
-                <Selector
-                    key={`barrio-${idCiudad}`}
-                    nombre="idBarrio"
-                    etiqueta="Barrio"
-                    ruta={idCiudad ? `barrios?idCiudad=${idCiudad}` : null}
-                    valor={idBarrio}
-                    onChange={setIdBarrio}
-                />
-            </div>
-        </fieldset>
+        <div ref={contenedor} className={styles.ubicacion}
+            onBlur={(event) => {
+                if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget as Node)) setAbierto(false);
+            }}
+            onKeyDown={(event) => {
+                if (event.key === "Escape" && abierto) { event.preventDefault(); cerrar(); }
+            }}>
+            <label htmlFor={`${id}-boton`}>Ubicación:</label>
+            <button ref={boton} id={`${id}-boton`} type="button" className={styles.campo}
+                aria-expanded={abierto} aria-controls={`${id}-panel`}
+                onClick={() => setAbierto(!abierto)}>
+                <span>{resumen || "Seleccioná tu ubicación"}{resumen && !barrio ? " — completar" : ""}</span>
+                <span aria-hidden="true">{abierto ? "▴" : "▾"}</span>
+            </button>
+            {seleccion.map((opcion, nivel) => (
+                <input key={nivel} type="hidden" name={["idPais", "idDepartamento", "idCiudad", "idBarrio"][nivel]} value={opcion.id} />
+            ))}
+            {abierto && (
+                <div ref={panel} tabIndex={-1} id={`${id}-panel`} className={styles.panel} role="region" aria-label="Elegir ubicación">
+                    <div className={styles.cabecera}>
+                        <p>Elegí país, departamento, ciudad y barrio.</p>
+                        <button type="button" onClick={cerrar} aria-label="Cerrar ubicación">✕</button>
+                    </div>
+                    <div className={styles.columnas}>
+                        <Columna etiqueta="País" ruta="paises" seleccionado={pais} elegir={(opcion) => elegir(0, opcion)} />
+                        {pais && <Columna key={`departamento-${pais.id}`} etiqueta="Departamento" ruta={`departamentos?idPais=${pais.id}`}
+                            seleccionado={departamento} elegir={(opcion) => elegir(1, opcion)} />}
+                        {departamento && <Columna key={`ciudad-${departamento.id}`} etiqueta="Ciudad" ruta={`ciudades?idDepartamento=${departamento.id}`}
+                            seleccionado={ciudad} elegir={(opcion) => elegir(2, opcion)} />}
+                        {ciudad && <Columna key={`barrio-${ciudad.id}`} etiqueta="Barrio" ruta={`barrios?idCiudad=${ciudad.id}`}
+                            seleccionado={barrio} elegir={(opcion) => elegir(3, opcion)} />}
+                    </div>
+                </div>
+            )}
+            <span className={styles.estado} role="status">{barrio ? `Ubicación seleccionada: ${resumen}` : ""}</span>
+        </div>
     );
 }
