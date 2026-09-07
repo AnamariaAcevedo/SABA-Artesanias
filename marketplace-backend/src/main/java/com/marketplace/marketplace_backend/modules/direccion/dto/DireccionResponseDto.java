@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 public class DireccionResponseDto {
     private Long id;
     private String calle;
+    private String nombreEdificio;
     private Integer nroCasa;
     private String nroDepartamento;
     private Long idBarrio;
