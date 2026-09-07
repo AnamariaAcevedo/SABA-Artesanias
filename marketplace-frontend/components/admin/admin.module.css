@@ -1,0 +1,75 @@
+/* Misma paleta e identidad visual que components/auth/auth.module.css,
+   adaptada a pantallas anchas (nav + tablas) en vez de una tarjeta angosta. */
+
+.page { min-height: 100svh; background: #f4ddba; color: #63240e; font-family: Georgia, 'Times New Roman', serif; }
+
+.header { display: flex; align-items: baseline; gap: 14px; padding: 18px 32px; border-bottom: 1px solid #b88b44; }
+.logo { font-size: 34px; line-height: 1; letter-spacing: -3px; }
+.subtitle { font-size: 15px; letter-spacing: 1.5px; color: #30200f; }
+
+.nav { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 32px; border-bottom: 1px solid #b88b44; }
+.navLink { padding: 8px 20px; border-radius: 999px; background: #cba367; border: 1px solid #b88b44; color: #63240e; text-decoration: none; font-size: 15px; }
+.navLink:hover { background: #d9b783; }
+.navLinkActive { background: #63240e; color: #f7dfb9; border-color: #63240e; }
+
+.main { padding: 28px 32px 48px; }
+
+.card { background: #cba367; border: 1px solid #b88b44; border-radius: 24px; padding: 26px 32px 30px; }
+
+.sectionHeader { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.title { font-size: 26px; margin: 0; }
+.pageTitle { font-size: 26px; margin: 4px 0 20px; }
+.pageSubtitle { margin: 4px 0 0; font-size: 15px; font-family: Arial, sans-serif; color: #48200f; }
+
+.buttonPrimary { display: inline-block; background: #f7dfb9; color: #63240e; padding: 10px 26px; min-height: 44px; line-height: 24px; border-radius: 999px; font-size: 16px; font-family: Arial, sans-serif; cursor: pointer; border: 1px solid #e2c190; text-decoration: none; }
+.buttonPrimary:hover:not(:disabled) { background: #ffedcf; }
+.buttonPrimary:disabled { opacity: .65; cursor: not-allowed; }
+
+.buttonGhost { background: transparent; color: #63240e; padding: 9px 20px; min-height: 40px; border-radius: 999px; border: 1px solid #63240e; font-size: 14px; font-family: Arial, sans-serif; cursor: pointer; }
+.buttonGhost:hover:not(:disabled) { background: rgba(99, 36, 14, .08); }
+.buttonGhost:disabled { opacity: .5; cursor: not-allowed; }
+
+.toolbar { display: flex; flex-wrap: wrap; align-items: end; gap: 14px; margin-bottom: 20px; }
+.field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.field label { font-size: 15px; line-height: 1.2; color: #48200f; font-family: Arial, sans-serif; }
+.field input, .field select { min-width: 0; min-height: 44px; border: 1px solid #a77b38; border-radius: 999px; padding: 8px 16px; background: #b98c47; color: #291606; font-family: Arial, sans-serif; font-size: 15px; }
+.field input::placeholder { color: #503715; }
+.field select:disabled, .field input:disabled { opacity: .75; }
+.page :is(input, select, button, a):focus-visible { outline: 3px solid #63240e; outline-offset: 3px; }
+
+.formCard { max-width: 560px; }
+.form { display: flex; flex-direction: column; gap: 16px; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.checkboxField { display: flex; align-items: center; gap: 8px; font-size: 15px; font-family: Arial, sans-serif; color: #48200f; }
+
+.tableWrap { overflow-x: auto; border: 1px solid #b88b44; border-radius: 16px; }
+.table { width: 100%; border-collapse: collapse; text-align: left; font-family: Arial, sans-serif; font-size: 14px; }
+.table thead { background: #b98c47; }
+.table th { padding: 10px 16px; font-weight: 600; color: #2c1707; }
+.table td { padding: 10px 16px; border-top: 1px solid #b88b44; }
+.table tbody tr:hover { background: rgba(255, 255, 255, .12); }
+.emptyRow { text-align: center; padding: 24px; color: #48200f; }
+
+.badge { display: inline-block; border-radius: 999px; padding: 3px 12px; font-size: 12px; }
+.badgeActivo { background: #eef7e6; color: #2f5d1f; }
+.badgeInactivo { background: #f1e2c9; color: #6b4a22; }
+
+.rowActions { display: flex; flex-wrap: wrap; gap: 12px; }
+.linkAction { color: #48200f; text-decoration: underline; text-underline-offset: 3px; font-size: 13px; background: none; border: none; padding: 0; cursor: pointer; font-family: Arial, sans-serif; }
+.linkAction:disabled { opacity: .5; cursor: not-allowed; }
+.linkActionDanger { color: #8a2c14; }
+
+.pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; font-family: Arial, sans-serif; font-size: 14px; color: #48200f; flex-wrap: wrap; gap: 12px; }
+.paginationButtons { display: flex; gap: 8px; }
+
+.error, .notice { font: 14px/1.6 Arial, sans-serif; padding: 12px 14px; border-radius: 10px; background: #fae8c9; color: #63240e; margin-bottom: 16px; }
+
+.gateNotice { max-width: 420px; margin: 64px auto; text-align: center; }
+
+.backLink { display: inline-block; margin-bottom: 12px; color: #48200f; text-decoration: underline; text-underline-offset: 3px; font-family: Arial, sans-serif; font-size: 14px; }
+
+@media (max-width: 640px) {
+  .header, .nav, .main { padding-left: 18px; padding-right: 18px; }
+  .row { grid-template-columns: 1fr; gap: 12px; }
+  .card { padding: 20px; border-radius: 20px; }
+}

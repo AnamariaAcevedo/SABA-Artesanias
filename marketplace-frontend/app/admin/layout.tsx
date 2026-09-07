@@ -1,29 +1,66 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
+import styles from "@/components/admin/admin.module.css";
+import { esRolAdministrador, useRolSesion } from "@/lib/auth";
+
+const enlaces = [
+  { href: "/admin", label: "Dashboard" },
+  { href: "/admin/productos", label: "Productos" },
+  { href: "/admin/usuarios", label: "Usuarios" },
+  { href: "/admin/pedidos", label: "Pedidos" },
+];
 
 export default function AdminLayout({
-                                        children,
-                                    }: Readonly<{
-    children: React.ReactNode;
+  children,
+}: Readonly<{
+  children: React.ReactNode;
 }>) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const rol = useRolSesion();
+  const verificando = rol === undefined;
+  const autorizado = esRolAdministrador(rol);
+
+  useEffect(() => {
+    if (verificando || autorizado) return;
+    // Sin sesión válida -> login; con sesión pero sin rol admin -> su propia área.
+    router.replace(rol ? "/home" : "/login");
+  }, [verificando, autorizado, rol, router]);
+
+  if (verificando || !autorizado) {
     return (
-        <div>
-            <header>
-                <h1>SABA - Administración</h1>
-            </header>
-
-            <nav>
-                <Link href="/admin">Dashboard</Link>
-                {" | "}
-                <Link href="/admin/productos">Productos</Link>
-                {" | "}
-                <Link href="/admin/usuarios">Usuarios</Link>
-                {" | "}
-                <Link href="/admin/pedidos">Pedidos</Link>
-            </nav>
-
-            <main>
-                {children}
-            </main>
-        </div>
+      <div className={styles.page}>
+        <p className={styles.gateNotice}>{verificando ? "Verificando acceso…" : "Redirigiendo…"}</p>
+      </div>
     );
+  }
+
+  return (
+    <div className={styles.page}>
+      <header className={styles.header}>
+        <span className={styles.logo}>•SABA•</span>
+        <span className={styles.subtitle}>Administración</span>
+      </header>
+
+      <nav className={styles.nav}>
+        {enlaces.map((enlace) => {
+          const activo = enlace.href === "/admin" ? pathname === "/admin" : pathname.startsWith(enlace.href);
+          return (
+            <Link
+              key={enlace.href}
+              href={enlace.href}
+              className={`${styles.navLink} ${activo ? styles.navLinkActive : ""}`}
+            >
+              {enlace.label}
+            </Link>
+          );
+        })}
+      </nav>
+
+      <main className={styles.main}>{children}</main>
+    </div>
+  );
 }
