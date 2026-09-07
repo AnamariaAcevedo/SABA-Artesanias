@@ -19,8 +19,12 @@ public class DireccionCreateRequestDto {
     @Size(max = 100, message = "La calle no puede tener más de 100 caracteres")
     private String calle;
 
-    // Casa o departamento: al menos uno de los dos debe venir completo
-    // (se valida en el service, no acá, porque depende del otro campo).
+    @Size(max = 100, message = "El nombre del edificio no puede tener más de 100 caracteres")
+    private String nombreEdificio;
+
+    // Si no hay nombreEdificio, nroCasa es obligatorio.
+    // Si hay nombreEdificio, nroDepartamento es obligatorio.
+    // (se valida en el service, porque depende del otro campo).
     private Integer nroCasa;
 
     @Size(max = 50, message = "El número de departamento no puede tener más de 50 caracteres")

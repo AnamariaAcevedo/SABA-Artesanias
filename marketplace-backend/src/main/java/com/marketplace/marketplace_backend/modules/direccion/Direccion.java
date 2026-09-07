@@ -32,10 +32,13 @@ public class Direccion extends BaseEntity {
     @Column(nullable = false, length = 100)
     private String calle;
 
-    @Column(name = "nro_casa", nullable = false)
+    @Column(name = "nombre_edificio", length = 100)
+    private String nombreEdificio;
+
+    @Column(name = "nro_casa")
     private Integer nroCasa;
 
-    @Column(name = "nro_departamento", nullable = false, length = 50)
+    @Column(name = "nro_departamento", length = 50)
     private String nroDepartamento;
 
     @ManyToOne(fetch = FetchType.LAZY)

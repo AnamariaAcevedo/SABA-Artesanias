@@ -16,6 +16,9 @@ public class DireccionUpdateRequestDto {
     @Size(max = 100, message = "La calle no puede tener más de 100 caracteres")
     private String calle;
 
+    @Size(max = 100, message = "El nombre del edificio no puede tener más de 100 caracteres")
+    private String nombreEdificio;
+
     private Integer nroCasa;
 
     @Size(max = 50, message = "El número de departamento no puede tener más de 50 caracteres")
