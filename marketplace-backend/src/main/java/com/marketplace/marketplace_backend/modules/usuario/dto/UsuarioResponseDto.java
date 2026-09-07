@@ -20,7 +20,6 @@ public class UsuarioResponseDto {
     private String usuario;
     private Long idRol;
     private String nombreRol;
-    private String contacto;
     private Long idDireccion;
     private String nombreDireccion;
     private Boolean activo;
