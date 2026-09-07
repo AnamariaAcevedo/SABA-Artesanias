@@ -45,7 +45,6 @@ public class TiendaController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('GET_TIENDAS')")
     public ResponseEntity<StandardResponseDto<TiendaResponseDto>> get(@PathVariable Long id) {
         StandardResponseDto<TiendaResponseDto> response = new StandardResponseDto<>();
         response.setSuccess(true);
@@ -56,7 +55,6 @@ public class TiendaController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('LIST_TIENDAS')")
     public ResponseEntity<StandardResponseDto<List<TiendaResponseDto>>> findAll(@ModelAttribute TiendaFilterDto filter) {
         StandardResponseDto<List<TiendaResponseDto>> response = new StandardResponseDto<>();
         var result = tiendaService.findAll(filter);
