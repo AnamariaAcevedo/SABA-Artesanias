@@ -60,7 +60,12 @@ export default function LoginPage() {
       try {
         const payload = result.data.accessToken.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
         const claims = JSON.parse(atob(payload));
-        if (typeof claims.rol === "string" && ["ADMIN", "ADMINISTRADOR", "ROLE_ADMIN", "ROLE_ADMINISTRADOR"].includes(claims.rol.toUpperCase())) destination = "/admin";
+        const rol = typeof claims.rol === "string" ? claims.rol.trim().toUpperCase() : "";
+        if (["ADMIN", "ADMINISTRADOR", "ROLE_ADMIN", "ROLE_ADMINISTRADOR"].includes(rol)) {
+          destination = "/admin";
+        } else if (["CLIENTE", "ROLE_CLIENTE"].includes(rol)) {
+          destination = "/home";
+        }
       } catch { /* Use the public home when a role cannot be read. */ }
       router.replace(destination);
     } catch (cause) {
