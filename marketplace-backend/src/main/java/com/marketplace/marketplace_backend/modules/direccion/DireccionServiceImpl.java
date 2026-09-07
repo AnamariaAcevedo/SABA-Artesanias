@@ -29,15 +29,14 @@ public class DireccionServiceImpl implements DireccionService {
     @Override
     @Transactional
     public DireccionResponseDto create(DireccionCreateRequestDto request) {
-        if (request.getNroCasa() == null && (request.getNroDepartamento() == null || request.getNroDepartamento().isBlank())) {
-            throw new IllegalArgumentException("Debe indicar el número de casa o el número de departamento");
-        }
+        validarCasaODepartamento(request.getNombreEdificio(), request.getNroCasa(), request.getNroDepartamento());
 
         Barrio barrio = barrioRepository.findById(request.getIdBarrio())
                 .orElseThrow(() -> new EntityNotFoundException("Barrio no encontrado"));
 
         Direccion direccion = new Direccion();
         direccion.setCalle(request.getCalle());
+        direccion.setNombreEdificio(request.getNombreEdificio());
         direccion.setNroCasa(request.getNroCasa());
         direccion.setNroDepartamento(request.getNroDepartamento());
         direccion.setBarrio(barrio);
@@ -55,6 +54,10 @@ public class DireccionServiceImpl implements DireccionService {
             direccion.setCalle(request.getCalle());
         }
 
+        if (request.getNombreEdificio() != null) {
+            direccion.setNombreEdificio(request.getNombreEdificio());
+        }
+
         if (request.getNroCasa() != null) {
             direccion.setNroCasa(request.getNroCasa());
         }
@@ -63,9 +66,7 @@ public class DireccionServiceImpl implements DireccionService {
             direccion.setNroDepartamento(request.getNroDepartamento());
         }
 
-        if (direccion.getNroCasa() == null && (direccion.getNroDepartamento() == null || direccion.getNroDepartamento().isBlank())) {
-            throw new IllegalArgumentException("Debe indicar el número de casa o el número de departamento");
-        }
+        validarCasaODepartamento(direccion.getNombreEdificio(), direccion.getNroCasa(), direccion.getNroDepartamento());
 
         if (request.getIdBarrio() != null) {
             Barrio barrio = barrioRepository.findById(request.getIdBarrio())
@@ -131,6 +132,18 @@ public class DireccionServiceImpl implements DireccionService {
         return new PagedResult<>(data, page, perPage, (int) result.getTotalElements());
     }
 
+    private void validarCasaODepartamento(String nombreEdificio, Integer nroCasa, String nroDepartamento) {
+        boolean hayEdificio = nombreEdificio != null && !nombreEdificio.isBlank();
+
+        if (!hayEdificio && nroCasa == null) {
+            throw new IllegalArgumentException("El número de casa es obligatorio si no se indica un edificio");
+        }
+
+        if (hayEdificio && (nroDepartamento == null || nroDepartamento.isBlank())) {
+            throw new IllegalArgumentException("El número de departamento es obligatorio si se indica un edificio");
+        }
+    }
+
     private DireccionResponseDto toResponse(Direccion direccion) {
         Barrio barrio = direccion.getBarrio();
         var ciudad = barrio.getCiudad();
@@ -140,6 +153,7 @@ public class DireccionServiceImpl implements DireccionService {
         return new DireccionResponseDto(
                 direccion.getId(),
                 direccion.getCalle(),
+                direccion.getNombreEdificio(),
                 direccion.getNroCasa(),
                 direccion.getNroDepartamento(),
                 barrio.getId(),
