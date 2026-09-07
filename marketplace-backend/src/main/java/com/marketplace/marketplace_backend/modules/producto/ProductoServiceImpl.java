@@ -1,10 +1,13 @@
 package com.marketplace.marketplace_backend.modules.producto;
 
 import com.marketplace.marketplace_backend.common.PagedResult;
+import com.marketplace.marketplace_backend.modules.categoriasubcategoria.CategoriaSubcategoriaRepository;
 import com.marketplace.marketplace_backend.modules.producto.dto.ProductoCreateRequestDto;
 import com.marketplace.marketplace_backend.modules.producto.dto.ProductoFilterDto;
 import com.marketplace.marketplace_backend.modules.producto.dto.ProductoResponseDto;
 import com.marketplace.marketplace_backend.modules.producto.dto.ProductoUpdateRequestDto;
+import com.marketplace.marketplace_backend.modules.productosubcategoria.ProductoSubcategoria;
+import com.marketplace.marketplace_backend.modules.productosubcategoria.ProductoSubcategoriaRepository;
 import com.marketplace.marketplace_backend.modules.tienda.Tienda;
 import com.marketplace.marketplace_backend.modules.tienda.TiendaRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -25,6 +28,8 @@ public class ProductoServiceImpl implements ProductoService {
 
     private final ProductoRepository productoRepository;
     private final TiendaRepository tiendaRepository;
+    private final ProductoSubcategoriaRepository productoSubcategoriaRepository;
+    private final CategoriaSubcategoriaRepository categoriaSubcategoriaRepository;
 
     @Override
     @Transactional
@@ -115,13 +120,35 @@ public class ProductoServiceImpl implements ProductoService {
         }
 
         Long idTienda = filter.getIdTienda();
+        Long idCategoria = filter.getIdCategoria();
+        Long idSubcategoria = filter.getIdSubcategoria();
 
         boolean hasNombre = nombre != null;
         boolean hasIdTienda = idTienda != null;
+        boolean hasFiltroCategoria = idCategoria != null || idSubcategoria != null;
+
+        List<Long> idsElegibles = null;
+        if (hasFiltroCategoria) {
+            idsElegibles = resolverProductosPorCategoriaOSubcategoria(idCategoria, idSubcategoria);
+
+            if (idsElegibles.isEmpty()) {
+                return new PagedResult<>(List.of(), page, perPage, 0);
+            }
+        }
 
         Page<Producto> result;
 
-        if (!hasNombre && !hasIdTienda) {
+        if (hasFiltroCategoria) {
+            if (hasNombre && hasIdTienda) {
+                result = productoRepository.findByIdInAndNombreContainingIgnoreCaseAndTienda_Id(idsElegibles, nombre, idTienda, pageable);
+            } else if (hasNombre) {
+                result = productoRepository.findByIdInAndNombreContainingIgnoreCase(idsElegibles, nombre, pageable);
+            } else if (hasIdTienda) {
+                result = productoRepository.findByIdInAndTienda_Id(idsElegibles, idTienda, pageable);
+            } else {
+                result = productoRepository.findByIdIn(idsElegibles, pageable);
+            }
+        } else if (!hasNombre && !hasIdTienda) {
             result = productoRepository.findAllByOrderByIdAsc(pageable);
         } else if (hasNombre && hasIdTienda) {
             result = productoRepository.findByNombreContainingIgnoreCaseAndTienda_Id(nombre, idTienda, pageable);
@@ -138,7 +165,47 @@ public class ProductoServiceImpl implements ProductoService {
         return new PagedResult<>(data, page, perPage, (int) result.getTotalElements());
     }
 
+    // Resuelve los ids de producto elegibles a partir de idCategoria y/o idSubcategoria.
+    // idSubcategoria es directo y preciso; idCategoria pasa por las subcategorias de esa categoria.
+    // Si vienen los dos, se intersecan.
+    private List<Long> resolverProductosPorCategoriaOSubcategoria(Long idCategoria, Long idSubcategoria) {
+        List<Long> porSubcategoria = null;
+        if (idSubcategoria != null) {
+            porSubcategoria = productoSubcategoriaRepository.findBySubcategoria_Id(idSubcategoria).stream()
+                    .map(ps -> ps.getProducto().getId())
+                    .distinct()
+                    .toList();
+        }
+
+        List<Long> porCategoria = null;
+        if (idCategoria != null) {
+            List<Long> idsSubcategoriaDeCategoria = categoriaSubcategoriaRepository.findByCategoria_Id(idCategoria).stream()
+                    .map(cs -> cs.getSubcategoria().getId())
+                    .toList();
+
+            porCategoria = productoSubcategoriaRepository.findBySubcategoria_IdIn(idsSubcategoriaDeCategoria).stream()
+                    .map(ProductoSubcategoria::getProducto)
+                    .map(Producto::getId)
+                    .distinct()
+                    .toList();
+        }
+
+        if (porSubcategoria != null && porCategoria != null) {
+            return porSubcategoria.stream().filter(porCategoria::contains).toList();
+        }
+
+        return porSubcategoria != null ? porSubcategoria : porCategoria;
+    }
+
     private ProductoResponseDto toResponse(Producto producto) {
+        List<ProductoSubcategoria> subcategorias = productoSubcategoriaRepository.findByProducto_Id(producto.getId());
+        List<Long> idsSubcategorias = subcategorias.stream()
+                .map(ps -> ps.getSubcategoria().getId())
+                .toList();
+        List<String> nombresSubcategorias = subcategorias.stream()
+                .map(ps -> ps.getSubcategoria().getNombre())
+                .toList();
+
         return new ProductoResponseDto(
                 producto.getId(),
                 producto.getNombre(),
@@ -149,6 +216,8 @@ public class ProductoServiceImpl implements ProductoService {
                 producto.getCantidadDisponible(),
                 producto.getTienda().getId(),
                 producto.getTienda().getNombre(),
+                idsSubcategorias,
+                nombresSubcategorias,
                 producto.getCreatedAt(),
                 producto.getUpdatedAt()
         );
