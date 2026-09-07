@@ -128,7 +128,7 @@ function Columna({ etiqueta, ruta, seleccionado, elegir }: ColumnaProps) {
     );
 }
 
-export default function UbicacionFields() {
+export default function UbicacionFields({ onSelectionChange }: { onSelectionChange?: () => void } = {}) {
     const [abierto, setAbierto] = useState(false);
     const [seleccion, setSeleccion] = useState<Opcion[]>([]);
     const contenedor = useRef<HTMLDivElement>(null);
@@ -157,6 +157,7 @@ export default function UbicacionFields() {
     }
 
     function elegir(nivel: number, opcion: Opcion) {
+        onSelectionChange?.();
         setSeleccion((actual) => [...actual.slice(0, nivel), opcion]);
         if (nivel === 3) cerrar();
     }
