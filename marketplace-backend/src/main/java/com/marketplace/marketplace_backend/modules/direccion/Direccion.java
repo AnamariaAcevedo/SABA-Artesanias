@@ -30,7 +30,7 @@ public class Direccion extends BaseEntity {
     private Long id;
 
     @Column(nullable = false, length = 100)
-    private String nombre;
+    private String calle;
 
     @Column(name = "nro_casa", nullable = false)
     private Integer nroCasa;

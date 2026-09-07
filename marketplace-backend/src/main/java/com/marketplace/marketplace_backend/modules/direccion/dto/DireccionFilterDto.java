@@ -10,6 +10,6 @@ public class DireccionFilterDto {
     private Integer page = 1;
     private Integer perPage = 10;
 
-    private String nombre;
+    private String calle;
     private Long idBarrio;
 }
