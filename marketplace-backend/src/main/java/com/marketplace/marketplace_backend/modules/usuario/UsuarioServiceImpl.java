@@ -55,7 +55,6 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuario.setEmail(request.getEmail());
         usuario.setUsuario(request.getUsuario());
         usuario.setRol(rol);
-        usuario.setContacto(request.getContacto());
         usuario.setDireccion(direccion);
         usuario.setActivo(true);
 
@@ -83,10 +82,6 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         if (request.getUsuario() != null) {
             usuario.setUsuario(request.getUsuario());
-        }
-
-        if (request.getContacto() != null) {
-            usuario.setContacto(request.getContacto());
         }
 
         if (request.getActivo() != null) {
@@ -179,9 +174,8 @@ public class UsuarioServiceImpl implements UsuarioService {
                 usuario.getUsuario(),
                 usuario.getRol().getId(),
                 usuario.getRol().getNombre(),
-                usuario.getContacto(),
                 usuario.getDireccion().getId(),
-                usuario.getDireccion().getNombre(),
+                usuario.getDireccion().getCalle(),
                 usuario.getActivo(),
                 usuario.getCreatedAt(),
                 usuario.getUpdatedAt()

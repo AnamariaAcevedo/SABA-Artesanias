@@ -33,9 +33,6 @@ public class RegistroRequestDto {
     @NotBlank(message = "El usuario no puede estar vacío")
     private String usuario;
 
-    @NotBlank(message = "El contacto no puede estar vacío")
-    private String contacto;
-
     @NotNull(message = "La dirección es obligatoria")
     private Long idDireccion;
 }

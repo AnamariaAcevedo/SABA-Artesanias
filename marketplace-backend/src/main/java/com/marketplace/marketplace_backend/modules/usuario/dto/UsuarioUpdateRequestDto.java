@@ -24,8 +24,6 @@ public class UsuarioUpdateRequestDto {
 
     private Long idRol;
 
-    private String contacto;
-
     private Boolean activo;
 
     private Long idDireccion;

@@ -36,9 +36,6 @@ public class UsuarioCreateRequestDto {
     @NotNull(message = "El rol es obligatorio")
     private Long idRol;
 
-    @NotBlank(message = "El contacto no puede estar vacío")
-    private String contacto;
-
     @NotNull(message = "La dirección es obligatoria")
     private Long idDireccion;
 }

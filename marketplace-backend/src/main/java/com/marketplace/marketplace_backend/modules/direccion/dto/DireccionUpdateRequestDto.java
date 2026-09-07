@@ -13,8 +13,8 @@ import lombok.Setter;
 // DTO para actualizar los datos de una direccion existente
 public class DireccionUpdateRequestDto {
 
-    @Size(max = 100, message = "El nombre no puede tener más de 100 caracteres")
-    private String nombre;
+    @Size(max = 100, message = "La calle no puede tener más de 100 caracteres")
+    private String calle;
 
     private Integer nroCasa;
 

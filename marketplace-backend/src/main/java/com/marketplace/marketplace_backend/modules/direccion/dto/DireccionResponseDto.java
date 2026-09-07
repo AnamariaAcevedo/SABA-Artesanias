@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 // sin pedidos adicionales al frontend.
 public class DireccionResponseDto {
     private Long id;
-    private String nombre;
+    private String calle;
     private Integer nroCasa;
     private String nroDepartamento;
     private Long idBarrio;
