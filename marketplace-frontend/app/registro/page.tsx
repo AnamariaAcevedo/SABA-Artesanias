@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useRef, useState, type FormEvent } from "react";
 import AuthShell from "@/components/auth/AuthShell";
 import styles from "@/components/auth/auth.module.css";
 import UbicacionFields from "@/components/auth/UbicacionFields";
 
 export default function RegistroPage() {
+  const router = useRouter();
   const [error, setError] = useState("");
   const [creado, setCreado] = useState(false);
   const [enviando, setEnviando] = useState(false);
@@ -105,6 +107,19 @@ export default function RegistroPage() {
       // Do not retain the submitted password in the form after account creation.
       (form.elements.namedItem("contrasenha") as HTMLInputElement).value = "";
       (form.elements.namedItem("confirmar") as HTMLInputElement).value = "";
+      const sesion = resultado.data;
+      if (typeof sesion?.accessToken !== "string" || !sesion.accessToken ||
+          typeof sesion?.refreshToken !== "string" || !sesion.refreshToken) {
+        throw new Error("Tu cuenta se creó, pero no pudimos iniciar la sesión. Ingresá desde Iniciar sesión.");
+      }
+      try {
+        localStorage.setItem("accessToken", sesion.accessToken);
+        localStorage.setItem("refreshToken", sesion.refreshToken);
+      } catch {
+        try { localStorage.removeItem("accessToken"); localStorage.removeItem("refreshToken"); } catch { /* Storage unavailable. */ }
+        throw new Error("Tu cuenta se creó, pero el navegador no permitió guardar la sesión. Habilitá el almacenamiento e iniciá sesión.");
+      }
+      router.replace("/home");
     } catch (cause) {
       if (cause instanceof TypeError || (cause instanceof DOMException && ["TimeoutError", "AbortError"].includes(cause.name))) {
         setError("Se perdió la conexión o el servidor tardó demasiado. No pudimos confirmar si se creó tu cuenta; intentá iniciar sesión antes de repetir el registro.");
@@ -123,7 +138,7 @@ export default function RegistroPage() {
 
   return (
     <AuthShell title="Crear una cuenta" wide>
-      <form onSubmit={validarRegistro} onChange={limpiarMensaje} aria-describedby="registro-notice" aria-busy={enviando}>
+      <form onSubmit={validarRegistro} onChange={limpiarMensaje} aria-busy={enviando}>
         <fieldset className={styles.form} disabled={enviando || creado}>
         <div className={styles.row}>
           <div className={styles.field}><label htmlFor="nombre">Nombre:</label><input id="nombre" name="nombre" autoComplete="given-name" required /></div>
@@ -149,9 +164,8 @@ export default function RegistroPage() {
         </fieldset>
         {error && <p className={styles.error} role="alert">{error}</p>}
         {enviando && <p role="status">Estamos creando tu cuenta…</p>}
-        {creado && <p className={styles.notice} role="status">Tu cuenta se creó correctamente. <Link href="/login">Iniciá sesión para continuar.</Link></p>}
+        {creado && !error && <p role="status">Tu cuenta se creó correctamente. Entrando al catálogo…</p>}
       </form>
-      <p id="registro-notice" className={styles.notice}>Todos los campos son obligatorios excepto el nombre del edificio.</p>
       <p className={styles.linkText}>¿Ya tenés cuenta? <Link href="/login">Iniciá sesión.</Link></p>
     </AuthShell>
   );
