@@ -30,6 +30,17 @@ export default function AdminLayout({
     router.replace(rol ? "/home" : "/login");
   }, [verificando, autorizado, rol, router]);
 
+  function cerrarSesion() {
+    if (!window.confirm("¿Querés cerrar sesión?")) return;
+    try {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+    } catch {
+      /* Storage unavailable. */
+    }
+    router.replace("/");
+  }
+
   if (verificando || !autorizado) {
     return (
       <div className={styles.page}>
@@ -43,6 +54,9 @@ export default function AdminLayout({
       <header className={styles.header}>
         <span className={styles.logo}>•SABA•</span>
         <span className={styles.subtitle}>Administración</span>
+        <button type="button" onClick={cerrarSesion} className={`${styles.buttonGhost} ${styles.logoutButton}`}>
+          Cerrar sesión
+        </button>
       </header>
 
       <nav className={styles.nav}>

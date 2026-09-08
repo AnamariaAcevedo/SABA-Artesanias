@@ -6,6 +6,7 @@
 .header { display: flex; align-items: baseline; gap: 14px; padding: 18px 32px; border-bottom: 1px solid #b88b44; }
 .logo { font-size: 34px; line-height: 1; letter-spacing: -3px; }
 .subtitle { font-size: 15px; letter-spacing: 1.5px; color: #30200f; }
+.logoutButton { margin-left: auto; }
 
 .nav { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 32px; border-bottom: 1px solid #b88b44; }
 .navLink { padding: 8px 20px; border-radius: 999px; background: #cba367; border: 1px solid #b88b44; color: #63240e; text-decoration: none; font-size: 15px; }
