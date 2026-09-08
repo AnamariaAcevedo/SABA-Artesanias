@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -22,6 +23,8 @@ public class ProductoResponseDto {
     private Integer cantidadDisponible;
     private Long idTienda;
     private String nombreTienda;
+    private List<Long> idsSubcategorias;
+    private List<String> nombresSubcategorias;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

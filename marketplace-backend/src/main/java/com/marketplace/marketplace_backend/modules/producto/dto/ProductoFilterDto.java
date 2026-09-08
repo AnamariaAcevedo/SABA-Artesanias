@@ -12,4 +12,6 @@ public class ProductoFilterDto {
 
     private String nombre;
     private Long idTienda;
+    private Long idCategoria;
+    private Long idSubcategoria;
 }
