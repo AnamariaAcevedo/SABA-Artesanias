@@ -1,7 +1,7 @@
 import { ApiResponse } from "@/types/ApiResponse";
 import { Tienda } from "@/types/Tienda";
 
-const API_URL = "http://localhost:8080";
+const API_URL = (process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:8080").replace(/\/+$/, "");
 
 function obtenerToken() {
   if (typeof window === "undefined") {
