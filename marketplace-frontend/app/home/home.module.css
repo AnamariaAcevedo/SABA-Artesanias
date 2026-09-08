@@ -1,0 +1,442 @@
+.homeContainer {
+  min-height: 100vh;
+  background-color: #f2d9b1;
+  color: #6f2b1d;
+}
+
+/* ========================================
+   CABECERA
+======================================== */
+
+.homeHeader {
+  min-height: 130px;
+  background-color: #c49448;
+  display: flex;
+  align-items: center;
+  gap: 70px;
+  padding: 20px 35px;
+}
+
+.logo {
+  width: 260px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.logo h1 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 58px;
+  font-weight: normal;
+  line-height: 55px;
+}
+
+.logo p {
+  margin: 8px 0 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 20px;
+  letter-spacing: 5px;
+}
+
+.searchBar {
+  width: min(570px, 100%);
+  height: 48px;
+  display: flex;
+  border: 2px solid #6f2b1d;
+  border-radius: 30px;
+  overflow: hidden;
+}
+
+.searchBar input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0 20px;
+  font-size: 18px;
+  color: #6f2b1d;
+}
+
+.searchBar input::placeholder {
+  color: #6f2b1d;
+  opacity: 0.7;
+}
+
+.searchBar button {
+  width: 90px;
+  border: none;
+  background: transparent;
+  color: #6f2b1d;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.searchBar button:hover {
+  opacity: 0.7;
+}
+
+/* ========================================
+   CONTENIDO PRINCIPAL
+======================================== */
+
+.homeContent {
+  display: grid;
+  grid-template-columns: 310px minmax(0, 1fr);
+  min-height: calc(100vh - 130px);
+}
+
+.categories {
+  background-color: #c49448;
+  padding: 60px 35px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.mainContent {
+  min-width: 0;
+  padding: 0 45px 45px;
+}
+
+/* ========================================
+   BANNER
+======================================== */
+
+.banner {
+  height: 300px;
+  background-color: #7b5d49;
+  border-radius: 75px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.banner h2 {
+  margin: 0;
+  color: white;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 68px;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin: 18px 0;
+}
+
+.dots span {
+  width: 28px;
+  height: 28px;
+  display: block;
+  border-radius: 50%;
+  background-color: white;
+  border: 1px solid #bbb;
+}
+
+.dots .activeDot {
+  background-color: black;
+  border-color: black;
+}
+
+/* ========================================
+   CATEGORÍAS Y SUBCATEGORÍAS
+======================================== */
+
+.categoryGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.categoryButton {
+  border: none;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  color: #6f2b1d;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 30px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.categoryButton:hover {
+  opacity: 0.7;
+}
+
+.selectedCategory {
+  font-weight: bold;
+}
+
+.subcategories {
+  margin-top: 12px;
+  margin-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.subcategoryButton {
+  border: none;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  color: #6f2b1d;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.subcategoryButton:hover {
+  text-decoration: underline;
+}
+
+.selectedSubcategory {
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+/* ========================================
+   FILTRO POR TIENDAS
+======================================== */
+
+.storeFilter {
+  margin-top: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.storeFilter h4 {
+  margin: 0 0 8px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 22px;
+  font-weight: normal;
+}
+
+.storeFilter button {
+  border: none;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  color: #6f2b1d;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.storeFilter button:hover {
+  text-decoration: underline;
+}
+
+.selectedStore {
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+/* ========================================
+   SECCIÓN DE PRODUCTOS
+======================================== */
+
+.storeSection {
+  width: 100%;
+}
+
+.storeTitle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 15px;
+}
+
+.storeTitle h3 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 30px;
+  font-weight: normal;
+}
+
+.showAllButton {
+  border: none;
+  background: transparent;
+  color: #6f2b1d;
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.showAllButton:hover {
+  text-decoration: underline;
+}
+
+.statusMessage {
+  margin: 35px 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 20px;
+}
+
+/* ========================================
+   PRODUCTOS
+======================================== */
+
+.products {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 50px;
+}
+
+.productCard {
+  min-width: 0;
+}
+
+.productImage {
+  height: 280px;
+  background-color: #cdb188;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #725638;
+  text-align: center;
+  padding: 15px;
+}
+
+.productInfo {
+  margin-top: 7px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.productInfo h4 {
+  margin: 0;
+  color: #111;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 21px;
+}
+
+.productInfo small {
+  display: block;
+  margin-top: 4px;
+  color: #6f2b1d;
+}
+
+.productInfo strong {
+  color: #111;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 18px;
+  white-space: nowrap;
+}
+
+.productDescription {
+  margin: 10px 0 5px;
+  color: #5f4638;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.productCategories {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.productCategories span {
+  padding: 4px 8px;
+  border: 1px solid #6f2b1d;
+  border-radius: 14px;
+  color: #6f2b1d;
+  font-size: 12px;
+}
+
+.productExtra {
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: #6f2b1d;
+  font-size: 13px;
+}
+
+/* ========================================
+   RESPONSIVE
+======================================== */
+
+@media (max-width: 1200px) {
+  .products {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 30px;
+  }
+
+  .banner h2 {
+    font-size: 56px;
+  }
+}
+
+@media (max-width: 950px) {
+  .homeHeader {
+    gap: 30px;
+  }
+
+  .homeContent {
+    grid-template-columns: 250px minmax(0, 1fr);
+  }
+
+  .categories {
+    padding: 45px 25px;
+  }
+
+  .categoryButton {
+    font-size: 24px;
+  }
+
+  .products {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .homeHeader {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 20px;
+  }
+
+  .logo {
+    width: 100%;
+  }
+
+  .searchBar {
+    width: 100%;
+  }
+
+  .homeContent {
+    display: block;
+  }
+
+  .categories {
+    padding: 30px;
+  }
+
+  .mainContent {
+    padding: 25px;
+  }
+
+  .banner {
+    height: 220px;
+    border-radius: 45px;
+  }
+
+  .banner h2 {
+    font-size: 42px;
+  }
+
+  .products {
+    grid-template-columns: 1fr;
+  }
+}
