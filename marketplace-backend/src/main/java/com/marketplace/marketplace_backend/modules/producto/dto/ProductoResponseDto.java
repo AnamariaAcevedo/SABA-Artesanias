@@ -25,6 +25,7 @@ public class ProductoResponseDto {
     private String nombreTienda;
     private List<Long> idsSubcategorias;
     private List<String> nombresSubcategorias;
+    private Long idImagenPrincipal;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
