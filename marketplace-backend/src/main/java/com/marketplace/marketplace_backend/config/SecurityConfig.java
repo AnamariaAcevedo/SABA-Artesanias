@@ -51,7 +51,8 @@ public class SecurityConfig {
                         "/productos", "/productos/**",
                         "/tiendas", "/tiendas/**",
                         "/categorias", "/categorias/**",
-                        "/subcategorias", "/subcategorias/**"
+                        "/subcategorias", "/subcategorias/**",
+                        "/imagenes", "/imagenes/**"
                 ).permitAll()
                 .anyRequest().authenticated()
             )

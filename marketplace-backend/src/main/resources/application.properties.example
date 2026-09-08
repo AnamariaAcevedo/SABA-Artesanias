@@ -19,3 +19,7 @@ jwt.secret.key=cambia-esta-clave-por-una-propia-de-al-menos-32-caracteres-para-h
 jwt.expiration.time=60
 # Duracion del refresh token, en minutos (10080 = 7 dias)
 jwt.refresh.expiration.time=10080
+
+# Tamaño maximo permitido para subir imagenes de productos
+spring.servlet.multipart.max-file-size=5MB
+spring.servlet.multipart.max-request-size=5MB
