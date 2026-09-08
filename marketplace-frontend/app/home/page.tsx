@@ -1,56 +1,45 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import "./home.css";
+
+import styles from "./home.module.css";
 
 import { Producto } from "@/types/Producto";
 import { Tienda } from "@/types/Tienda";
+import { Categoria } from "@/types/Categoria";
+import { Subcategoria } from "@/types/Subcategoria";
 
 import { obtenerProductos } from "@/services/productoService";
 import { obtenerTiendas } from "@/services/tiendaService";
+import {
+  obtenerCategorias,
+  obtenerSubcategoriasPorCategoria,
+} from "@/services/categoriaService";
 
 export default function HomePage() {
-  // Estas categorías son solamente visuales por ahora.
-  // El backend actual todavía no tiene categorías/subcategorías.
-  const categorias = [
-    "Cuero",
-    "Madera",
-    "Cerámica",
-    "Bordados",
-    "Ñandutí",
-    "Tejidos",
-    "Metal",
-  ];
-
-  // Lista de productos obtenidos del backend.
   const [productos, setProductos] = useState<Producto[]>([]);
-
-  // Lista de tiendas obtenidas del backend.
   const [tiendas, setTiendas] = useState<Tienda[]>([]);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [subcategorias, setSubcategorias] = useState<Subcategoria[]>([]);
 
-  // Texto escrito en el buscador.
   const [busqueda, setBusqueda] = useState("");
-
-  // Sirve para mostrar "Cargando productos..."
   const [cargando, setCargando] = useState(false);
-
-  // Mensajes de error o cuando no existen productos.
   const [mensaje, setMensaje] = useState("");
 
-  // Guarda la tienda seleccionada.
   const [tiendaSeleccionada, setTiendaSeleccionada] =
     useState<number | null>(null);
 
-  /*
-   * Obtiene los productos utilizando productoService.ts.
-   *
-   * Puede recibir:
-   * - nombre del producto
-   * - id de una tienda
-   */
+  const [categoriaSeleccionada, setCategoriaSeleccionada] =
+    useState<number | null>(null);
+
+  const [subcategoriaSeleccionada, setSubcategoriaSeleccionada] =
+    useState<number | null>(null);
+
   async function cargarProductos(
     nombre?: string,
-    idTienda?: number
+    idTienda?: number,
+    idCategoria?: number,
+    idSubcategoria?: number
   ) {
     try {
       setCargando(true);
@@ -58,7 +47,9 @@ export default function HomePage() {
 
       const respuesta = await obtenerProductos(
         nombre,
-        idTienda
+        idTienda,
+        idCategoria,
+        idSubcategoria
       );
 
       setProductos(respuesta.data);
@@ -70,18 +61,12 @@ export default function HomePage() {
       console.error("Error cargando productos:", error);
 
       setProductos([]);
-
-      setMensaje(
-        "No fue posible cargar los productos."
-      );
+      setMensaje("No fue posible cargar los productos.");
     } finally {
       setCargando(false);
     }
   }
 
-  /*
-   * Obtiene las tiendas existentes.
-   */
   async function cargarTiendas() {
     try {
       const respuesta = await obtenerTiendas();
@@ -92,71 +77,122 @@ export default function HomePage() {
     }
   }
 
-  /*
-   * Se ejecuta una vez cuando se abre el Home.
-   *
-   * Carga:
-   * - productos
-   * - tiendas
-   */
+async function cargarCategorias() {
+  try {
+    const respuesta = await obtenerCategorias();
+
+    console.log("RESPUESTA CATEGORIAS:", respuesta);
+    console.log("DATA CATEGORIAS:", respuesta.data);
+
+    setCategorias(respuesta.data);
+  } catch (error) {
+    console.error("Error cargando categorías:", error);
+  }
+}
+
   useEffect(() => {
     cargarProductos();
     cargarTiendas();
+    cargarCategorias();
   }, []);
 
-  /*
-   * Se ejecuta cuando el usuario presiona Buscar
-   * o Enter dentro del buscador.
-   */
   function buscarProducto(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
 
     cargarProductos(
       busqueda,
-      tiendaSeleccionada ?? undefined
+      tiendaSeleccionada ?? undefined,
+      categoriaSeleccionada ?? undefined,
+      subcategoriaSeleccionada ?? undefined
     );
   }
 
-  /*
-   * Filtra los productos por tienda.
-   */
+  async function seleccionarCategoria(idCategoria: number) {
+    /*
+     * Si vuelve a presionar la categoría ya seleccionada,
+     * la cerramos y quitamos ese filtro.
+     */
+    if (categoriaSeleccionada === idCategoria) {
+      setCategoriaSeleccionada(null);
+      setSubcategoriaSeleccionada(null);
+      setSubcategorias([]);
+
+      cargarProductos(
+        busqueda,
+        tiendaSeleccionada ?? undefined
+      );
+
+      return;
+    }
+
+    try {
+      setCategoriaSeleccionada(idCategoria);
+      setSubcategoriaSeleccionada(null);
+
+      const respuesta =
+        await obtenerSubcategoriasPorCategoria(idCategoria);
+
+      setSubcategorias(respuesta.data);
+
+      cargarProductos(
+        busqueda,
+        tiendaSeleccionada ?? undefined,
+        idCategoria
+      );
+    } catch (error) {
+      console.error(
+        "Error cargando subcategorías:",
+        error
+      );
+
+      setSubcategorias([]);
+    }
+  }
+
+  function seleccionarSubcategoria(idSubcategoria: number) {
+    setSubcategoriaSeleccionada(idSubcategoria);
+
+    cargarProductos(
+      busqueda,
+      tiendaSeleccionada ?? undefined,
+      categoriaSeleccionada ?? undefined,
+      idSubcategoria
+    );
+  }
+
   function seleccionarTienda(idTienda: number) {
     setTiendaSeleccionada(idTienda);
 
     cargarProductos(
       busqueda,
-      idTienda
+      idTienda,
+      categoriaSeleccionada ?? undefined,
+      subcategoriaSeleccionada ?? undefined
     );
   }
 
-  /*
-   * Elimina los filtros y vuelve a mostrar todo.
-   */
   function mostrarTodos() {
     setBusqueda("");
+
     setTiendaSeleccionada(null);
+
+    setCategoriaSeleccionada(null);
+    setSubcategoriaSeleccionada(null);
+    setSubcategorias([]);
 
     cargarProductos();
   }
 
   return (
-    <main className="home-container">
-
-      {/* =========================
-          CABECERA
-      ========================== */}
-
-      <header className="home-header">
-
-        <div className="logo">
+    <main className={styles.homeContainer}>
+      <header className={styles.homeHeader}>
+        <div className={styles.logo}>
           <h1>•SABA•</h1>
           <p>Artesanías</p>
         </div>
 
-        {/* BUSCADOR */}
-
         <form
-          className="search-bar"
+          className={styles.searchBar}
           onSubmit={buscarProducto}
         >
           <input
@@ -172,36 +208,64 @@ export default function HomePage() {
             Buscar
           </button>
         </form>
-
       </header>
 
-      {/* =========================
-          CONTENIDO
-      ========================== */}
-
-      <div className="home-content">
-
-        {/* =========================
-            MENÚ IZQUIERDO
-        ========================== */}
-
-        <aside className="categories">
-
+      <div className={styles.homeContent}>
+        <aside className={styles.categories}>
           {categorias.map((categoria) => (
-            <button
-              type="button"
-              key={categoria}
-              className="category-button"
+            <div
+              key={categoria.id}
+              className={styles.categoryGroup}
             >
-              {categoria} →
-            </button>
+              <button
+                type="button"
+                className={
+                  categoriaSeleccionada === categoria.id
+                    ? `${styles.categoryButton} ${styles.selectedCategory}`
+                    : styles.categoryButton
+                }
+                onClick={() =>
+                  seleccionarCategoria(categoria.id)
+                }
+              >
+                {categoria.nombre} →
+              </button>
+
+              {categoriaSeleccionada === categoria.id &&
+                subcategorias.length > 0 && (
+                  <div className={styles.subcategories}>
+                    {subcategorias.map(
+                      (subcategoria) => (
+                        <button
+                          type="button"
+                          key={
+                            subcategoria.subcategoriaId
+                          }
+                          className={
+                            subcategoriaSeleccionada ===
+                            subcategoria.subcategoriaId
+                              ? `${styles.subcategoryButton} ${styles.selectedSubcategory}`
+                              : styles.subcategoryButton
+                          }
+                          onClick={() =>
+                            seleccionarSubcategoria(
+                              subcategoria.subcategoriaId
+                            )
+                          }
+                        >
+                          {
+                            subcategoria.subcategoriaNombre
+                          }
+                        </button>
+                      )
+                    )}
+                  </div>
+                )}
+            </div>
           ))}
 
-          {/* TIENDAS REALES DEL BACKEND */}
-
           {tiendas.length > 0 && (
-            <div className="store-filter">
-
+            <div className={styles.storeFilter}>
               <h4>Tiendas</h4>
 
               <button
@@ -220,175 +284,179 @@ export default function HomePage() {
                   }
                   className={
                     tiendaSeleccionada === tienda.id
-                      ? "selected-store"
+                      ? styles.selectedStore
                       : ""
                   }
                 >
                   {tienda.nombre}
                 </button>
               ))}
-
             </div>
           )}
-
         </aside>
 
-        {/* =========================
-            PARTE PRINCIPAL
-        ========================== */}
-
-        <section className="main-content">
-
-          {/* BANNER */}
-
-          <section className="banner">
-
+        <section className={styles.mainContent}>
+          <section className={styles.banner}>
             <h2>
               CONOCÉ LAS
               <br />
               ARTESANÍAS
             </h2>
-
           </section>
 
-          {/* PUNTOS DEL BANNER */}
-
-          <div className="dots">
-            <span className="active-dot"></span>
+          <div className={styles.dots}>
+            <span className={styles.activeDot}></span>
             <span></span>
             <span></span>
             <span></span>
           </div>
 
-          {/* =========================
-              PRODUCTOS
-          ========================== */}
-
-          <section className="store-section">
-
-            <div className="store-title">
-
+          <section className={styles.storeSection}>
+            <div className={styles.storeTitle}>
               <h3>
                 {tiendaSeleccionada
                   ? tiendas.find(
                       (tienda) =>
-                        tienda.id === tiendaSeleccionada
+                        tienda.id ===
+                        tiendaSeleccionada
                     )?.nombre
-                  : "Artesanías disponibles"}
+                  : categoriaSeleccionada
+                    ? categorias.find(
+                        (categoria) =>
+                          categoria.id ===
+                          categoriaSeleccionada
+                      )?.nombre
+                    : "Artesanías disponibles"}
               </h3>
 
-              {tiendaSeleccionada && (
+              {(tiendaSeleccionada ||
+                categoriaSeleccionada ||
+                subcategoriaSeleccionada) && (
                 <button
                   type="button"
-                  className="show-all-button"
+                  className={styles.showAllButton}
                   onClick={mostrarTodos}
                 >
                   Ver todas
                 </button>
               )}
-
             </div>
 
-            {/* CARGANDO */}
-
             {cargando && (
-              <p className="status-message">
+              <p className={styles.statusMessage}>
                 Cargando productos...
               </p>
             )}
 
-            {/* MENSAJE */}
-
             {!cargando && mensaje && (
-              <p className="status-message">
+              <p className={styles.statusMessage}>
                 {mensaje}
               </p>
             )}
 
-            {/* PRODUCTOS */}
-
-            {!cargando && productos.length > 0 && (
-
-              <div className="products">
-
-                {productos.map((producto) => (
-
-                  <article
-                    className="product-card"
-                    key={producto.id}
-                  >
-
-                    {/*
-                      El backend todavía no tiene imágenes.
-                      Por ahora dejamos este espacio visual.
-                    */}
-
-                    <div className="product-image">
-                      <span>
-                        {producto.nombre}
-                      </span>
-                    </div>
-
-                    <div className="product-info">
-
-                      <div>
-
-                        <h4>
+            {!cargando &&
+              productos.length > 0 && (
+                <div className={styles.products}>
+                  {productos.map((producto) => (
+                    <article
+                      className={styles.productCard}
+                      key={producto.id}
+                    >
+                      <div
+                        className={styles.productImage}
+                      >
+                        <span>
                           {producto.nombre}
-                        </h4>
-
-                        <small>
-                          {producto.nombreTienda}
-                        </small>
-
+                        </span>
                       </div>
 
-                      <strong>
-                        {producto.precio.toLocaleString(
-                          "es-PY"
-                        )}{" "}
-                        GS
-                      </strong>
+                      <div
+                        className={styles.productInfo}
+                      >
+                        <div>
+                          <h4>
+                            {producto.nombre}
+                          </h4>
 
-                    </div>
+                          <small>
+                            {
+                              producto.nombreTienda
+                            }
+                          </small>
+                        </div>
 
-                    {producto.descripcion && (
+                        <strong>
+                          {producto.precio.toLocaleString(
+                            "es-PY"
+                          )}{" "}
+                          GS
+                        </strong>
+                      </div>
 
-                      <p className="product-description">
-                        {producto.descripcion}
-                      </p>
-
-                    )}
-
-                    <div className="product-extra">
-
-                      {producto.puntuacion !== null && (
-                        <span>
-                          ★ {producto.puntuacion}
-                        </span>
+                      {producto.descripcion && (
+                        <p
+                          className={
+                            styles.productDescription
+                          }
+                        >
+                          {producto.descripcion}
+                        </p>
                       )}
 
-                      <span>
-                        Stock:{" "}
-                        {producto.cantidadDisponible}
-                      </span>
+                      {producto.nombresSubcategorias &&
+                        producto
+                          .nombresSubcategorias
+                          .length > 0 && (
+                          <div
+                            className={
+                              styles.productCategories
+                            }
+                          >
+                            {producto.nombresSubcategorias.map(
+                              (
+                                nombreSubcategoria
+                              ) => (
+                                <span
+                                  key={
+                                    nombreSubcategoria
+                                  }
+                                >
+                                  {
+                                    nombreSubcategoria
+                                  }
+                                </span>
+                              )
+                            )}
+                          </div>
+                        )}
 
-                    </div>
+                      <div
+                        className={styles.productExtra}
+                      >
+                        {producto.puntuacion !==
+                          null && (
+                          <span>
+                            ★{" "}
+                            {
+                              producto.puntuacion
+                            }
+                          </span>
+                        )}
 
-                  </article>
-
-                ))}
-
-              </div>
-
-            )}
-
+                        <span>
+                          Stock:{" "}
+                          {
+                            producto.cantidadDisponible
+                          }
+                        </span>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
           </section>
-
         </section>
-
       </div>
-
     </main>
   );
 }

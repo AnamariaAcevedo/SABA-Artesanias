@@ -8,6 +8,10 @@ export interface Producto {
   cantidadDisponible: number;
   idTienda: number;
   nombreTienda: string;
+
+  idsSubcategorias: number[];
+  nombresSubcategorias: string[];
+
   createdAt: string;
   updatedAt: string;
 }

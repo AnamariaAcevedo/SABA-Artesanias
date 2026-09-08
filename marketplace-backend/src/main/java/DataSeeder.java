@@ -2,6 +2,10 @@ package com.marketplace.marketplace_backend;
 
 import com.marketplace.marketplace_backend.modules.barrio.Barrio;
 import com.marketplace.marketplace_backend.modules.barrio.BarrioRepository;
+import com.marketplace.marketplace_backend.modules.categoria.Categoria;
+import com.marketplace.marketplace_backend.modules.categoria.CategoriaRepository;
+import com.marketplace.marketplace_backend.modules.categoriasubcategoria.CategoriaSubcategoria;
+import com.marketplace.marketplace_backend.modules.categoriasubcategoria.CategoriaSubcategoriaRepository;
 import com.marketplace.marketplace_backend.modules.ciudad.Ciudad;
 import com.marketplace.marketplace_backend.modules.ciudad.CiudadRepository;
 import com.marketplace.marketplace_backend.modules.departamento.Departamento;
@@ -14,10 +18,14 @@ import com.marketplace.marketplace_backend.modules.permiso.Permiso;
 import com.marketplace.marketplace_backend.modules.permiso.PermisoRepository;
 import com.marketplace.marketplace_backend.modules.producto.Producto;
 import com.marketplace.marketplace_backend.modules.producto.ProductoRepository;
+import com.marketplace.marketplace_backend.modules.productosubcategoria.ProductoSubcategoria;
+import com.marketplace.marketplace_backend.modules.productosubcategoria.ProductoSubcategoriaRepository;
 import com.marketplace.marketplace_backend.modules.rol.Rol;
 import com.marketplace.marketplace_backend.modules.rol.RolRepository;
 import com.marketplace.marketplace_backend.modules.rolpermiso.RolPermiso;
 import com.marketplace.marketplace_backend.modules.rolpermiso.RolPermisoRepository;
+import com.marketplace.marketplace_backend.modules.subcategoria.Subcategoria;
+import com.marketplace.marketplace_backend.modules.subcategoria.SubcategoriaRepository;
 import com.marketplace.marketplace_backend.modules.tienda.Tienda;
 import com.marketplace.marketplace_backend.modules.tienda.TiendaRepository;
 import com.marketplace.marketplace_backend.modules.usuario.Usuario;
@@ -52,6 +60,13 @@ public class DataSeeder implements CommandLineRunner {
     private final DireccionRepository direccionRepository;
     private final TiendaRepository tiendaRepository;
     private final ProductoRepository productoRepository;
+
+    private final CategoriaRepository categoriaRepository;
+    private final SubcategoriaRepository subcategoriaRepository;
+    private final CategoriaSubcategoriaRepository categoriaSubcategoriaRepository;
+
+    private final ProductoSubcategoriaRepository productoSubcategoriaRepository;
+
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -63,6 +78,9 @@ public class DataSeeder implements CommandLineRunner {
         seedUsuarios();
         seedTiendas();
         seedProductos();
+
+        seedCategoriasYSubcategorias();
+        seedRelacionesProductoSubcategoria();
     }
 
     private void seedRoles() {
@@ -91,21 +109,46 @@ public class DataSeeder implements CommandLineRunner {
         }
 
         // Recursos con CRUD completo + endpoint /options (dropdowns)
-        List<String> recursosConOptions = List.of("ROLES", "PERMISOS", "USUARIOS");
-        // Recursos con CRUD completo, sin /options
-        List<String> recursosCrudCompleto = List.of("DIRECCIONES");
-        // Recursos donde GET/LIST son públicos (sin @PreAuthorize): solo hacen
-        // falta permisos para las acciones que sí siguen protegidas.
-        List<String> recursosSoloEscritura = List.of(
-                "PAISES", "DEPARTAMENTOS", "CIUDADES", "BARRIOS", "TIENDAS", "PRODUCTOS"
+        List<String> recursosConOptions = List.of(
+                "ROLES",
+                "PERMISOS",
+                "USUARIOS"
         );
-        List<String> accionesBase = List.of("CREATE", "UPDATE", "GET", "LIST", "DELETE");
-        List<String> accionesEscritura = List.of("CREATE", "UPDATE", "DELETE");
+
+        // Recursos con CRUD completo, sin /options
+        List<String> recursosCrudCompleto = List.of(
+                "DIRECCIONES"
+        );
+
+        // Recursos donde GET/LIST son públicos
+        List<String> recursosSoloEscritura = List.of(
+                "PAISES",
+                "DEPARTAMENTOS",
+                "CIUDADES",
+                "BARRIOS",
+                "TIENDAS",
+                "PRODUCTOS"
+        );
+
+        List<String> accionesBase = List.of(
+                "CREATE",
+                "UPDATE",
+                "GET",
+                "LIST",
+                "DELETE"
+        );
+
+        List<String> accionesEscritura = List.of(
+                "CREATE",
+                "UPDATE",
+                "DELETE"
+        );
 
         for (String resource : recursosConOptions) {
             for (String action : accionesBase) {
                 guardarPermiso(action, resource);
             }
+
             guardarPermiso("OPTIONS", resource);
         }
 
@@ -125,24 +168,43 @@ public class DataSeeder implements CommandLineRunner {
         guardarPermiso("REVOKE", "PERMISOS");
     }
 
-    private void guardarPermiso(String action, String resource) {
+    private void guardarPermiso(
+            String action,
+            String resource
+    ) {
         Permiso permiso = new Permiso();
+
         permiso.setAction(action);
         permiso.setResource(resource);
+
         permisoRepository.save(permiso);
     }
 
     private void seedPermisosAdministrador() {
-        Rol rolAdministrador = rolRepository.findByNombreAndDeletedAtIsNull(ROL_ADMINISTRADOR)
-                .orElseThrow(() -> new IllegalStateException("Rol no encontrado: " + ROL_ADMINISTRADOR));
+        Rol rolAdministrador = rolRepository
+                .findByNombreAndDeletedAtIsNull(ROL_ADMINISTRADOR)
+                .orElseThrow(
+                        () -> new IllegalStateException(
+                                "Rol no encontrado: " + ROL_ADMINISTRADOR
+                        )
+                );
 
-        if (rolPermisoRepository.existsByRol_Id(rolAdministrador.getId())) {
+        if (rolPermisoRepository.existsByRol_Id(
+                rolAdministrador.getId()
+        )) {
             return;
         }
 
-        List<Permiso> todosLosPermisos = permisoRepository.findAll();
+        List<Permiso> todosLosPermisos =
+                permisoRepository.findAll();
+
         for (Permiso permiso : todosLosPermisos) {
-            rolPermisoRepository.save(new RolPermiso(rolAdministrador, permiso));
+            rolPermisoRepository.save(
+                    new RolPermiso(
+                            rolAdministrador,
+                            permiso
+                    )
+            );
         }
     }
 
@@ -154,51 +216,154 @@ public class DataSeeder implements CommandLineRunner {
         Pais paraguay = crearPais("Paraguay");
         Pais argentina = crearPais("Argentina");
 
-        Departamento central = crearDepartamento("Central", paraguay);
-        Departamento altoParana = crearDepartamento("Alto Paraná", paraguay);
-        Departamento buenosAires = crearDepartamento("Buenos Aires", argentina);
+        Departamento central =
+                crearDepartamento(
+                        "Central",
+                        paraguay
+                );
 
-        Ciudad asuncion = crearCiudad("Asunción", central);
-        Ciudad lambare = crearCiudad("Lambaré", central);
-        Ciudad ciudadDelEste = crearCiudad("Ciudad del Este", altoParana);
-        Ciudad laPlata = crearCiudad("La Plata", buenosAires);
+        Departamento altoParana =
+                crearDepartamento(
+                        "Alto Paraná",
+                        paraguay
+                );
 
-        Barrio centroAsuncion = crearBarrio("Centro", asuncion);
-        Barrio recoleta = crearBarrio("Recoleta", asuncion);
-        Barrio sanIsidro = crearBarrio("San Isidro", lambare);
-        Barrio km7 = crearBarrio("Km 7", ciudadDelEste);
-        crearBarrio("Centro", laPlata);
+        Departamento buenosAires =
+                crearDepartamento(
+                        "Buenos Aires",
+                        argentina
+                );
 
-        crearDireccion("Casa Central", null, 123, null, centroAsuncion);
-        crearDireccion("Av. Mariscal López", null, 1234, null, recoleta);
-        crearDireccion("Av. Monseñor Rodríguez", "Shopping China", null, "Local 12", km7);
-        crearDireccion("Calle San Isidro", null, 456, null, sanIsidro);
+        Ciudad asuncion =
+                crearCiudad(
+                        "Asunción",
+                        central
+                );
+
+        Ciudad lambare =
+                crearCiudad(
+                        "Lambaré",
+                        central
+                );
+
+        Ciudad ciudadDelEste =
+                crearCiudad(
+                        "Ciudad del Este",
+                        altoParana
+                );
+
+        Ciudad laPlata =
+                crearCiudad(
+                        "La Plata",
+                        buenosAires
+                );
+
+        Barrio centroAsuncion =
+                crearBarrio(
+                        "Centro",
+                        asuncion
+                );
+
+        Barrio recoleta =
+                crearBarrio(
+                        "Recoleta",
+                        asuncion
+                );
+
+        Barrio sanIsidro =
+                crearBarrio(
+                        "San Isidro",
+                        lambare
+                );
+
+        Barrio km7 =
+                crearBarrio(
+                        "Km 7",
+                        ciudadDelEste
+                );
+
+        crearBarrio(
+                "Centro",
+                laPlata
+        );
+
+        crearDireccion(
+                "Casa Central",
+                null,
+                123,
+                null,
+                centroAsuncion
+        );
+
+        crearDireccion(
+                "Av. Mariscal López",
+                null,
+                1234,
+                null,
+                recoleta
+        );
+
+        crearDireccion(
+                "Av. Monseñor Rodríguez",
+                "Shopping China",
+                null,
+                "Local 12",
+                km7
+        );
+
+        crearDireccion(
+                "Calle San Isidro",
+                null,
+                456,
+                null,
+                sanIsidro
+        );
     }
 
     private Pais crearPais(String nombre) {
         Pais pais = new Pais();
+
         pais.setNombre(nombre);
+
         return paisRepository.save(pais);
     }
 
-    private Departamento crearDepartamento(String nombre, Pais pais) {
-        Departamento departamento = new Departamento();
+    private Departamento crearDepartamento(
+            String nombre,
+            Pais pais
+    ) {
+        Departamento departamento =
+                new Departamento();
+
         departamento.setNombre(nombre);
         departamento.setPais(pais);
-        return departamentoRepository.save(departamento);
+
+        return departamentoRepository.save(
+                departamento
+        );
     }
 
-    private Ciudad crearCiudad(String nombre, Departamento departamento) {
+    private Ciudad crearCiudad(
+            String nombre,
+            Departamento departamento
+    ) {
         Ciudad ciudad = new Ciudad();
+
         ciudad.setNombre(nombre);
         ciudad.setDepartamento(departamento);
+
         return ciudadRepository.save(ciudad);
     }
 
-    private Barrio crearBarrio(String nombre, Ciudad ciudad) {
+    private Barrio crearBarrio(
+            String nombre,
+            Ciudad ciudad
+    ) {
         Barrio barrio = new Barrio();
+
         barrio.setNombre(nombre);
         barrio.setCiudad(ciudad);
+
         return barrioRepository.save(barrio);
     }
 
@@ -209,19 +374,35 @@ public class DataSeeder implements CommandLineRunner {
             String nroDepartamento,
             Barrio barrio
     ) {
-        Direccion direccion = new Direccion();
+        Direccion direccion =
+                new Direccion();
+
         direccion.setCalle(calle);
         direccion.setNombreEdificio(nombreEdificio);
         direccion.setNroCasa(nroCasa);
         direccion.setNroDepartamento(nroDepartamento);
         direccion.setBarrio(barrio);
+
         return direccionRepository.save(direccion);
     }
 
-    private Direccion buscarDireccionPorCalle(String calle) {
-        return direccionRepository.findByCalleContainingIgnoreCase(calle, PageRequest.of(0, 1))
-                .getContent().stream().findFirst()
-                .orElseThrow(() -> new IllegalStateException("No se encontró la dirección: " + calle));
+    private Direccion buscarDireccionPorCalle(
+            String calle
+    ) {
+        return direccionRepository
+                .findByCalleContainingIgnoreCase(
+                        calle,
+                        PageRequest.of(0, 1)
+                )
+                .getContent()
+                .stream()
+                .findFirst()
+                .orElseThrow(
+                        () -> new IllegalStateException(
+                                "No se encontró la dirección: "
+                                        + calle
+                        )
+                );
     }
 
     private void seedUsuarios() {
@@ -229,20 +410,45 @@ public class DataSeeder implements CommandLineRunner {
             return;
         }
 
-        Rol rolAdministrador = rolRepository.findByNombreAndDeletedAtIsNull(ROL_ADMINISTRADOR)
-                .orElseThrow(() -> new IllegalStateException("Rol no encontrado: " + ROL_ADMINISTRADOR));
+        Rol rolAdministrador = rolRepository
+                .findByNombreAndDeletedAtIsNull(
+                        ROL_ADMINISTRADOR
+                )
+                .orElseThrow(
+                        () -> new IllegalStateException(
+                                "Rol no encontrado: "
+                                        + ROL_ADMINISTRADOR
+                        )
+                );
 
-        Direccion direccion = buscarDireccionPorCalle("Casa Central");
+        Direccion direccion =
+                buscarDireccionPorCalle(
+                        "Casa Central"
+                );
 
         Usuario usuario = new Usuario();
+
         usuario.setNombre(ROL_ADMINISTRADOR);
         usuario.setApellido("Prueba");
-        usuario.setContrasenha(passwordEncoder.encode("SABA123"));
-        usuario.setEmail("administrador@saba.com");
-        usuario.setUsuario("administrador");
-        usuario.setRol(rolAdministrador);
-        usuario.setDireccion(direccion);
+        usuario.setContrasenha(
+                passwordEncoder.encode(
+                        "SABA123"
+                )
+        );
+        usuario.setEmail(
+                "administrador@saba.com"
+        );
+        usuario.setUsuario(
+                "administrador"
+        );
+        usuario.setRol(
+                rolAdministrador
+        );
+        usuario.setDireccion(
+                direccion
+        );
         usuario.setActivo(true);
+
         usuarioRepository.save(usuario);
     }
 
@@ -251,16 +457,41 @@ public class DataSeeder implements CommandLineRunner {
             return;
         }
 
-        crearTienda("Artesanías Ñandutí", "Encajes y tejidos artesanales paraguayos", "Av. Mariscal López");
-        crearTienda("Cerámica Itá", "Cerámica artesanal pintada a mano", "Av. Monseñor Rodríguez");
-        crearTienda("Cueros del Sur", "Productos de cuero genuino hechos a mano", "Calle San Isidro");
+        crearTienda(
+                "Artesanías Ñandutí",
+                "Encajes y tejidos artesanales paraguayos",
+                "Av. Mariscal López"
+        );
+
+        crearTienda(
+                "Cerámica Itá",
+                "Cerámica artesanal pintada a mano",
+                "Av. Monseñor Rodríguez"
+        );
+
+        crearTienda(
+                "Cueros del Sur",
+                "Productos de cuero genuino hechos a mano",
+                "Calle San Isidro"
+        );
     }
 
-    private void crearTienda(String nombre, String descripcion, String calleDireccion) {
+    private void crearTienda(
+            String nombre,
+            String descripcion,
+            String calleDireccion
+    ) {
         Tienda tienda = new Tienda();
+
         tienda.setNombre(nombre);
         tienda.setDescripcion(descripcion);
-        tienda.setDireccion(buscarDireccionPorCalle(calleDireccion));
+
+        tienda.setDireccion(
+                buscarDireccionPorCalle(
+                        calleDireccion
+                )
+        );
+
         tiendaRepository.save(tienda);
     }
 
@@ -269,24 +500,99 @@ public class DataSeeder implements CommandLineRunner {
             return;
         }
 
-        Tienda nandutí = buscarTiendaPorNombre("Artesanías Ñandutí");
-        Tienda ceramica = buscarTiendaPorNombre("Cerámica Itá");
-        Tienda cueros = buscarTiendaPorNombre("Cueros del Sur");
+        Tienda nanduti =
+                buscarTiendaPorNombre(
+                        "Artesanías Ñandutí"
+                );
 
-        crearProducto("Mantel de Ñandutí", "Mantel tejido a mano, 2x1.5m", 150000.0, 4.8, 10.0, 10, nandutí);
-        crearProducto("Blusa bordada en ñandutí", "Blusa de algodón con bordado artesanal", 95000.0, 4.5, null, 15, nandutí);
+        Tienda ceramica =
+                buscarTiendaPorNombre(
+                        "Cerámica Itá"
+                );
 
-        crearProducto("Jarrón de cerámica pintado", "Jarrón decorativo hecho a mano", 60000.0, 4.6, null, 20, ceramica);
-        crearProducto("Plato decorativo de barro", "Plato tradicional pintado a mano", 35000.0, null, 5.0, 25, ceramica);
+        Tienda cueros =
+                buscarTiendaPorNombre(
+                        "Cueros del Sur"
+                );
 
-        crearProducto("Cinturón de cuero repujado", "Cinturón artesanal de cuero genuino", 80000.0, 4.7, null, 30, cueros);
-        crearProducto("Billetera de cuero", "Billetera artesanal con compartimentos", 45000.0, 4.9, 15.0, 40, cueros);
+        crearProducto(
+                "Mantel de Ñandutí",
+                "Mantel tejido a mano, 2x1.5m",
+                150000.0,
+                4.8,
+                10.0,
+                10,
+                nanduti
+        );
+
+        crearProducto(
+                "Blusa bordada en ñandutí",
+                "Blusa de algodón con bordado artesanal",
+                95000.0,
+                4.5,
+                null,
+                15,
+                nanduti
+        );
+
+        crearProducto(
+                "Jarrón de cerámica pintado",
+                "Jarrón decorativo hecho a mano",
+                60000.0,
+                4.6,
+                null,
+                20,
+                ceramica
+        );
+
+        crearProducto(
+                "Plato decorativo de barro",
+                "Plato tradicional pintado a mano",
+                35000.0,
+                null,
+                5.0,
+                25,
+                ceramica
+        );
+
+        crearProducto(
+                "Cinturón de cuero repujado",
+                "Cinturón artesanal de cuero genuino",
+                80000.0,
+                4.7,
+                null,
+                30,
+                cueros
+        );
+
+        crearProducto(
+                "Billetera de cuero",
+                "Billetera artesanal con compartimentos",
+                45000.0,
+                4.9,
+                15.0,
+                40,
+                cueros
+        );
     }
 
-    private Tienda buscarTiendaPorNombre(String nombre) {
-        return tiendaRepository.findByNombreContainingIgnoreCase(nombre, PageRequest.of(0, 1))
-                .getContent().stream().findFirst()
-                .orElseThrow(() -> new IllegalStateException("No se encontró la tienda: " + nombre));
+    private Tienda buscarTiendaPorNombre(
+            String nombre
+    ) {
+        return tiendaRepository
+                .findByNombreContainingIgnoreCase(
+                        nombre,
+                        PageRequest.of(0, 1)
+                )
+                .getContent()
+                .stream()
+                .findFirst()
+                .orElseThrow(
+                        () -> new IllegalStateException(
+                                "No se encontró la tienda: "
+                                        + nombre
+                        )
+                );
     }
 
     private void crearProducto(
@@ -299,13 +605,396 @@ public class DataSeeder implements CommandLineRunner {
             Tienda tienda
     ) {
         Producto producto = new Producto();
+
         producto.setNombre(nombre);
         producto.setDescripcion(descripcion);
         producto.setPrecio(precio);
         producto.setPuntuacion(puntuacion);
         producto.setDescuento(descuento);
-        producto.setCantidadDisponible(cantidadDisponible);
+        producto.setCantidadDisponible(
+                cantidadDisponible
+        );
         producto.setTienda(tienda);
+
         productoRepository.save(producto);
+    }
+
+    /*
+     * ============================================================
+     * CATEGORÍAS Y SUBCATEGORÍAS
+     * ============================================================
+     */
+
+    private void seedCategoriasYSubcategorias() {
+
+        /*
+         * TEXTILES
+         */
+
+        Categoria textiles =
+                crearCategoriaSiNoExiste(
+                        "Textiles"
+                );
+
+        Subcategoria nanduti =
+                crearSubcategoriaSiNoExiste(
+                        "Ñandutí"
+                );
+
+        Subcategoria aoPoi =
+                crearSubcategoriaSiNoExiste(
+                        "Ao Po'i"
+                );
+
+        Subcategoria bordados =
+                crearSubcategoriaSiNoExiste(
+                        "Bordados"
+                );
+
+        Subcategoria tejidos =
+                crearSubcategoriaSiNoExiste(
+                        "Tejidos"
+                );
+
+        relacionarCategoriaSubcategoria(
+                textiles,
+                nanduti
+        );
+
+        relacionarCategoriaSubcategoria(
+                textiles,
+                aoPoi
+        );
+
+        relacionarCategoriaSubcategoria(
+                textiles,
+                bordados
+        );
+
+        relacionarCategoriaSubcategoria(
+                textiles,
+                tejidos
+        );
+
+
+        /*
+         * CERÁMICA
+         */
+
+        Categoria ceramica =
+                crearCategoriaSiNoExiste(
+                        "Cerámica"
+                );
+
+        Subcategoria jarrones =
+                crearSubcategoriaSiNoExiste(
+                        "Jarrones"
+                );
+
+        Subcategoria platosDecorativos =
+                crearSubcategoriaSiNoExiste(
+                        "Platos decorativos"
+                );
+
+        Subcategoria vasijas =
+                crearSubcategoriaSiNoExiste(
+                        "Vasijas"
+                );
+
+        relacionarCategoriaSubcategoria(
+                ceramica,
+                jarrones
+        );
+
+        relacionarCategoriaSubcategoria(
+                ceramica,
+                platosDecorativos
+        );
+
+        relacionarCategoriaSubcategoria(
+                ceramica,
+                vasijas
+        );
+
+
+        /*
+         * CUERO
+         */
+
+        Categoria cuero =
+                crearCategoriaSiNoExiste(
+                        "Cuero"
+                );
+
+        Subcategoria cinturones =
+                crearSubcategoriaSiNoExiste(
+                        "Cinturones"
+                );
+
+        Subcategoria billeteras =
+                crearSubcategoriaSiNoExiste(
+                        "Billeteras"
+                );
+
+        Subcategoria carteras =
+                crearSubcategoriaSiNoExiste(
+                        "Carteras"
+                );
+
+        relacionarCategoriaSubcategoria(
+                cuero,
+                cinturones
+        );
+
+        relacionarCategoriaSubcategoria(
+                cuero,
+                billeteras
+        );
+
+        relacionarCategoriaSubcategoria(
+                cuero,
+                carteras
+        );
+
+
+        /*
+         * MADERA
+         */
+
+        Categoria madera =
+                crearCategoriaSiNoExiste(
+                        "Madera"
+                );
+
+        Subcategoria tallados =
+                crearSubcategoriaSiNoExiste(
+                        "Tallados"
+                );
+
+        Subcategoria utensilios =
+                crearSubcategoriaSiNoExiste(
+                        "Utensilios"
+                );
+
+        Subcategoria decoracionMadera =
+                crearSubcategoriaSiNoExiste(
+                        "Decoración"
+                );
+
+        relacionarCategoriaSubcategoria(
+                madera,
+                tallados
+        );
+
+        relacionarCategoriaSubcategoria(
+                madera,
+                utensilios
+        );
+
+        relacionarCategoriaSubcategoria(
+                madera,
+                decoracionMadera
+        );
+
+
+        /*
+         * METAL
+         */
+
+        Categoria metal =
+                crearCategoriaSiNoExiste(
+                        "Metal"
+                );
+
+        Subcategoria joyeria =
+                crearSubcategoriaSiNoExiste(
+                        "Joyería"
+                );
+
+        Subcategoria adornosMetal =
+                crearSubcategoriaSiNoExiste(
+                        "Adornos"
+                );
+
+        Subcategoria utensiliosMetal =
+                crearSubcategoriaSiNoExiste(
+                        "Utensilios de metal"
+                );
+
+        relacionarCategoriaSubcategoria(
+                metal,
+                joyeria
+        );
+
+        relacionarCategoriaSubcategoria(
+                metal,
+                adornosMetal
+        );
+
+        relacionarCategoriaSubcategoria(
+                metal,
+                utensiliosMetal
+        );
+    }
+
+    private Categoria crearCategoriaSiNoExiste(
+            String nombre
+    ) {
+        return categoriaRepository
+                .findByNombreIgnoreCaseAndDeletedAtIsNull(
+                        nombre
+                )
+                .orElseGet(() -> {
+                    Categoria categoria =
+                            new Categoria();
+
+                    categoria.setNombre(nombre);
+
+                    return categoriaRepository.save(
+                            categoria
+                    );
+                });
+    }
+
+    private Subcategoria crearSubcategoriaSiNoExiste(
+            String nombre
+    ) {
+        return subcategoriaRepository
+                .findByNombreIgnoreCaseAndDeletedAtIsNull(
+                        nombre
+                )
+                .orElseGet(() -> {
+                    Subcategoria subcategoria =
+                            new Subcategoria();
+
+                    subcategoria.setNombre(nombre);
+
+                    return subcategoriaRepository.save(
+                            subcategoria
+                    );
+                });
+    }
+
+    private void relacionarCategoriaSubcategoria(
+            Categoria categoria,
+            Subcategoria subcategoria
+    ) {
+        boolean existe =
+                categoriaSubcategoriaRepository
+                        .existsByCategoria_IdAndSubcategoria_Id(
+                                categoria.getId(),
+                                subcategoria.getId()
+                        );
+
+        if (!existe) {
+            CategoriaSubcategoria relacion =
+                    new CategoriaSubcategoria(
+                            categoria,
+                            subcategoria
+                    );
+
+            categoriaSubcategoriaRepository.save(
+                    relacion
+            );
+        }
+    }
+
+    /*
+     * ============================================================
+     * PRODUCTOS Y SUBCATEGORÍAS
+     * ============================================================
+     */
+
+    private void seedRelacionesProductoSubcategoria() {
+
+        relacionarProductoSubcategoria(
+                "Mantel de Ñandutí",
+                "Ñandutí"
+        );
+
+        relacionarProductoSubcategoria(
+                "Blusa bordada en ñandutí",
+                "Ñandutí"
+        );
+
+        relacionarProductoSubcategoria(
+                "Jarrón de cerámica pintado",
+                "Jarrones"
+        );
+
+        relacionarProductoSubcategoria(
+                "Plato decorativo de barro",
+                "Platos decorativos"
+        );
+
+        relacionarProductoSubcategoria(
+                "Cinturón de cuero repujado",
+                "Cinturones"
+        );
+
+        relacionarProductoSubcategoria(
+                "Billetera de cuero",
+                "Billeteras"
+        );
+    }
+
+    private void relacionarProductoSubcategoria(
+            String nombreProducto,
+            String nombreSubcategoria
+    ) {
+
+        Producto producto = productoRepository
+                .findAll()
+                .stream()
+                .filter(
+                        p -> p.getNombre()
+                                .equalsIgnoreCase(
+                                        nombreProducto
+                                )
+                )
+                .findFirst()
+                .orElseThrow(
+                        () -> new IllegalStateException(
+                                "No se encontró el producto: "
+                                        + nombreProducto
+                        )
+                );
+
+        Subcategoria subcategoria =
+                subcategoriaRepository
+                        .findAll()
+                        .stream()
+                        .filter(
+                                s -> s.getNombre()
+                                        .equalsIgnoreCase(
+                                                nombreSubcategoria
+                                        )
+                        )
+                        .findFirst()
+                        .orElseThrow(
+                                () -> new IllegalStateException(
+                                        "No se encontró la subcategoría: "
+                                                + nombreSubcategoria
+                                )
+                        );
+
+        boolean existeRelacion =
+                productoSubcategoriaRepository
+                        .existsByProducto_IdAndSubcategoria_Id(
+                                producto.getId(),
+                                subcategoria.getId()
+                        );
+
+        if (!existeRelacion) {
+            ProductoSubcategoria relacion =
+                    new ProductoSubcategoria(
+                            producto,
+                            subcategoria
+                    );
+
+            productoSubcategoriaRepository.save(
+                    relacion
+            );
+        }
     }
 }
