@@ -12,6 +12,8 @@ export interface Producto {
   idsSubcategorias: number[];
   nombresSubcategorias: string[];
 
+  idImagenPrincipal: number | null;
+
   createdAt: string;
   updatedAt: string;
 }

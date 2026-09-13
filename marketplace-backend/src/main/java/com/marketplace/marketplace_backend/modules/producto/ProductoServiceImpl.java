@@ -2,6 +2,8 @@ package com.marketplace.marketplace_backend.modules.producto;
 
 import com.marketplace.marketplace_backend.common.PagedResult;
 import com.marketplace.marketplace_backend.modules.categoriasubcategoria.CategoriaSubcategoriaRepository;
+import com.marketplace.marketplace_backend.modules.imagenproducto.ImagenProducto;
+import com.marketplace.marketplace_backend.modules.imagenproducto.ImagenProductoRepository;
 import com.marketplace.marketplace_backend.modules.producto.dto.ProductoCreateRequestDto;
 import com.marketplace.marketplace_backend.modules.producto.dto.ProductoFilterDto;
 import com.marketplace.marketplace_backend.modules.producto.dto.ProductoResponseDto;
@@ -30,6 +32,7 @@ public class ProductoServiceImpl implements ProductoService {
     private final TiendaRepository tiendaRepository;
     private final ProductoSubcategoriaRepository productoSubcategoriaRepository;
     private final CategoriaSubcategoriaRepository categoriaSubcategoriaRepository;
+    private final ImagenProductoRepository imagenProductoRepository;
 
     @Override
     @Transactional
@@ -206,6 +209,10 @@ public class ProductoServiceImpl implements ProductoService {
                 .map(ps -> ps.getSubcategoria().getNombre())
                 .toList();
 
+        Long idImagenPrincipal = imagenProductoRepository.findFirstByProducto_IdOrderByIdAsc(producto.getId())
+                .map(ImagenProducto::getId)
+                .orElse(null);
+
         return new ProductoResponseDto(
                 producto.getId(),
                 producto.getNombre(),
@@ -218,6 +225,7 @@ public class ProductoServiceImpl implements ProductoService {
                 producto.getTienda().getNombre(),
                 idsSubcategorias,
                 nombresSubcategorias,
+                idImagenPrincipal,
                 producto.getCreatedAt(),
                 producto.getUpdatedAt()
         );

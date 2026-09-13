@@ -16,6 +16,9 @@ import {
   obtenerSubcategoriasPorCategoria,
 } from "@/services/categoriaService";
 
+const API_URL =
+  (process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:8080").replace(/\/+$/, "");
+
 export default function HomePage() {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [tiendas, setTiendas] = useState<Tienda[]>([]);
@@ -297,11 +300,7 @@ async function cargarCategorias() {
 
         <section className={styles.mainContent}>
           <section className={styles.banner}>
-            <h2>
-              CONOCÉ LAS
-              <br />
-              ARTESANÍAS
-            </h2>
+            <h2>CONOCÉ LAS ARTESANÍAS</h2>
           </section>
 
           <div className={styles.dots}>
@@ -365,9 +364,17 @@ async function cargarCategorias() {
                       <div
                         className={styles.productImage}
                       >
-                        <span>
-                          {producto.nombre}
-                        </span>
+                        {producto.idImagenPrincipal ? (
+                          <img
+                            src={`${API_URL}/imagenes/${producto.idImagenPrincipal}`}
+                            alt={producto.nombre}
+                            className={styles.productImageImg}
+                          />
+                        ) : (
+                          <span>
+                            {producto.nombre}
+                          </span>
+                        )}
                       </div>
 
                       <div
