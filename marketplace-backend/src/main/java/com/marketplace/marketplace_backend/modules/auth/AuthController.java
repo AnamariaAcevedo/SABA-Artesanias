@@ -3,6 +3,7 @@ package com.marketplace.marketplace_backend.modules.auth;
 import com.marketplace.marketplace_backend.common.StandardResponseDto;
 import com.marketplace.marketplace_backend.modules.auth.dto.AuthResponseDto;
 import com.marketplace.marketplace_backend.modules.auth.dto.LoginRequestDto;
+import com.marketplace.marketplace_backend.modules.auth.dto.LogoutRequestDto;
 import com.marketplace.marketplace_backend.modules.auth.dto.RefreshRequestDto;
 import com.marketplace.marketplace_backend.modules.auth.dto.RegistroRequestDto;
 import jakarta.validation.Valid;
@@ -14,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @AllArgsConstructor
-// Endpoints REST de autenticación: login y refresh de tokens
+// Endpoints REST de autenticación: login, refresh de tokens, registro y logout
 public class AuthController {
 
     private final AuthService authService;
@@ -44,6 +45,17 @@ public class AuthController {
         StandardResponseDto<AuthResponseDto> response = new StandardResponseDto<>();
         response.setSuccess(true);
         response.setData(authService.registrar(request));
+        response.setErrors(null);
+        response.setPagination(null);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<StandardResponseDto<Void>> logout(@Valid @RequestBody LogoutRequestDto request) {
+        StandardResponseDto<Void> response = new StandardResponseDto<>();
+        authService.logout(request.getRefreshToken());
+        response.setSuccess(true);
+        response.setData(null);
         response.setErrors(null);
         response.setPagination(null);
         return ResponseEntity.ok(response);

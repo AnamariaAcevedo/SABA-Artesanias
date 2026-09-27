@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @AllArgsConstructor
 @Service
-// Implementación de la lógica de negocio de login, refresh de tokens y registro
+// Implementación de la lógica de negocio de login, refresh de tokens, registro y logout
 public class AuthServiceImpl implements AuthService {
 
     private static final String ROL_CLIENTE = "Cliente";
@@ -139,5 +139,11 @@ public class AuthServiceImpl implements AuthService {
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(saved.getUsuario());
 
         return new AuthResponseDto(accessToken, refreshToken.getToken(), saved.getUsuario());
+    }
+
+    @Override
+    @Transactional
+    public void logout(String refreshToken) {
+        refreshTokenService.deleteToken(refreshToken);
     }
 }
