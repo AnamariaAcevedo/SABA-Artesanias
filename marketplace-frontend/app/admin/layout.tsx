@@ -44,9 +44,7 @@ export default function AdminLayout({
       <header className={styles.header}>
         <span className={styles.logo}>•SABA•</span>
         <span className={styles.subtitle}>Administración</span>
-        <LogoutButton
-            className={`${styles.buttonGhost} ${styles.logoutButton}`}
-        />
+        <LogoutButton className={styles.logoutButton} />
       </header>
 
       <nav className={styles.nav}>
