@@ -11,9 +11,9 @@ const enlaces = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/productos", label: "Productos" },
   { href: "/admin/usuarios", label: "Usuarios" },
+  { href: "/admin/roles", label: "Roles" },
   { href: "/admin/pedidos", label: "Pedidos" },
 ];
-
 export default function AdminLayout({
   children,
 }: Readonly<{
