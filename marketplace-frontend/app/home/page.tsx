@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 
 import styles from "./home.module.css";
 
@@ -16,19 +17,29 @@ import {
   obtenerSubcategoriasPorCategoria,
 } from "@/services/categoriaService";
 import LogoutButton from "@/components/auth/LogoutButton";
+import { useRolSesion } from "@/lib/auth";
 
 const API_URL =
   (process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:8080").replace(/\/+$/, "");
 
 export default function HomePage() {
+  const rol = useRolSesion();
+
   const [productos, setProductos] = useState<Producto[]>([]);
   const [tiendas, setTiendas] = useState<Tienda[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
-  const [subcategorias, setSubcategorias] = useState<Subcategoria[]>([]);
+  const [categoriaHover, setCategoriaHover] = useState<number | null>(null);
+  const [subcategoriasPorCategoria, setSubcategoriasPorCategoria] = useState<
+    Record<number, Subcategoria[]>
+  >({});
 
   const [busqueda, setBusqueda] = useState("");
   const [cargando, setCargando] = useState(false);
   const [mensaje, setMensaje] = useState("");
+
+  const [menuFijado, setMenuFijado] = useState(false);
+  const [menuEnHover, setMenuEnHover] = useState(false);
+  const menuAbierto = menuFijado || menuEnHover;
 
   const [tiendaSeleccionada, setTiendaSeleccionada] =
     useState<number | null>(null);
@@ -89,6 +100,12 @@ async function cargarCategorias() {
     console.log("DATA CATEGORIAS:", respuesta.data);
 
     setCategorias(respuesta.data);
+
+    // Precarga las subcategorías de todas las categorías para poder
+    // agrupar el catálogo completo por categoría (ver `productosPorCategoria`).
+    respuesta.data.forEach((categoria) => {
+      asegurarSubcategorias(categoria.id);
+    });
   } catch (error) {
     console.error("Error cargando categorías:", error);
   }
@@ -111,6 +128,21 @@ async function cargarCategorias() {
     );
   }
 
+  async function asegurarSubcategorias(idCategoria: number) {
+    if (subcategoriasPorCategoria[idCategoria]) return;
+
+    try {
+      const respuesta = await obtenerSubcategoriasPorCategoria(idCategoria);
+
+      setSubcategoriasPorCategoria((previo) => ({
+        ...previo,
+        [idCategoria]: respuesta.data,
+      }));
+    } catch (error) {
+      console.error("Error cargando subcategorías:", error);
+    }
+  }
+
   async function seleccionarCategoria(idCategoria: number) {
     /*
      * Si vuelve a presionar la categoría ya seleccionada,
@@ -119,7 +151,6 @@ async function cargarCategorias() {
     if (categoriaSeleccionada === idCategoria) {
       setCategoriaSeleccionada(null);
       setSubcategoriaSeleccionada(null);
-      setSubcategorias([]);
 
       cargarProductos(
         busqueda,
@@ -129,37 +160,26 @@ async function cargarCategorias() {
       return;
     }
 
-    try {
-      setCategoriaSeleccionada(idCategoria);
-      setSubcategoriaSeleccionada(null);
+    setCategoriaSeleccionada(idCategoria);
+    setSubcategoriaSeleccionada(null);
 
-      const respuesta =
-        await obtenerSubcategoriasPorCategoria(idCategoria);
+    await asegurarSubcategorias(idCategoria);
 
-      setSubcategorias(respuesta.data);
-
-      cargarProductos(
-        busqueda,
-        tiendaSeleccionada ?? undefined,
-        idCategoria
-      );
-    } catch (error) {
-      console.error(
-        "Error cargando subcategorías:",
-        error
-      );
-
-      setSubcategorias([]);
-    }
+    cargarProductos(
+      busqueda,
+      tiendaSeleccionada ?? undefined,
+      idCategoria
+    );
   }
 
-  function seleccionarSubcategoria(idSubcategoria: number) {
+  function seleccionarSubcategoria(idCategoria: number, idSubcategoria: number) {
+    setCategoriaSeleccionada(idCategoria);
     setSubcategoriaSeleccionada(idSubcategoria);
 
     cargarProductos(
       busqueda,
       tiendaSeleccionada ?? undefined,
-      categoriaSeleccionada ?? undefined,
+      idCategoria,
       idSubcategoria
     );
   }
@@ -182,14 +202,181 @@ async function cargarCategorias() {
 
     setCategoriaSeleccionada(null);
     setSubcategoriaSeleccionada(null);
-    setSubcategorias([]);
 
     cargarProductos();
+  }
+
+  // Sin un filtro de tienda o categoría activo, el catálogo se separa en
+  // secciones por categoría en vez de mostrar todos los productos juntos.
+  const sinFiltro = tiendaSeleccionada === null && categoriaSeleccionada === null;
+
+  const productosPorCategoria = useMemo(() => {
+    if (!sinFiltro || categorias.length === 0) return [];
+
+    const grupos = categorias.map((categoria) => ({
+      categoria,
+      productos: [] as Producto[],
+    }));
+
+    const otros: Producto[] = [];
+
+    productos.forEach((producto) => {
+      const grupo = grupos.find(({ categoria }) => {
+        const idsSubcategoria =
+          subcategoriasPorCategoria[categoria.id]?.map(
+            (subcategoria) => subcategoria.subcategoriaId
+          ) ?? [];
+
+        return producto.idsSubcategorias.some((id) =>
+          idsSubcategoria.includes(id)
+        );
+      });
+
+      if (grupo) {
+        grupo.productos.push(producto);
+      } else {
+        otros.push(producto);
+      }
+    });
+
+    const seccionesConProductos = grupos.filter(
+      (grupo) => grupo.productos.length > 0
+    );
+
+    if (otros.length > 0) {
+      seccionesConProductos.push({
+        categoria: { id: -1, nombre: "Otros" } as Categoria,
+        productos: otros,
+      });
+    }
+
+    return seccionesConProductos;
+  }, [sinFiltro, productos, categorias, subcategoriasPorCategoria]);
+
+  function renderProducto(producto: Producto) {
+    return (
+      <article
+        className={styles.productCard}
+        key={producto.id}
+      >
+        <div
+          className={styles.productImage}
+        >
+          {producto.idImagenPrincipal ? (
+            <img
+              src={`${API_URL}/imagenes/${producto.idImagenPrincipal}`}
+              alt={producto.nombre}
+              className={styles.productImageImg}
+            />
+          ) : (
+            <span>
+              {producto.nombre}
+            </span>
+          )}
+        </div>
+
+        <div
+          className={styles.productInfo}
+        >
+          <div>
+            <h4>
+              {producto.nombre}
+            </h4>
+
+            <small>
+              {
+                producto.nombreTienda
+              }
+            </small>
+          </div>
+
+          <strong>
+            {producto.precio.toLocaleString(
+              "es-PY"
+            )}{" "}
+            GS
+          </strong>
+        </div>
+
+        {producto.descripcion && (
+          <p
+            className={
+              styles.productDescription
+            }
+          >
+            {producto.descripcion}
+          </p>
+        )}
+
+        {producto.nombresSubcategorias &&
+          producto
+            .nombresSubcategorias
+            .length > 0 && (
+            <div
+              className={
+                styles.productCategories
+              }
+            >
+              {producto.nombresSubcategorias.map(
+                (
+                  nombreSubcategoria
+                ) => (
+                  <span
+                    key={
+                      nombreSubcategoria
+                    }
+                  >
+                    {
+                      nombreSubcategoria
+                    }
+                  </span>
+                )
+              )}
+            </div>
+          )}
+
+        <div
+          className={styles.productExtra}
+        >
+          {producto.puntuacion !==
+            null && (
+            <span>
+              ★{" "}
+              {
+                producto.puntuacion
+              }
+            </span>
+          )}
+
+          <span>
+            Stock:{" "}
+            {
+              producto.cantidadDisponible
+            }
+          </span>
+        </div>
+      </article>
+    );
   }
 
   return (
     <main className={styles.homeContainer}>
       <header className={styles.homeHeader}>
+        <button
+          type="button"
+          className={styles.menuToggle}
+          aria-label={menuAbierto ? "Cerrar menú de categorías" : "Abrir menú de categorías"}
+          aria-expanded={menuAbierto}
+          onClick={() => setMenuFijado((valor) => !valor)}
+          onMouseEnter={() => setMenuEnHover(true)}
+          onMouseLeave={() => setMenuEnHover(false)}
+          suppressHydrationWarning
+        >
+          <span className={styles.menuBar} />
+          <span className={styles.menuBar} />
+          <span className={styles.menuBar} />
+        </button>
+
         <div className={styles.logo}>
           <h1>•SABA•</h1>
           <p>Artesanías</p>
@@ -199,6 +386,8 @@ async function cargarCategorias() {
           className={styles.searchBar}
           onSubmit={buscarProducto}
         >
+          <span className={styles.searchIcon} aria-hidden="true">⌕</span>
+
           <input
             type="text"
             placeholder="Buscar productos..."
@@ -206,98 +395,135 @@ async function cargarCategorias() {
             onChange={(evento) =>
               setBusqueda(evento.target.value)
             }
+            suppressHydrationWarning
           />
 
-          <button type="submit">
+          <button type="submit" className={styles.searchButton} suppressHydrationWarning>
             Buscar
           </button>
         </form>
-        <LogoutButton className={styles.logoutButton} />
+        {rol === undefined ? null : rol ? (
+          <LogoutButton className={styles.logoutButton} />
+        ) : (
+          <Link href="/login" className={styles.logoutButton} style={{ marginLeft: "auto" }}>
+            Iniciar sesión
+          </Link>
+        )}
       </header>
 
       <div className={styles.homeContent}>
-        <aside className={styles.categories}>
-          {categorias.map((categoria) => (
-            <div
-              key={categoria.id}
-              className={styles.categoryGroup}
-            >
-              <button
-                type="button"
-                className={
-                  categoriaSeleccionada === categoria.id
-                    ? `${styles.categoryButton} ${styles.selectedCategory}`
-                    : styles.categoryButton
-                }
-                onClick={() =>
-                  seleccionarCategoria(categoria.id)
-                }
-              >
-                {categoria.nombre} →
-              </button>
+        <aside
+          className={`${styles.categories} ${menuAbierto ? styles.categoriesOpen : ""}`}
+          onMouseEnter={() => setMenuEnHover(true)}
+          onMouseLeave={() => setMenuEnHover(false)}
+        >
+          <div className={styles.categoriesContent}>
+            {categorias.map((categoria) => {
+              const subcategoriasCategoria =
+                subcategoriasPorCategoria[categoria.id] ?? [];
+              const desplegada =
+                categoriaHover === categoria.id ||
+                categoriaSeleccionada === categoria.id;
 
-              {categoriaSeleccionada === categoria.id &&
-                subcategorias.length > 0 && (
-                  <div className={styles.subcategories}>
-                    {subcategorias.map(
-                      (subcategoria) => (
-                        <button
-                          type="button"
-                          key={
-                            subcategoria.subcategoriaId
-                          }
-                          className={
-                            subcategoriaSeleccionada ===
-                            subcategoria.subcategoriaId
-                              ? `${styles.subcategoryButton} ${styles.selectedSubcategory}`
-                              : styles.subcategoryButton
-                          }
-                          onClick={() =>
-                            seleccionarSubcategoria(
-                              subcategoria.subcategoriaId
-                            )
-                          }
-                        >
-                          {
-                            subcategoria.subcategoriaNombre
-                          }
-                        </button>
-                      )
-                    )}
-                  </div>
-                )}
-            </div>
-          ))}
-
-          {tiendas.length > 0 && (
-            <div className={styles.storeFilter}>
-              <h4>Tiendas</h4>
-
-              <button
-                type="button"
-                onClick={mostrarTodos}
-              >
-                Todas
-              </button>
-
-              {tiendas.map((tienda) => (
-                <button
-                  type="button"
-                  key={tienda.id}
-                  onClick={() =>
-                    seleccionarTienda(tienda.id)
-                  }
-                  className={
-                    tiendaSeleccionada === tienda.id
-                      ? styles.selectedStore
-                      : ""
+              return (
+                <div
+                  key={categoria.id}
+                  className={styles.categoryGroup}
+                  onMouseEnter={() => {
+                    setCategoriaHover(categoria.id);
+                    asegurarSubcategorias(categoria.id);
+                  }}
+                  onMouseLeave={() =>
+                    setCategoriaHover((actual) =>
+                      actual === categoria.id ? null : actual
+                    )
                   }
                 >
-                  {tienda.nombre}
-                </button>
-              ))}
-            </div>
-          )}
+                  <button
+                    type="button"
+                    className={
+                      categoriaSeleccionada === categoria.id
+                        ? `${styles.categoryButton} ${styles.selectedCategory}`
+                        : styles.categoryButton
+                    }
+                    onClick={() =>
+                      seleccionarCategoria(categoria.id)
+                    }
+                  >
+                    {categoria.nombre}
+                  </button>
+
+                  {desplegada && subcategoriasCategoria.length > 0 && (
+                    <div className={styles.subcategories}>
+                      {subcategoriasCategoria.map(
+                        (subcategoria) => (
+                          <button
+                            type="button"
+                            key={
+                              subcategoria.subcategoriaId
+                            }
+                            className={
+                              subcategoriaSeleccionada ===
+                              subcategoria.subcategoriaId
+                                ? `${styles.subcategoryButton} ${styles.selectedSubcategory}`
+                                : styles.subcategoryButton
+                            }
+                            onClick={() =>
+                              seleccionarSubcategoria(
+                                categoria.id,
+                                subcategoria.subcategoriaId
+                              )
+                            }
+                          >
+                            {
+                              subcategoria.subcategoriaNombre
+                            }
+                          </button>
+                        )
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {tiendas.length > 0 && (
+              <div className={styles.storeFilter}>
+                <h4>Tiendas</h4>
+
+                <div className={styles.storeChips}>
+                  <button
+                    type="button"
+                    className={
+                      tiendaSeleccionada === null
+                        ? `${styles.storeChip} ${styles.selectedStore}`
+                        : styles.storeChip
+                    }
+                    onClick={mostrarTodos}
+                  >
+                    Todas
+                  </button>
+
+                  {tiendas.map((tienda) => (
+                    <button
+                      type="button"
+                      key={tienda.id}
+                      onClick={() =>
+                        seleccionarTienda(tienda.id)
+                      }
+                      className={
+                        tiendaSeleccionada === tienda.id
+                          ? `${styles.storeChip} ${styles.selectedStore}`
+                          : styles.storeChip
+                      }
+                    >
+                      {tienda.nombre}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </aside>
 
         <section className={styles.mainContent}>
@@ -356,113 +582,26 @@ async function cargarCategorias() {
             )}
 
             {!cargando &&
-              productos.length > 0 && (
-                <div className={styles.products}>
-                  {productos.map((producto) => (
-                    <article
-                      className={styles.productCard}
-                      key={producto.id}
-                    >
-                      <div
-                        className={styles.productImage}
-                      >
-                        {producto.idImagenPrincipal ? (
-                          <img
-                            src={`${API_URL}/imagenes/${producto.idImagenPrincipal}`}
-                            alt={producto.nombre}
-                            className={styles.productImageImg}
-                          />
-                        ) : (
-                          <span>
-                            {producto.nombre}
-                          </span>
-                        )}
+              productos.length > 0 &&
+              (sinFiltro ? (
+                <div className={styles.categorySections}>
+                  {productosPorCategoria.map(({ categoria, productos: productosCategoria }) => (
+                    <section key={categoria.id} className={styles.categorySection}>
+                      <h4 className={styles.categorySectionTitle}>
+                        {categoria.nombre}
+                      </h4>
+
+                      <div className={styles.products}>
+                        {productosCategoria.map(renderProducto)}
                       </div>
-
-                      <div
-                        className={styles.productInfo}
-                      >
-                        <div>
-                          <h4>
-                            {producto.nombre}
-                          </h4>
-
-                          <small>
-                            {
-                              producto.nombreTienda
-                            }
-                          </small>
-                        </div>
-
-                        <strong>
-                          {producto.precio.toLocaleString(
-                            "es-PY"
-                          )}{" "}
-                          GS
-                        </strong>
-                      </div>
-
-                      {producto.descripcion && (
-                        <p
-                          className={
-                            styles.productDescription
-                          }
-                        >
-                          {producto.descripcion}
-                        </p>
-                      )}
-
-                      {producto.nombresSubcategorias &&
-                        producto
-                          .nombresSubcategorias
-                          .length > 0 && (
-                          <div
-                            className={
-                              styles.productCategories
-                            }
-                          >
-                            {producto.nombresSubcategorias.map(
-                              (
-                                nombreSubcategoria
-                              ) => (
-                                <span
-                                  key={
-                                    nombreSubcategoria
-                                  }
-                                >
-                                  {
-                                    nombreSubcategoria
-                                  }
-                                </span>
-                              )
-                            )}
-                          </div>
-                        )}
-
-                      <div
-                        className={styles.productExtra}
-                      >
-                        {producto.puntuacion !==
-                          null && (
-                          <span>
-                            ★{" "}
-                            {
-                              producto.puntuacion
-                            }
-                          </span>
-                        )}
-
-                        <span>
-                          Stock:{" "}
-                          {
-                            producto.cantidadDisponible
-                          }
-                        </span>
-                      </div>
-                    </article>
+                    </section>
                   ))}
                 </div>
-              )}
+              ) : (
+                <div className={styles.products}>
+                  {productos.map(renderProducto)}
+                </div>
+              ))}
           </section>
         </section>
       </div>
