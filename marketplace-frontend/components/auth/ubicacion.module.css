@@ -1,6 +1,6 @@
 .ubicacion { position: relative; min-width: 0; }
 .ubicacion > label { display: block; margin-bottom: 5px; font-size: 25px; line-height: 1.2; color: #48200f; }
-.campo { width: 100%; min-height: 52px; display: flex; justify-content: space-between; align-items: center; gap: 16px; border: 1px solid #a77b38; border-radius: 28px; padding: 12px 18px; background: #b98c47; color: #291606; font: 16px/1.5 Arial, sans-serif; text-align: left; cursor: pointer; }
+.campo { width: 100%; min-height: 52px; display: flex; justify-content: space-between; align-items: center; gap: 16px; border: 1px solid #b88b44; border-radius: 28px; padding: 12px 18px; background: #f4ddba; color: #291606; font: 16px/1.5 Arial, sans-serif; text-align: left; cursor: pointer; }
 .campo span:first-child { overflow-wrap: anywhere; }
 .panel { position: relative; z-index: 3; margin-top: 8px; border: 1px solid #ba945b; border-radius: 14px; background: #fffaf2; color: #48200f; box-shadow: 0 12px 28px #63240e20; font: 14px/1.5 Arial, sans-serif; }
 .cabecera { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 16px; border-bottom: 1px solid #e4d4bd; }

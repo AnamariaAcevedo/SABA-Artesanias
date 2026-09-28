@@ -44,7 +44,7 @@ export default function LogoutButton({ className }: Props) {
 
     if (!rol) return null;
     return (
-        <div>
+        <div style={{ marginLeft: "auto" }}>
             <button
                 type="button"
                 className={className}

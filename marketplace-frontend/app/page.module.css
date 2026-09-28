@@ -1,6 +1,6 @@
 .page {
     min-height: 100vh;
-    background: #f6dfbd;
+    background: #fff6e6;
 }
 
 .home {
@@ -18,11 +18,7 @@
    ========================= */
 
 .brand {
-    background: linear-gradient(
-            180deg,
-            #f6dfbd 0%,
-            #f3d5a9 100%
-    );
+    background: #e6c99a;
 
     position: relative;
 
@@ -30,10 +26,7 @@
     align-items: center;
     justify-content: center;
 
-    border-right: 1px solid rgba(92, 46, 22, 0.15);
-
-    box-shadow:
-            8px 0 24px rgba(54, 25, 8, 0.08);
+    border-right: 1px solid #b88b44;
 
     z-index: 2;
 }
@@ -45,7 +38,7 @@
     font-size: clamp(4rem, 7vw, 7rem);
     font-weight: 500;
 
-    color: #7b2812;
+    color: #63240e;
 
     transform: rotate(90deg);
 
@@ -64,7 +57,7 @@
     font-family: Georgia, "Times New Roman", serif;
     font-size: clamp(1.15rem, 1.7vw, 1.8rem);
 
-    color: #32190f;
+    color: #30200f;
 
     transform: rotate(90deg);
 
@@ -92,30 +85,13 @@
     background-image:
             linear-gradient(
                     90deg,
-                    rgba(78, 34, 12, 0.15) 0%,
-                    rgba(0, 0, 0, 0.05) 35%,
-                    rgba(0, 0, 0, 0.22) 100%
+                    rgba(99, 36, 14, 0.45) 0%,
+                    rgba(99, 36, 14, 0.2) 100%
             ),
             url("/home-artesanias.png");
 
     background-size: cover;
     background-position: center;
-}
-
-.hero::after {
-    content: "";
-
-    position: absolute;
-    inset: 0;
-
-    background: radial-gradient(
-            circle at center,
-            rgba(255, 255, 255, 0.02) 0%,
-            rgba(0, 0, 0, 0.06) 65%,
-            rgba(0, 0, 0, 0.17) 100%
-    );
-
-    pointer-events: none;
 }
 
 /* =========================
@@ -139,23 +115,17 @@
 .button {
     width: 100%;
 
-    padding: 22px 34px;
+    padding: 20px 34px;
 
     display: flex;
     justify-content: center;
     align-items: center;
 
-    background: linear-gradient(
-            180deg,
-            rgba(214, 164, 89, 0.92) 0%,
-            rgba(187, 132, 53, 0.92) 100%
-    );
-
-    border: 1px solid rgba(106, 55, 19, 0.35);
+    background: #f7dfb9;
+    border: 1px solid #e2c190;
+    color: #63240e;
 
     border-radius: 999px;
-
-    color: #fff4df;
 
     font-family: Georgia, "Times New Roman", serif;
     font-size: clamp(1.3rem, 2vw, 2rem);
@@ -164,26 +134,12 @@
     text-decoration: none;
     text-align: center;
 
-    box-shadow:
-            0 8px 20px rgba(45, 20, 4, 0.22),
-            inset 0 1px 0 rgba(255, 255, 255, 0.25);
-
-    backdrop-filter: blur(2px);
-
-    transition:
-            transform 0.2s ease,
-            box-shadow 0.2s ease,
-            filter 0.2s ease;
+    transition: transform 0.15s ease, background 0.15s ease;
 }
 
 .button:hover {
-    transform: translateY(-3px);
-
-    box-shadow:
-            0 12px 26px rgba(45, 20, 4, 0.3),
-            inset 0 1px 0 rgba(255, 255, 255, 0.3);
-
-    filter: brightness(1.05);
+    background: #fff6e6;
+    transform: translateY(-2px);
 }
 
 .button:active {
@@ -213,7 +169,7 @@
     .brand {
         min-height: 140px;
         border-right: none;
-        border-bottom: 1px solid rgba(92, 46, 22, 0.15);
+        border-bottom: 1px solid #b88b44;
     }
 
     .logo {

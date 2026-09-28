@@ -141,26 +141,29 @@ export default function RegistroPage() {
       <form onSubmit={validarRegistro} onChange={limpiarMensaje} aria-busy={enviando}>
         <fieldset className={styles.form} disabled={enviando || creado}>
         <div className={styles.row}>
-          <div className={styles.field}><label htmlFor="nombre">Nombre:</label><input id="nombre" name="nombre" autoComplete="given-name" required /></div>
-          <div className={styles.field}><label htmlFor="apellido">Apellido:</label><input id="apellido" name="apellido" autoComplete="family-name" required /></div>
+          <div className={styles.field}><label htmlFor="nombre" suppressHydrationWarning>Nombre:</label><input id="nombre" name="nombre" autoComplete="given-name" required /></div>
+          <div className={styles.field}><label htmlFor="apellido" suppressHydrationWarning>Apellido:</label><input id="apellido" name="apellido" autoComplete="family-name" required /></div>
         </div>
-        <div className={styles.field}><label htmlFor="nuevo-usuario">Nombre de usuario:</label><input id="nuevo-usuario" name="usuario" autoComplete="username" autoCapitalize="none" spellCheck={false} required /></div>
-        <div className={styles.field}><label htmlFor="correo">Correo electrónico:</label><input id="correo" name="email" type="email" autoComplete="email" required /></div>
-        <div className={styles.field}><label htmlFor="nueva-contrasenha">Contraseña:</label><input id="nueva-contrasenha" name="contrasenha" type="password" autoComplete="new-password" required minLength={8} aria-describedby="password-help" /><small id="password-help">Mínimo 8 caracteres.</small></div>
-        <div className={styles.field}><label htmlFor="confirmar">Confirmar contraseña:</label><input id="confirmar" name="confirmar" type="password" autoComplete="new-password" required minLength={8} /></div>
+        <div className={styles.field}><label htmlFor="nuevo-usuario" suppressHydrationWarning>Nombre de usuario:</label><input id="nuevo-usuario" name="usuario" autoComplete="username" autoCapitalize="none" spellCheck={false} required /></div>
+        <div className={styles.field}><label htmlFor="correo" suppressHydrationWarning>Correo electrónico:</label><input id="correo" name="email" type="email" autoComplete="email" required /></div>
+        <div className={styles.field}><label htmlFor="nueva-contrasenha" suppressHydrationWarning>Contraseña:</label><input id="nueva-contrasenha" name="contrasenha" type="password" autoComplete="new-password" required minLength={8} aria-describedby="password-help" /><small id="password-help">Mínimo 8 caracteres.</small></div>
+        <div className={styles.field}><label htmlFor="confirmar" suppressHydrationWarning>Confirmar contraseña:</label><input id="confirmar" name="confirmar" type="password" autoComplete="new-password" required minLength={8} /></div>
         <UbicacionFields onSelectionChange={limpiarMensaje} />
         <div className={styles.row}>
-          <div className={styles.field}><label htmlFor="calle">Calle:</label><input id="calle" name="calle" autoComplete="address-line1" maxLength={100} required /></div>
+          <div className={styles.field}><label htmlFor="calle" suppressHydrationWarning>Calle:</label><input id="calle" name="calle" autoComplete="address-line1" maxLength={100} required /></div>
           <div className={styles.field}>
-            <label htmlFor="casa">{hayEdificio ? "Nro. de departamento:" : "Nro. de casa:"}</label>
+            <label htmlFor="casa" suppressHydrationWarning>{hayEdificio ? "Nro. de departamento:" : "Nro. de casa:"}</label>
             <input id="casa" name={campoNumero} type="text" inputMode={hayEdificio ? "text" : "numeric"}
               required aria-describedby="numero-help" />
             <small id="numero-help">{hayEdificio ? "Podés usar números y letras, por ejemplo: 4B." : "Ingresá solo números. Para un departamento, completá el edificio."}</small>
           </div>
         </div>
-        <div className={styles.field}><label htmlFor="nombre_edificio">Nombre edificio (opcional):</label><input id="nombre_edificio" name="nombreEdificio" type="text" maxLength={100}
+        <div className={styles.field}><label htmlFor="nombre_edificio" suppressHydrationWarning>Nombre edificio (opcional):</label><input id="nombre_edificio" name="nombreEdificio" type="text" maxLength={100}
           value={nombreEdificio} onChange={(event) => setNombreEdificio(event.target.value)} /></div>
-        <button type="submit" className={styles.submit} disabled={enviando || creado}>{creado ? "Cuenta creada" : enviando ? "Creando cuenta…" : "Crear cuenta"}</button>
+        <div className={styles.formActions}>
+          <Link href="/" className={styles.cancelLink}>Cancelar</Link>
+          <button type="submit" className={styles.submit} disabled={enviando || creado}>{creado ? "Cuenta creada" : enviando ? "Creando cuenta…" : "Crear cuenta"}</button>
+        </div>
         </fieldset>
         {error && <p className={styles.error} role="alert">{error}</p>}
         {enviando && <p role="status">Estamos creando tu cuenta…</p>}
