@@ -15,6 +15,7 @@ import {
   obtenerCategorias,
   obtenerSubcategoriasPorCategoria,
 } from "@/services/categoriaService";
+import LogoutButton from "@/components/auth/LogoutButton";
 
 const API_URL =
   (process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:8080").replace(/\/+$/, "");
@@ -211,6 +212,7 @@ async function cargarCategorias() {
             Buscar
           </button>
         </form>
+        <LogoutButton className={styles.logoutButton} />
       </header>
 
       <div className={styles.homeContent}>
