@@ -6,16 +6,18 @@ import com.marketplace.marketplace_backend.modules.auth.dto.LoginRequestDto;
 import com.marketplace.marketplace_backend.modules.auth.dto.LogoutRequestDto;
 import com.marketplace.marketplace_backend.modules.auth.dto.RefreshRequestDto;
 import com.marketplace.marketplace_backend.modules.auth.dto.RegistroRequestDto;
+import com.marketplace.marketplace_backend.modules.auth.dto.SesionActualResponseDto;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @AllArgsConstructor
-// Endpoints REST de autenticación: login, refresh de tokens, registro y logout
+// Endpoints REST de autenticación: login, refresh de tokens, registro, logout y sesión actual
 public class AuthController {
 
     private final AuthService authService;
@@ -56,6 +58,16 @@ public class AuthController {
         authService.logout(request.getRefreshToken());
         response.setSuccess(true);
         response.setData(null);
+        response.setErrors(null);
+        response.setPagination(null);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<StandardResponseDto<SesionActualResponseDto>> sesionActual() {
+        StandardResponseDto<SesionActualResponseDto> response = new StandardResponseDto<>();
+        response.setSuccess(true);
+        response.setData(authService.obtenerSesionActual());
         response.setErrors(null);
         response.setPagination(null);
         return ResponseEntity.ok(response);
