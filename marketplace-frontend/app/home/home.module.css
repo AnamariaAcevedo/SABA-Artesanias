@@ -144,6 +144,29 @@
   border-color: black;
 }
 
+.logoutButton {
+  padding: 10px 18px;
+  border: 1px solid #7b321e;
+  border-radius: 8px;
+  background: #fff5e5;
+  color: #63240e;
+  cursor: pointer;
+}
+
+.logoutButton:hover:not(:disabled) {
+  background: #f4ddba;
+}
+
+.logoutButton:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.logoutButton:focus-visible {
+  outline: 3px solid #7b321e;
+  outline-offset: 3px;
+}
+
 /* ========================================
    CATEGORÍAS Y SUBCATEGORÍAS
 ======================================== */

@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import styles from "@/components/admin/admin.module.css";
 import { esRolAdministrador, useRolSesion } from "@/lib/auth";
+import LogoutButton from "@/components/auth/LogoutButton";
 
 const enlaces = [
   { href: "/admin", label: "Dashboard" },
@@ -30,17 +31,6 @@ export default function AdminLayout({
     router.replace(rol ? "/home" : "/login");
   }, [verificando, autorizado, rol, router]);
 
-  function cerrarSesion() {
-    if (!window.confirm("¿Querés cerrar sesión?")) return;
-    try {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-    } catch {
-      /* Storage unavailable. */
-    }
-    router.replace("/");
-  }
-
   if (verificando || !autorizado) {
     return (
       <div className={styles.page}>
@@ -54,9 +44,9 @@ export default function AdminLayout({
       <header className={styles.header}>
         <span className={styles.logo}>•SABA•</span>
         <span className={styles.subtitle}>Administración</span>
-        <button type="button" onClick={cerrarSesion} className={`${styles.buttonGhost} ${styles.logoutButton}`}>
-          Cerrar sesión
-        </button>
+        <LogoutButton
+            className={`${styles.buttonGhost} ${styles.logoutButton}`}
+        />
       </header>
 
       <nav className={styles.nav}>
