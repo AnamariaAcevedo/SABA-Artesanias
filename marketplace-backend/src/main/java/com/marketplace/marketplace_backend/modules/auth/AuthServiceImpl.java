@@ -3,6 +3,7 @@ package com.marketplace.marketplace_backend.modules.auth;
 import com.marketplace.marketplace_backend.config.JwtUtil;
 import com.marketplace.marketplace_backend.modules.auth.dto.AuthResponseDto;
 import com.marketplace.marketplace_backend.modules.auth.dto.RegistroRequestDto;
+import com.marketplace.marketplace_backend.modules.auth.dto.SesionActualResponseDto;
 import com.marketplace.marketplace_backend.modules.barrio.Barrio;
 import com.marketplace.marketplace_backend.modules.barrio.BarrioRepository;
 import com.marketplace.marketplace_backend.modules.direccion.Direccion;
@@ -17,9 +18,13 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @AllArgsConstructor
 @Service
@@ -145,5 +150,28 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public void logout(String refreshToken) {
         refreshTokenService.deleteToken(refreshToken);
+    }
+
+    @Override
+    public SesionActualResponseDto obtenerSesionActual() {
+        String nombreUsuario = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        Usuario usuarioEntity = usuarioRepository.findByUsuarioIgnoreCase(nombreUsuario)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado: " + nombreUsuario));
+
+        List<String> permisos = SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .filter(authority -> !authority.startsWith("ROLE_"))
+                .toList();
+
+        return new SesionActualResponseDto(
+                usuarioEntity.getId(),
+                usuarioEntity.getUsuario(),
+                usuarioEntity.getNombre(),
+                usuarioEntity.getApellido(),
+                usuarioEntity.getEmail(),
+                usuarioEntity.getRol().getNombre(),
+                permisos
+        );
     }
 }
