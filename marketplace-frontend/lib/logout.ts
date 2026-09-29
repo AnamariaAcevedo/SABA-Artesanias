@@ -19,6 +19,7 @@ export async function cerrarSesion(): Promise<boolean> {
         try {
             localStorage.removeItem("accessToken");
             localStorage.removeItem("refreshToken");
+            window.dispatchEvent(new Event("sesion-cambiada"));
         } catch {
             throw new Error(
                 "No pudimos borrar la sesión del navegador. Eliminá los datos de este sitio para cerrar sesión."

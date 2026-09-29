@@ -4,65 +4,162 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import styles from "@/components/admin/admin.module.css";
-import { esRolAdministrador, useRolSesion } from "@/lib/auth";
 import LogoutButton from "@/components/auth/LogoutButton";
+import { useSesion } from "@/components/auth/SesionProvider";
+import {
+  ACCESO,
+  cumplePermisos,
+  puedeAbrirRuta,
+  puedeEntrarAlPanel,
+} from "@/lib/access";
 
-const enlaces = [
-  { href: "/admin", label: "Dashboard" },
-  { href: "/admin/productos", label: "Productos" },
-  { href: "/admin/usuarios", label: "Usuarios" },
-  { href: "/admin/roles", label: "Roles" },
-  { href: "/admin/pedidos", label: "Pedidos" },
+
+const secciones = [
+  {
+    href: "/admin/usuarios",
+    label: "Usuarios",
+    permisos: ACCESO.verUsuarios,
+  },
+  {
+    href: "/admin/roles",
+    label: "Roles",
+    permisos: ACCESO.verRoles,
+  },
 ];
+
 export default function AdminLayout({
-  children,
-}: Readonly<{
+                                      children,
+                                    }: Readonly<{
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
   const router = useRouter();
-  const rol = useRolSesion();
-  const verificando = rol === undefined;
-  const autorizado = esRolAdministrador(rol);
+
+  const {
+    sesion,
+    cargando,
+    error,
+    actualizar,
+  } = useSesion();
 
   useEffect(() => {
-    if (verificando || autorizado) return;
-    // Sin sesión válida -> login; con sesión pero sin rol admin -> su propia área.
-    router.replace(rol ? "/home" : "/login");
-  }, [verificando, autorizado, rol, router]);
+    if (!cargando && !error && !sesion) {
+      router.replace("/login");
+    }
+  }, [cargando, error, sesion, router]);
 
-  if (verificando || !autorizado) {
+  if (error) {
     return (
-      <div className={styles.page}>
-        <p className={styles.gateNotice}>{verificando ? "Verificando acceso…" : "Redirigiendo…"}</p>
-      </div>
+        <div className={styles.page}>
+          <div className={styles.gateNotice} role="alert">
+            <p>{error}</p>
+
+            <button
+                type="button"
+                className={styles.buttonPrimary}
+                onClick={() => void actualizar()}
+            >
+              Reintentar
+            </button>
+
+            <p>
+              <Link href="/login">
+                Ir a iniciar sesión
+              </Link>
+            </p>
+          </div>
+        </div>
     );
   }
 
+  if (cargando || !sesion) {
+    return (
+        <div className={styles.page}>
+          <p className={styles.gateNotice} role="status">
+            {cargando
+                ? "Verificando acceso…"
+                : "Redirigiendo…"}
+          </p>
+        </div>
+    );
+  }
+
+  if (!puedeEntrarAlPanel(sesion.permisos)) {
+    return (
+        <div className={styles.page}>
+          <div className={styles.gateNotice}>
+            <p>No tenés acceso a este panel.</p>
+            <Link href="/home">Volver al inicio</Link>
+          </div>
+        </div>
+    );
+  }
+
+  const visibles = secciones.filter((seccion) =>
+      cumplePermisos(sesion.permisos, seccion.permisos)
+  );
+
+  const autorizado = puedeAbrirRuta(
+      pathname,
+      sesion.permisos
+  );
+
   return (
-    <div className={styles.page}>
-      <header className={styles.header}>
-        <span className={styles.logo}>•SABA•</span>
-        <span className={styles.subtitle}>Administración</span>
-        <LogoutButton className={styles.logoutButton} />
-      </header>
+      <div className={styles.page}>
+        <header className={styles.header}>
+          <span className={styles.logo}>•SABA•</span>
+          <span className={styles.subtitle}>
+                    Panel de gestión
+                </span>
+          <LogoutButton className={styles.logoutButton} />
+        </header>
 
-      <nav className={styles.nav}>
-        {enlaces.map((enlace) => {
-          const activo = enlace.href === "/admin" ? pathname === "/admin" : pathname.startsWith(enlace.href);
-          return (
-            <Link
-              key={enlace.href}
-              href={enlace.href}
-              className={`${styles.navLink} ${activo ? styles.navLinkActive : ""}`}
-            >
-              {enlace.label}
-            </Link>
-          );
-        })}
-      </nav>
+        <nav className={styles.nav} aria-label="Gestión">
+          <Link
+              href="/admin"
+              className={`${styles.navLink} ${
+                  pathname === "/admin"
+                      ? styles.navLinkActive
+                      : ""
+              }`}
+          >
+            Inicio
+          </Link>
 
-      <main className={styles.main}>{children}</main>
-    </div>
+          {visibles.map((seccion) => {
+            const activo =
+                pathname === seccion.href ||
+                pathname.startsWith(`${seccion.href}/`);
+
+            return (
+                <Link
+                    key={seccion.href}
+                    href={seccion.href}
+                    className={`${styles.navLink} ${
+                        activo ? styles.navLinkActive : ""
+                    }`}
+                >
+                  {seccion.label}
+                </Link>
+            );
+          })}
+        </nav>
+
+        <main className={styles.main}>
+          {autorizado ? (
+              children
+          ) : (
+              <div className={styles.card}>
+                <p role="alert">
+                  Esta sección no está disponible
+                  para tu acceso.
+                </p>
+                <Link href="/admin">
+                  Volver al panel
+                </Link>
+              </div>
+          )}
+        </main>
+      </div>
   );
 }

@@ -3,6 +3,11 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { apiFetch, apiFetchConPaginacion } from "@/lib/api";
 import styles from "@/components/admin/admin.module.css";
+import ConPermiso from "@/components/auth/ConPermiso";
+import { ACCESO } from "@/lib/access";
+import type { Permiso } from "@/lib/permisos";
+import { resolverModulos } from "@/lib/capacidades";
+import SelectorCapacidades from "@/components/auth/SelectorCapacidades";
 
 type Rol = {
     id: number;
@@ -10,25 +15,8 @@ type Rol = {
     activo: boolean;
 };
 
-type Permiso = {
-    id: number;
-    action: string;
-    resource: string;
-};
-
 type Asignacion = {
     permisoId: number;
-};
-
-const acciones: Record<string, string> = {
-    LIST: "Listar",
-    GET: "Consultar",
-    CREATE: "Crear",
-    UPDATE: "Editar",
-    DELETE: "Eliminar",
-    OPTIONS: "Consultar opciones",
-    ASSIGN: "Asignar",
-    REVOKE: "Quitar",
 };
 
 // Los listados del backend son paginados.
@@ -112,16 +100,18 @@ export default function RolesPage() {
                 </div>
 
                 {editor === undefined && (
-                    <button
-                        type="button"
-                        className={styles.buttonPrimary}
-                        onClick={() => {
-                            setAviso("");
-                            setEditor(null);
-                        }}
-                    >
-                        + Nuevo rol
-                    </button>
+                    <ConPermiso permisos={ACCESO.crearRol}>
+                        <button
+                            type="button"
+                            className={styles.buttonPrimary}
+                            onClick={() => {
+                                setAviso("");
+                                setEditor(null);
+                            }}
+                        >
+                            + Nuevo rol
+                        </button>
+                    </ConPermiso>
                 )}
             </div>
 
@@ -201,17 +191,19 @@ export default function RolesPage() {
                         </span>
                                             </td>
                                             <td>
-                                                <button
-                                                    type="button"
-                                                    className={styles.linkAction}
-                                                    aria-label={`Editar ${rol.nombre}`}
-                                                    onClick={() => {
-                                                        setAviso("");
-                                                        setEditor(rol);
-                                                    }}
-                                                >
-                                                    Editar
-                                                </button>
+                                                <ConPermiso permisos={ACCESO.editarRol}>
+                                                    <button
+                                                        type="button"
+                                                        className={styles.linkAction}
+                                                        aria-label={`Editar ${rol.nombre}`}
+                                                        onClick={() => {
+                                                            setAviso("");
+                                                            setEditor(rol);
+                                                        }}
+                                                    >
+                                                        Editar
+                                                    </button>
+                                                </ConPermiso>
                                             </td>
                                         </tr>
                                     ))}
@@ -296,26 +288,6 @@ function EditorRol({
         };
     }, [rol, revision]);
 
-    const grupos = permisos.reduce<Record<string, Permiso[]>>(
-        (resultado, permiso) => {
-            (resultado[permiso.resource] ??= []).push(permiso);
-            return resultado;
-        },
-        {}
-    );
-
-    function cambiar(ids: number[], marcar: boolean) {
-        setSeleccionados((anteriores) => {
-            const nuevos = new Set(anteriores);
-
-            for (const id of ids) {
-                if (marcar) nuevos.add(id);
-                else nuevos.delete(id);
-            }
-
-            return nuevos;
-        });
-    }
 
     async function guardar(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -359,10 +331,19 @@ function EditorRol({
                 method: "PUT",
                 body: JSON.stringify({ nombre: nombre.trim(), activo }),
             });
+            const idsEditables = new Set(
+                resolverModulos(permisos)
+                    .flatMap((modulo) => modulo.capacidades)
+                    .filter((capacidad) => capacidad.disponible)
+                    .flatMap((capacidad) => capacidad.ids)
+            );
 
             // Primero asignamos; luego revocamos.
             for (const permisoId of seleccionados) {
-                if (!idsActuales.has(permisoId)) {
+                if (
+                    idsEditables.has(permisoId) &&
+                    !idsActuales.has(permisoId)
+                ) {
                     await apiFetch(`/roles/${id}/permisos`, {
                         method: "POST",
                         body: JSON.stringify({ permisoId }),
@@ -371,7 +352,10 @@ function EditorRol({
             }
 
             for (const permisoId of idsActuales) {
-                if (!seleccionados.has(permisoId)) {
+                if (
+                    idsEditables.has(permisoId) &&
+                    !seleccionados.has(permisoId)
+                ) {
                     await apiFetch(`/roles/${id}/permisos/${permisoId}`, {
                         method: "DELETE",
                     });
@@ -442,95 +426,11 @@ function EditorRol({
                     Rol activo
                 </label>
 
-                <div className={styles.rolesPermissionsHeader}>
-                    <div>
-                        <h3 className={styles.title}>Permisos</h3>
-                        <p className={styles.pageSubtitle}>
-                            {seleccionados.size} seleccionados
-                        </p>
-                    </div>
-
-                    <div className={styles.rowActions}>
-                        <button
-                            type="button"
-                            className={styles.buttonGhost}
-                            onClick={() =>
-                                cambiar(permisos.map((permiso) => permiso.id), true)
-                            }
-                        >
-                            Seleccionar todos
-                        </button>
-
-                        <button
-                            type="button"
-                            className={styles.buttonGhost}
-                            onClick={() =>
-                                cambiar(permisos.map((permiso) => permiso.id), false)
-                            }
-                        >
-                            Quitar selección
-                        </button>
-                    </div>
-                </div>
-
-                {Object.entries(grupos).map(([modulo, opciones]) => {
-                    const cantidad = opciones.filter((permiso) =>
-                        seleccionados.has(permiso.id)
-                    ).length;
-
-                    return (
-                        <details key={modulo} className={styles.permissionGroup}>
-                            <summary className={styles.permissionSummary}>
-                                {modulo}
-                                <span className={styles.permissionCount}>
-                {cantidad}/{opciones.length}
-              </span>
-                            </summary>
-
-                            <div className={styles.permissionBody}>
-                                <label className={styles.checkboxField}>
-                                    <input
-                                        type="checkbox"
-                                        checked={cantidad === opciones.length}
-                                        onChange={(event) =>
-                                            cambiar(
-                                                opciones.map((permiso) => permiso.id),
-                                                event.target.checked
-                                            )
-                                        }
-                                    />
-                                    Seleccionar todo el módulo
-                                </label>
-
-                                <div className={styles.permissionGrid}>
-                                    {opciones.map((permiso) => (
-                                        <label
-                                            key={permiso.id}
-                                            className={styles.checkboxField}
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                checked={seleccionados.has(permiso.id)}
-                                                onChange={(event) =>
-                                                    cambiar([permiso.id], event.target.checked)
-                                                }
-                                            />
-                                            {acciones[permiso.action] ?? permiso.action}
-                                            {" — "}
-                                            {permiso.resource}
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-                        </details>
-                    );
-                })}
-
-                {!cargando && permisos.length === 0 && (
-                    <p className={styles.notice}>
-                        No hay permisos definidos en el sistema.
-                    </p>
-                )}
+                <SelectorCapacidades
+                    permisos={permisos}
+                    seleccionados={seleccionados}
+                    onChange={setSeleccionados}
+                />
 
                 <button type="submit" className={styles.buttonPrimary}>
                     {guardando ? "Guardando…" : "Guardar cambios"}

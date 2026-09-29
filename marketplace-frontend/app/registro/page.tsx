@@ -115,6 +115,7 @@ export default function RegistroPage() {
       try {
         localStorage.setItem("accessToken", sesion.accessToken);
         localStorage.setItem("refreshToken", sesion.refreshToken);
+        window.dispatchEvent(new Event("sesion-cambiada"));
       } catch {
         try { localStorage.removeItem("accessToken"); localStorage.removeItem("refreshToken"); } catch { /* Storage unavailable. */ }
         throw new Error("Tu cuenta se creó, pero el navegador no permitió guardar la sesión. Habilitá el almacenamiento e iniciá sesión.");

@@ -6,6 +6,9 @@ import styles from "@/components/admin/admin.module.css";
 import { ApiError, apiFetch, apiFetchConPaginacion } from "@/lib/api";
 import type { Pagination } from "@/types/api";
 import type { Usuario } from "@/types/usuario";
+import ConPermiso from "@/components/auth/ConPermiso";
+import { ACCESO } from "@/lib/access";
+
 
 type FiltroActivo = "todos" | "activos" | "inactivos";
 
@@ -96,9 +99,14 @@ export default function UsuariosPage() {
     <div className={styles.card}>
       <div className={styles.sectionHeader}>
         <h2 className={styles.title}>Gestión de usuarios</h2>
-        <Link href="/admin/usuarios/nuevo" className={styles.buttonPrimary}>
-          + Nuevo usuario
-        </Link>
+        <ConPermiso permisos={ACCESO.crearUsuario}>
+          <Link
+              href="/admin/usuarios/nuevo"
+              className={styles.buttonPrimary}
+          >
+            + Nuevo usuario
+          </Link>
+        </ConPermiso>
       </div>
 
       <form onSubmit={buscar} className={styles.toolbar}>
@@ -180,25 +188,36 @@ export default function UsuariosPage() {
                   </td>
                   <td>
                     <div className={styles.rowActions}>
-                      <Link href={`/admin/usuarios/${usuarioActual.id}/editar`} className={styles.linkAction}>
-                        Editar
-                      </Link>
-                      <button
-                        type="button"
-                        disabled={accionEnCurso === usuarioActual.id}
-                        onClick={() => alternarActivo(usuarioActual)}
-                        className={styles.linkAction}
-                      >
-                        {usuarioActual.activo ? "Desactivar" : "Activar"}
-                      </button>
-                      <button
-                        type="button"
-                        disabled={accionEnCurso === usuarioActual.id}
-                        onClick={() => eliminar(usuarioActual)}
-                        className={`${styles.linkAction} ${styles.linkActionDanger}`}
-                      >
-                        Eliminar
-                      </button>
+                      <ConPermiso permisos={ACCESO.editarUsuario}>
+                        <Link
+                            href={`/admin/usuarios/${usuarioActual.id}/editar`}
+                            className={styles.linkAction}
+                        >
+                          Editar
+                        </Link>
+                      </ConPermiso>
+
+                      <ConPermiso permisos={ACCESO.cambiarEstadoUsuario}>
+                        <button
+                            type="button"
+                            disabled={accionEnCurso === usuarioActual.id}
+                            onClick={() => alternarActivo(usuarioActual)}
+                            className={styles.linkAction}
+                        >
+                          {usuarioActual.activo ? "Desactivar" : "Activar"}
+                        </button>
+                      </ConPermiso>
+
+                      <ConPermiso permisos={ACCESO.eliminarUsuario}>
+                        <button
+                            type="button"
+                            disabled={accionEnCurso === usuarioActual.id}
+                            onClick={() => eliminar(usuarioActual)}
+                            className={`${styles.linkAction} ${styles.linkActionDanger}`}
+                        >
+                          Eliminar
+                        </button>
+                      </ConPermiso>
                     </div>
                   </td>
                 </tr>
