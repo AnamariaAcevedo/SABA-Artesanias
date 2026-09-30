@@ -17,7 +17,7 @@ export async function obtenerTiendas(): Promise<
   const token = obtenerToken();
 
   const respuesta = await fetch(
-    `${API_URL}/tiendas?page=1&perPage=20`,
+    `${API_URL}/tiendas?page=1&perPage=100`,
     {
       method: "GET",
       headers: token
@@ -27,6 +27,27 @@ export async function obtenerTiendas(): Promise<
         : {},
     }
   );
+
+  if (!respuesta.ok) {
+    throw new Error(`Error ${respuesta.status}`);
+  }
+
+  return respuesta.json();
+}
+
+export async function obtenerTiendaPorId(
+  id: number
+): Promise<ApiResponse<Tienda>> {
+  const token = obtenerToken();
+
+  const respuesta = await fetch(`${API_URL}/tiendas/${id}`, {
+    method: "GET",
+    headers: token
+      ? {
+          Authorization: `Bearer ${token}`,
+        }
+      : {},
+  });
 
   if (!respuesta.ok) {
     throw new Error(`Error ${respuesta.status}`);
