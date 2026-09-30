@@ -1,19 +1,14 @@
-import { ACCESO } from "@/lib/access";
-import type { Permiso } from "@/lib/permisos";
+import {
+    nombrePermiso,
+    type Permiso,
+} from "@/lib/permisos";
 
-type Definicion = {
+// Conservamos estos tipos para que el guardado actual
+// de Roles siga funcionando. Cada elemento tiene un solo ID.
+export type CapacidadResuelta = {
     id: string;
     nombre: string;
-    codigos: readonly string[];
-};
-
-type Modulo = {
-    id: string;
-    nombre: string;
-    capacidades: Definicion[];
-};
-
-export type CapacidadResuelta = Definicion & {
+    codigos: string[];
     ids: number[];
     disponible: boolean;
 };
@@ -24,171 +19,175 @@ export type ModuloResuelto = {
     capacidades: CapacidadResuelta[];
 };
 
-const modulos: Modulo[] = [
+const definiciones = [
     {
         id: "productos",
         nombre: "Productos",
-        capacidades: [
-            {
-                id: "productos.crear",
-                nombre: "Crear productos",
-                codigos: ["CREATE_PRODUCTOS"],
-            },
-            {
-                id: "productos.editar",
-                nombre: "Editar productos, precios y stock",
-                codigos: ["UPDATE_PRODUCTOS"],
-            },
-            {
-                id: "productos.imagenes",
-                nombre: "Gestionar imágenes de productos",
-                codigos: ["CREATE_IMAGENES", "DELETE_IMAGENES"],
-            },
-            {
-                id: "productos.eliminar",
-                nombre: "Eliminar productos",
-                codigos: ["DELETE_PRODUCTOS"],
-            },
-        ],
+        recursos: ["PRODUCTOS", "IMAGENES", "IMAGENESPRODUCTOS"],
     },
     {
         id: "catalogo",
-        nombre: "Catálogo general de SABA",
-        capacidades: [
-            {
-                id: "catalogo.categorias",
-                nombre: "Gestionar categorías",
-                codigos: [
-                    "CREATE_CATEGORIAS",
-                    "UPDATE_CATEGORIAS",
-                    "DELETE_CATEGORIAS",
-                ],
-            },
-            {
-                id: "catalogo.subcategorias",
-                nombre: "Gestionar subcategorías",
-                codigos: [
-                    "CREATE_SUBCATEGORIAS",
-                    "UPDATE_SUBCATEGORIAS",
-                    "DELETE_SUBCATEGORIAS",
-                ],
-            },
-            {
-                id: "catalogo.asociaciones",
-                nombre: "Asignar o quitar subcategorías",
-                codigos: [
-                    "ASSIGN_SUBCATEGORIAS",
-                    "REVOKE_SUBCATEGORIAS",
-                ],
-            },
+        nombre: "Catálogo",
+        recursos: [
+            "CATALOGO",
+            "CATEGORIAS",
+            "SUBCATEGORIAS",
+            "CATEGORIASUBCATEGORIAS",
+            "PRODUCTOSUBCATEGORIAS",
         ],
+    },
+    {
+        id: "administracion",
+        nombre: "Administración",
+        recursos: ["ADMINISTRACION"],
     },
     {
         id: "tiendas",
-        nombre: "Administración de tiendas",
-        capacidades: [
-            {
-                id: "tiendas.crear",
-                nombre: "Crear tiendas",
-                codigos: ["CREATE_TIENDAS"],
-            },
-            {
-                id: "tiendas.editar",
-                nombre: "Editar tiendas",
-                codigos: ["UPDATE_TIENDAS"],
-            },
-            {
-                id: "tiendas.contactos",
-                nombre: "Gestionar contactos de tiendas",
-                codigos: [
-                    "CREATE_CONTACTOS",
-                    "UPDATE_CONTACTOS",
-                    "DELETE_CONTACTOS",
-                ],
-            },
-            {
-                id: "tiendas.eliminar",
-                nombre: "Eliminar tiendas",
-                codigos: ["DELETE_TIENDAS"],
-            },
-        ],
+        nombre: "Tiendas",
+        recursos: ["TIENDAS"],
     },
     {
         id: "usuarios",
-        nombre: "Usuarios del sistema",
-        capacidades: [
-            {
-                id: "usuarios.ver",
-                nombre: "Ver usuarios",
-                codigos: ACCESO.verUsuarios,
-            },
-            {
-                id: "usuarios.crear",
-                nombre: "Crear usuarios",
-                codigos: ACCESO.crearUsuario,
-            },
-            {
-                id: "usuarios.editar",
-                nombre: "Editar usuarios y cambiar su estado",
-                codigos: ACCESO.editarUsuario,
-            },
-            {
-                id: "usuarios.eliminar",
-                nombre: "Eliminar usuarios",
-                codigos: [
-                    ...ACCESO.verUsuarios,
-                    ...ACCESO.eliminarUsuario,
-                ],
-            },
-        ],
+        nombre: "Usuarios",
+        recursos: ["USUARIOS"],
     },
     {
         id: "roles",
         nombre: "Roles",
-        capacidades: [
-            {
-                id: "roles.ver",
-                nombre: "Ver listado de roles",
-                codigos: ACCESO.verRoles,
-            },
-            {
-                id: "roles.gestionar",
-                nombre: "Crear, editar roles y asignar permisos",
-                codigos: [
-                    ...ACCESO.crearRol,
-                    ...ACCESO.editarRol,
-                ],
-            },
-        ],
+        recursos: ["ROLES"],
+    },
+    {
+        id: "permisos",
+        nombre: "Permisos",
+        recursos: ["PERMISOS"],
+    },
+    {
+        id: "contactos",
+        nombre: "Contactos",
+        recursos: ["CONTACTOS"],
+    },
+    {
+        id: "tipos-contacto",
+        nombre: "Tipos de contacto",
+        recursos: ["TIPOS_CONTACTO"],
+    },
+    {
+        id: "direcciones",
+        nombre: "Direcciones",
+        recursos: ["DIRECCIONES"],
+    },
+    {
+        id: "paises",
+        nombre: "Países",
+        recursos: ["PAISES"],
+    },
+    {
+        id: "departamentos",
+        nombre: "Departamentos",
+        recursos: ["DEPARTAMENTOS"],
+    },
+    {
+        id: "ciudades",
+        nombre: "Ciudades",
+        recursos: ["CIUDADES"],
+    },
+    {
+        id: "barrios",
+        nombre: "Barrios",
+        recursos: ["BARRIOS"],
+    },
+    {
+        id: "ayudantes",
+        nombre: "Ayudantes",
+        recursos: ["AYUDANTES"],
+    },
+    {
+        id: "pedidos",
+        nombre: "Pedidos",
+        recursos: ["PEDIDOS"],
+    },
+    {
+        id: "facturacion",
+        nombre: "Facturación",
+        recursos: ["FACTURACION"],
+    },
+    {
+        id: "reportes",
+        nombre: "Reportes",
+        recursos: ["REPORTES"],
+    },
+    {
+        id: "perfil",
+        nombre: "Perfil",
+        recursos: ["PERFIL"],
+    },
+    {
+        id: "canales",
+        nombre: "Canales",
+        recursos: ["CANALES"],
     },
 ];
+
+function nombreEntidad(resource: string): string {
+    const texto = resource.toLowerCase().replaceAll("_", " ");
+    return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
 
 export function resolverModulos(
     permisos: readonly Permiso[]
 ): ModuloResuelto[] {
-    const porCodigo = new Map(
-        permisos.map((permiso) => [
-            `${permiso.action}_${permiso.resource}`.toUpperCase(),
-            permiso.id,
-        ])
+    const grupos: ModuloResuelto[] = definiciones.map(
+        (definicion) => ({
+            id: definicion.id,
+            nombre: definicion.nombre,
+            capacidades: [],
+        })
     );
 
-    return modulos.map((modulo) => ({
-        id: modulo.id,
-        nombre: modulo.nombre,
-        capacidades: modulo.capacidades.map((capacidad) => {
-            const codigos = [...new Set(capacidad.codigos)];
+    const idsProcesados = new Set<number>();
 
-            const ids = codigos.flatMap((codigo) => {
-                const id = porCodigo.get(codigo);
-                return id === undefined ? [] : [id];
-            });
+    for (const permiso of permisos) {
+        if (idsProcesados.has(permiso.id)) continue;
+        idsProcesados.add(permiso.id);
 
-            return {
-                ...capacidad,
-                ids,
-                disponible: ids.length === codigos.length,
+        const recurso = permiso.resource.trim().toUpperCase();
+
+        const definicion = definiciones.find((item) =>
+            item.recursos.includes(recurso)
+        );
+
+        const grupoId = definicion?.id ?? `entidad:${recurso}`;
+
+        let grupo = grupos.find((item) => item.id === grupoId);
+
+        if (!grupo) {
+            grupo = {
+                id: grupoId,
+                nombre: nombreEntidad(recurso),
+                capacidades: [],
             };
-        }),
-    }));
+
+            grupos.push(grupo);
+        }
+
+        // Mismo formato que las authorities del backend.
+        const codigo = `${permiso.action}_${permiso.resource}`;
+
+        grupo.capacidades.push({
+            id: String(permiso.id),
+            nombre: nombrePermiso(permiso),
+            codigos: [codigo],
+            ids: [permiso.id],
+            disponible: true,
+        });
+    }
+
+    return grupos
+        .filter((grupo) => grupo.capacidades.length > 0)
+        .map((grupo) => ({
+            ...grupo,
+            capacidades: grupo.capacidades.sort((a, b) =>
+                a.nombre.localeCompare(b.nombre, "es")
+            ),
+        }));
 }
