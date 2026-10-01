@@ -38,13 +38,90 @@
 .field label { font-size: 15px; line-height: 1.2; color: #48200f; font-family: Arial, sans-serif; }
 .field input, .field select { min-width: 0; min-height: 44px; border: 1px solid #b88b44; border-radius: 999px; padding: 8px 16px; background: #f4ddba; color: #291606; font-family: Arial, sans-serif; font-size: 15px; }
 .field input::placeholder { color: #503715; }
+.field select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 38px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2363240e' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+}
 .field select:disabled, .field input:disabled { opacity: .75; }
 .page :is(input, select, button, a):focus-visible { outline: 3px solid #63240e; outline-offset: 3px; }
 
-.formCard { max-width: 560px; }
+.formCard { max-width: none; }
 .form { display: flex; flex-direction: column; gap: 16px; }
 .row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.checkboxField { display: flex; align-items: center; gap: 8px; font-size: 15px; font-family: Arial, sans-serif; color: #48200f; }
+.rowQuad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.checkboxField { display: flex; align-items: center; gap: 10px; font-size: 15px; font-family: Arial, sans-serif; color: #48200f; cursor: pointer; }
+.checkboxField input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border: 1px solid #b88b44;
+  border-radius: 6px;
+  background: #f4ddba;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.checkboxField input[type="checkbox"]:checked {
+  background: #63240e;
+  border-color: #63240e;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='11' viewBox='0 0 14 11'%3E%3Cpath d='M1 5.5l4 4 8-8' fill='none' stroke='%23f7dfb9' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+}
+.checkboxField input[type="checkbox"]:focus-visible {
+  outline: 3px solid #63240e;
+  outline-offset: 2px;
+}
+
+.activoBox {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 22px;
+  border: 1px solid #b88b44;
+  border-radius: 16px;
+  background: #f4ddba;
+  cursor: pointer;
+}
+.activoBox span { display: flex; flex-direction: column; gap: 2px; }
+.activoBox strong { font-size: 16px; color: #291606; font-weight: normal; }
+.activoBox small { font-size: 13px; color: #6b4a22; }
+.activoBox input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  border: 1px solid #b88b44;
+  border-radius: 8px;
+  background: #fff6e6;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.activoBox input[type="checkbox"]:checked {
+  background: #63240e;
+  border-color: #63240e;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='14' viewBox='0 0 18 14'%3E%3Cpath d='M1 7l5.5 5.5L17 1' fill='none' stroke='%23f7dfb9' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+}
+.activoBox input[type="checkbox"]:focus-visible {
+  outline: 3px solid #63240e;
+  outline-offset: 2px;
+}
+
+.sectionSubtitle { font-size: 18px; margin: 4px 0 2px; font-family: Arial, sans-serif; color: #48200f; }
+
+.formActions { display: flex; justify-content: flex-end; gap: 14px; margin-top: 8px; padding-top: 20px; border-top: 1px solid #b88b44; }
+
+.buttonOutline { background: transparent; color: #63240e; padding: 10px 26px; min-height: 44px; line-height: 24px; border-radius: 999px; border: 1px solid #63240e; font-size: 16px; font-family: Arial, sans-serif; cursor: pointer; text-decoration: none; transition: background 0.15s ease; }
+.buttonOutline:hover:not(:disabled) { background: rgba(99, 36, 14, 0.08); }
+.buttonOutline:disabled { opacity: .5; cursor: not-allowed; }
 
 .tableWrap { overflow-x: auto; border: 1px solid #b88b44; border-radius: 16px; }
 .table { width: 100%; border-collapse: collapse; text-align: left; font-family: Arial, sans-serif; font-size: 14px; }
@@ -72,8 +149,12 @@
 
 .backLink { display: inline-block; margin-bottom: 12px; color: #48200f; text-decoration: underline; text-underline-offset: 3px; font-family: Arial, sans-serif; font-size: 14px; }
 
+@media (max-width: 900px) {
+  .rowQuad { grid-template-columns: 1fr 1fr; }
+}
+
 @media (max-width: 640px) {
   .header, .nav, .main { padding-left: 18px; padding-right: 18px; }
-  .row { grid-template-columns: 1fr; gap: 12px; }
+  .row, .rowQuad { grid-template-columns: 1fr; gap: 12px; }
   .card { padding: 20px; border-radius: 20px; }
 }
