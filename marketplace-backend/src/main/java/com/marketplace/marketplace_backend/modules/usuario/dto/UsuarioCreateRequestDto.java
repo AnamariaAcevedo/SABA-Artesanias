@@ -36,6 +36,18 @@ public class UsuarioCreateRequestDto {
     @NotNull(message = "El rol es obligatorio")
     private Long idRol;
 
-    @NotNull(message = "La dirección es obligatoria")
-    private Long idDireccion;
+    @NotBlank(message = "La calle no puede estar vacía")
+    private String calle;
+
+    private String nombreEdificio;
+
+    // Si no hay nombreEdificio, nroCasa es obligatorio.
+    // Si hay nombreEdificio, nroDepartamento es obligatorio.
+    // (se valida en el service, porque depende del otro campo).
+    private Integer nroCasa;
+
+    private String nroDepartamento;
+
+    @NotNull(message = "El barrio es obligatorio")
+    private Long idBarrio;
 }
