@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import UbicacionFields from "@/components/auth/UbicacionFields";
+import UbicacionSelects from "@/components/admin/usuarios/UbicacionSelects";
 import styles from "@/components/admin/admin.module.css";
 import { ApiError, apiFetch, apiFetchConPaginacion } from "@/lib/api";
 import { etiquetaDireccion, type Direccion } from "@/types/direccion";
@@ -38,6 +38,7 @@ export default function UsuarioForm({ modo, usuarioId, valoresIniciales }: Usuar
   const [nombreEdificio, setNombreEdificio] = useState("");
   const hayEdificio = nombreEdificio.trim().length > 0;
   const campoNumero = hayEdificio ? "nroDepartamento" : "nroCasa";
+  const [idBarrio, setIdBarrio] = useState<number | null>(null);
 
   const [roles, setRoles] = useState<Rol[]>([]);
   const [cargandoOpciones, setCargandoOpciones] = useState(true);
@@ -88,23 +89,20 @@ export default function UsuarioForm({ modo, usuarioId, valoresIniciales }: Usuar
     }
 
     // Datos de la dirección nueva (solo modo "crear"): calle y número vienen
-    // de inputs sin controlar, e idBarrio de un input hidden que arma
-    // UbicacionFields, igual que en /registro.
+    // de inputs sin controlar; idBarrio viene de UbicacionSelects (en cascada).
     let calle = "";
     let numero = "";
-    let idBarrio = 0;
     if (modo === "crear") {
       const datosForm = new FormData(event.currentTarget);
       const valorForm = (campo: string) => String(datosForm.get(campo) ?? "").trim();
       calle = valorForm("calle");
       numero = valorForm(campoNumero);
-      idBarrio = Number(valorForm("idBarrio"));
 
       if (!calle || !numero) {
         setError("Completá la calle y el número de la dirección.");
         return;
       }
-      if (!Number.isSafeInteger(idBarrio) || idBarrio <= 0) {
+      if (!idBarrio) {
         setError("Completá la ubicación hasta seleccionar un barrio.");
         return;
       }
@@ -122,9 +120,17 @@ export default function UsuarioForm({ modo, usuarioId, valoresIniciales }: Usuar
     setEnviando(true);
     try {
       if (modo === "crear") {
-        const direccionCreada = await apiFetch<Direccion>("/direcciones", {
+        // La direccion se crea junto con el usuario, en una sola transaccion
+        // del backend (ver UsuarioServiceImpl.create) - ya no se crea aparte.
+        await apiFetch("/usuarios", {
           method: "POST",
           body: JSON.stringify({
+            nombre: nombre.trim(),
+            apellido: apellido.trim(),
+            usuario: usuario.trim(),
+            email: email.trim(),
+            contrasenha,
+            idRol: Number(idRol),
             calle,
             nombreEdificio: hayEdificio ? nombreEdificio.trim() : null,
             nroCasa: hayEdificio ? null : Number(numero),
@@ -132,24 +138,6 @@ export default function UsuarioForm({ modo, usuarioId, valoresIniciales }: Usuar
             idBarrio,
           }),
         });
-        try {
-          await apiFetch("/usuarios", {
-            method: "POST",
-            body: JSON.stringify({
-              nombre: nombre.trim(),
-              apellido: apellido.trim(),
-              usuario: usuario.trim(),
-              email: email.trim(),
-              contrasenha,
-              idRol: Number(idRol),
-              idDireccion: direccionCreada.id,
-            }),
-          });
-        } catch (cause) {
-          // La dirección ya quedó creada aunque el usuario haya fallado.
-          const mensaje = cause instanceof ApiError ? cause.message : "No pudimos crear el usuario.";
-          throw new Error(`${mensaje} La dirección ya se guardó; si reintentás, se creará una nueva.`);
-        }
       } else {
         await apiFetch(`/usuarios/${usuarioId}`, {
           method: "PUT",
@@ -186,70 +174,84 @@ export default function UsuarioForm({ modo, usuarioId, valoresIniciales }: Usuar
           </div>
         </div>
 
-        <div className={styles.field}>
-          <label htmlFor="usuario">Nombre de usuario</label>
-          <input
-            id="usuario"
-            required
-            autoCapitalize="none"
-            spellCheck={false}
-            value={usuario}
-            onChange={(e) => setUsuario(e.target.value)}
-          />
-        </div>
-
-        <div className={styles.field}>
-          <label htmlFor="email">Email</label>
-          <input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-        </div>
-
-        {modo === "crear" && (
+        <div className={styles.row}>
           <div className={styles.field}>
-            <label htmlFor="contrasenha">Contraseña</label>
+            <label htmlFor="usuario">Nombre de usuario</label>
             <input
-              id="contrasenha"
-              type="password"
+              id="usuario"
               required
-              minLength={8}
-              value={contrasenha}
-              onChange={(e) => setContrasenha(e.target.value)}
+              autoCapitalize="none"
+              spellCheck={false}
+              value={usuario}
+              onChange={(e) => setUsuario(e.target.value)}
             />
           </div>
-        )}
-
-        <div className={styles.field}>
-          <label htmlFor="idRol">Rol</label>
-          <select id="idRol" required disabled={cargandoOpciones} value={idRol} onChange={(e) => setIdRol(e.target.value)}>
-            <option value="">Seleccioná un rol</option>
-            {roles.map((rol) => (
-              <option key={rol.id} value={rol.id}>
-                {rol.nombre}
-              </option>
-            ))}
-          </select>
+          <div className={styles.field}>
+            <label htmlFor="email">Email</label>
+            <input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
         </div>
 
         {modo === "crear" ? (
+          <div className={styles.row}>
+            <div className={styles.field}>
+              <label htmlFor="contrasenha">Contraseña</label>
+              <input
+                id="contrasenha"
+                type="password"
+                required
+                minLength={8}
+                value={contrasenha}
+                onChange={(e) => setContrasenha(e.target.value)}
+              />
+            </div>
+            <div className={styles.field}>
+              <label htmlFor="idRol">Rol</label>
+              <select id="idRol" required disabled={cargandoOpciones} value={idRol} onChange={(e) => setIdRol(e.target.value)}>
+                <option value="">Seleccioná un rol</option>
+                {roles.map((rol) => (
+                  <option key={rol.id} value={rol.id}>
+                    {rol.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        ) : (
+          <div className={styles.field}>
+            <label htmlFor="idRol">Rol</label>
+            <select id="idRol" required disabled={cargandoOpciones} value={idRol} onChange={(e) => setIdRol(e.target.value)}>
+              <option value="">Seleccioná un rol</option>
+              {roles.map((rol) => (
+                <option key={rol.id} value={rol.id}>
+                  {rol.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {modo === "crear" ? (
           <>
-            <UbicacionFields onSelectionChange={() => setError("")} />
+            <h3 className={styles.sectionSubtitle}>Ubicación</h3>
+            <UbicacionSelects onBarrioChange={setIdBarrio} />
             <div className={styles.row}>
               <div className={styles.field}>
                 <label htmlFor="calle">Calle</label>
                 <input id="calle" name="calle" autoComplete="address-line1" maxLength={100} required />
               </div>
               <div className={styles.field}>
-                <label htmlFor="numeroDireccion">{hayEdificio ? "Nro. de departamento" : "Nro. de casa"}</label>
+                <label htmlFor="numeroDireccion">Número de casa / Departamento</label>
                 <input
                   id="numeroDireccion"
                   name={campoNumero}
                   type="text"
-                  inputMode={hayEdificio ? "text" : "numeric"}
+                  inputMode="numeric"
                   required
-                  aria-describedby="numero-direccion-ayuda"
+                  onInput={(e) => {
+                    e.currentTarget.value = e.currentTarget.value.replace(/\D/g, "");
+                  }}
                 />
-                <small id="numero-direccion-ayuda">
-                  {hayEdificio ? "Podés usar números y letras, por ejemplo: 4B." : "Ingresá solo números."}
-                </small>
               </div>
             </div>
             <div className={styles.field}>
@@ -284,9 +286,11 @@ export default function UsuarioForm({ modo, usuarioId, valoresIniciales }: Usuar
         )}
 
         {modo === "editar" && (
-          <label htmlFor="activo" className={styles.checkboxField}>
+          <label htmlFor="activo" className={styles.activoBox}>
             <input id="activo" type="checkbox" checked={activo} onChange={(e) => setActivo(e.target.checked)} />
-            Usuario activo
+            <span>
+              <strong>Usuario activo</strong>
+            </span>
           </label>
         )}
 
@@ -296,9 +300,19 @@ export default function UsuarioForm({ modo, usuarioId, valoresIniciales }: Usuar
           </p>
         )}
 
-        <button type="submit" disabled={enviando || cargandoOpciones} className={styles.buttonPrimary}>
-          {enviando ? "Guardando…" : modo === "crear" ? "Crear usuario" : "Guardar cambios"}
-        </button>
+        <div className={styles.formActions}>
+          <button
+            type="button"
+            className={styles.buttonOutline}
+            onClick={() => router.push("/admin/usuarios")}
+            disabled={enviando}
+          >
+            Cancelar
+          </button>
+          <button type="submit" disabled={enviando || cargandoOpciones} className={styles.buttonPrimary}>
+            {enviando ? "Guardando…" : modo === "crear" ? "Crear usuario" : "Guardar cambios"}
+          </button>
+        </div>
       </form>
     </div>
   );
