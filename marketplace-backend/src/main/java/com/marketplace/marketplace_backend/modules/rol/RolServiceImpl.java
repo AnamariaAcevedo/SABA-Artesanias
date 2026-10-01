@@ -1,10 +1,15 @@
 package com.marketplace.marketplace_backend.modules.rol;
 
 import com.marketplace.marketplace_backend.common.PagedResult;
+import com.marketplace.marketplace_backend.modules.permiso.Permiso;
+import com.marketplace.marketplace_backend.modules.permiso.PermisoRepository;
+import com.marketplace.marketplace_backend.modules.rol.dto.RolConPermisosRequestDto;
 import com.marketplace.marketplace_backend.modules.rol.dto.RolCreateRequestDto;
 import com.marketplace.marketplace_backend.modules.rol.dto.RolFilterDto;
 import com.marketplace.marketplace_backend.modules.rol.dto.RolResponseDto;
 import com.marketplace.marketplace_backend.modules.rol.dto.RolUpdateRequestDto;
+import com.marketplace.marketplace_backend.modules.rolpermiso.RolPermiso;
+import com.marketplace.marketplace_backend.modules.rolpermiso.RolPermisoRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,6 +27,8 @@ import java.util.List;
 public class RolServiceImpl implements RolService {
 
     private final RolRepository rolRepository;
+    private final RolPermisoRepository rolPermisoRepository;
+    private final PermisoRepository permisoRepository;
 
     @Override
     @Transactional
@@ -121,6 +128,65 @@ public class RolServiceImpl implements RolService {
         return rolRepository.findAll().stream()
                 .map(this::toResponse)
                 .toList();
+    }
+
+    @Override
+    @Transactional
+    public RolResponseDto crearConPermisos(RolConPermisosRequestDto request) {
+        rolRepository.findByNombreAndDeletedAtIsNull(request.getNombre())
+                .ifPresent(r -> {
+                    throw new IllegalStateException("Ya existe un rol activo con ese nombre");
+                });
+
+        Rol rol = new Rol();
+        rol.setNombre(request.getNombre());
+        rol.setActivo(request.getActivo() != null ? request.getActivo() : true);
+        Rol saved = rolRepository.save(rol);
+
+        aplicarCambiosPermisos(saved, request.getPermisoIdsAgregar(), request.getPermisoIdsQuitar());
+
+        return toResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public RolResponseDto actualizarConPermisos(Long id, RolConPermisosRequestDto request) {
+        Rol rol = rolRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Rol no encontrado con ID: " + id));
+
+        rol.setNombre(request.getNombre());
+        if (request.getActivo() != null) {
+            rol.setActivo(request.getActivo());
+        }
+        Rol updated = rolRepository.save(rol);
+
+        aplicarCambiosPermisos(updated, request.getPermisoIdsAgregar(), request.getPermisoIdsQuitar());
+
+        return toResponse(updated);
+    }
+
+    // Aplica, en la misma transacción que el alta/edición del rol, los permisos
+    // a agregar y a quitar. Evita que el guardado del rol quede desincronizado
+    // de sus permisos si algo falla a mitad de camino.
+    private void aplicarCambiosPermisos(Rol rol, List<Long> permisoIdsAgregar, List<Long> permisoIdsQuitar) {
+        if (permisoIdsQuitar != null) {
+            for (Long permisoId : permisoIdsQuitar) {
+                rolPermisoRepository.deleteByRol_IdAndPermiso_Id(rol.getId(), permisoId);
+            }
+        }
+
+        if (permisoIdsAgregar != null) {
+            for (Long permisoId : permisoIdsAgregar) {
+                if (rolPermisoRepository.existsByRol_IdAndPermiso_Id(rol.getId(), permisoId)) {
+                    continue;
+                }
+
+                Permiso permiso = permisoRepository.findById(permisoId)
+                        .orElseThrow(() -> new EntityNotFoundException("Permiso no encontrado con ID: " + permisoId));
+
+                rolPermisoRepository.save(new RolPermiso(rol, permiso));
+            }
+        }
     }
 
     private RolResponseDto toResponse(Rol rol) {
