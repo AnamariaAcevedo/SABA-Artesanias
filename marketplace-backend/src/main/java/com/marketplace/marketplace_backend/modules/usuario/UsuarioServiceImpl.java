@@ -1,6 +1,8 @@
 package com.marketplace.marketplace_backend.modules.usuario;
 
 import com.marketplace.marketplace_backend.common.PagedResult;
+import com.marketplace.marketplace_backend.modules.barrio.Barrio;
+import com.marketplace.marketplace_backend.modules.barrio.BarrioRepository;
 import com.marketplace.marketplace_backend.modules.direccion.Direccion;
 import com.marketplace.marketplace_backend.modules.direccion.DireccionRepository;
 import com.marketplace.marketplace_backend.modules.rol.Rol;
@@ -29,6 +31,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
     private final DireccionRepository direccionRepository;
+    private final BarrioRepository barrioRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -45,8 +48,26 @@ public class UsuarioServiceImpl implements UsuarioService {
         Rol rol = rolRepository.findById(request.getIdRol())
                 .orElseThrow(() -> new EntityNotFoundException("Rol no encontrado con ID: " + request.getIdRol()));
 
-        Direccion direccion = direccionRepository.findById(request.getIdDireccion())
-                .orElseThrow(() -> new EntityNotFoundException("Dirección no encontrada"));
+        Barrio barrio = barrioRepository.findById(request.getIdBarrio())
+                .orElseThrow(() -> new EntityNotFoundException("Barrio no encontrado"));
+
+        boolean hayEdificio = request.getNombreEdificio() != null && !request.getNombreEdificio().isBlank();
+
+        if (!hayEdificio && request.getNroCasa() == null) {
+            throw new IllegalArgumentException("El número de casa es obligatorio si no se indica un edificio");
+        }
+
+        if (hayEdificio && (request.getNroDepartamento() == null || request.getNroDepartamento().isBlank())) {
+            throw new IllegalArgumentException("El número de departamento es obligatorio si se indica un edificio");
+        }
+
+        Direccion direccion = new Direccion();
+        direccion.setCalle(request.getCalle());
+        direccion.setNombreEdificio(request.getNombreEdificio());
+        direccion.setNroCasa(request.getNroCasa());
+        direccion.setNroDepartamento(request.getNroDepartamento());
+        direccion.setBarrio(barrio);
+        Direccion direccionGuardada = direccionRepository.save(direccion);
 
         Usuario usuario = new Usuario();
         usuario.setNombre(request.getNombre());
@@ -55,7 +76,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuario.setEmail(request.getEmail());
         usuario.setUsuario(request.getUsuario());
         usuario.setRol(rol);
-        usuario.setDireccion(direccion);
+        usuario.setDireccion(direccionGuardada);
         usuario.setActivo(true);
 
         Usuario saved = usuarioRepository.save(usuario);
