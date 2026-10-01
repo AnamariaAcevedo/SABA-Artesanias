@@ -255,10 +255,6 @@ function EditorRol({
 
     const ocupado = useRef(false);
 
-    // Conserva el ID si se crea el rol pero falla la asignación.
-    // Así, reintentar no vuelve a crear otro rol.
-    const idGuardado = useRef<number | null>(rol?.id ?? null);
-
     useEffect(() => {
         let vigente = true;
 
@@ -307,30 +303,13 @@ function EditorRol({
         setError("");
 
         try {
-            let id = idGuardado.current;
-
-            if (id === null) {
-                const nuevo = await apiFetch<Rol>("/roles", {
-                    method: "POST",
-                    body: JSON.stringify({ nombre: nombre.trim() }),
-                });
-
-                id = nuevo.id;
-                idGuardado.current = id;
-            }
-
-            // Leer nuevamente permite reintentar un guardado parcial.
-            const actuales = await obtenerTodos<Asignacion>(
-                `/roles/${id}/permisos`
-            );
             const idsActuales = new Set(
-                actuales.map((item) => item.permisoId)
+                rol
+                    ? (await obtenerTodos<Asignacion>(`/roles/${rol.id}/permisos`))
+                        .map((item) => item.permisoId)
+                    : []
             );
 
-            await apiFetch(`/roles/${id}`, {
-                method: "PUT",
-                body: JSON.stringify({ nombre: nombre.trim(), activo }),
-            });
             const idsEditables = new Set(
                 resolverModulos(permisos)
                     .flatMap((modulo) => modulo.capacidades)
@@ -338,38 +317,42 @@ function EditorRol({
                     .flatMap((capacidad) => capacidad.ids)
             );
 
-            // Primero asignamos; luego revocamos.
-            for (const permisoId of seleccionados) {
-                if (
-                    idsEditables.has(permisoId) &&
-                    !idsActuales.has(permisoId)
-                ) {
-                    await apiFetch(`/roles/${id}/permisos`, {
-                        method: "POST",
-                        body: JSON.stringify({ permisoId }),
-                    });
-                }
-            }
+            const permisoIdsAgregar = [...seleccionados].filter(
+                (permisoId) =>
+                    idsEditables.has(permisoId) && !idsActuales.has(permisoId)
+            );
 
-            for (const permisoId of idsActuales) {
-                if (
-                    idsEditables.has(permisoId) &&
-                    !seleccionados.has(permisoId)
-                ) {
-                    await apiFetch(`/roles/${id}/permisos/${permisoId}`, {
-                        method: "DELETE",
-                    });
-                }
+            const permisoIdsQuitar = [...idsActuales].filter(
+                (permisoId) =>
+                    idsEditables.has(permisoId) && !seleccionados.has(permisoId)
+            );
+
+            // El backend crea/actualiza el rol y aplica estos cambios de
+            // permisos en una sola transacción: o se guarda todo, o nada.
+            if (rol) {
+                await apiFetch(`/roles/${rol.id}/completo`, {
+                    method: "PUT",
+                    body: JSON.stringify({
+                        nombre: nombre.trim(),
+                        activo,
+                        permisoIdsAgregar,
+                        permisoIdsQuitar,
+                    }),
+                });
+            } else {
+                await apiFetch("/roles/completo", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        nombre: nombre.trim(),
+                        activo,
+                        permisoIdsAgregar,
+                    }),
+                });
             }
 
             guardado();
         } catch (cause) {
-            setError(
-                `${mensajeError(cause)} Pueden haberse guardado cambios parciales. ` +
-                (idGuardado.current !== null
-                    ? "Podés reintentar sobre el mismo rol."
-                    : "Antes de volver a crear, revisá si el rol aparece en el listado.")
-            );
+            setError(mensajeError(cause));
         } finally {
             ocupado.current = false;
             setGuardando(false);
