@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import styles from "@/components/auth/auth.module.css";
+import { apiFetch } from "@/lib/api";
+import { puedeEntrarAlPanel } from "@/lib/access";
 
 type Props = {
   idPrefix?: string;
@@ -55,6 +57,7 @@ export default function LoginForm({ idPrefix = "", onSuccess }: Props) {
       try {
         localStorage.setItem("accessToken", result.data.accessToken);
         localStorage.setItem("refreshToken", result.data.refreshToken);
+        window.dispatchEvent(new Event("sesion-cambiada"));
       } catch {
         try { localStorage.removeItem("accessToken"); localStorage.removeItem("refreshToken"); } catch { /* Storage unavailable. */ }
         throw new Error("Habilitá el almacenamiento de este sitio en tu navegador para iniciar sesión.");
@@ -62,24 +65,29 @@ export default function LoginForm({ idPrefix = "", onSuccess }: Props) {
       let destination = "/";
       // The claim selects navigation only. The backend must enforce authorization.
       try {
-        const payload = result.data.accessToken.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
-        const claims = JSON.parse(atob(payload));
-        const rol = typeof claims.rol === "string" ? claims.rol.trim().toUpperCase() : "";
-        if (["ADMIN", "ADMINISTRADOR", "ROLE_ADMIN", "ROLE_ADMINISTRADOR"].includes(rol)) {
+        const sesion = await apiFetch<{
+          permisos: string[];
+        }>("/me");
+
+        if (puedeEntrarAlPanel(sesion.permisos)) {
           destination = "/admin";
-        } else if (["CLIENTE", "ROLE_CLIENTE"].includes(rol)) {
-          destination = "/home";
         }
-      } catch { /* Use the public home when a role cannot be read. */ }
+      } catch {
+        // El proveedor de sesión mostrará el error de verificación.
+        // No se concede acceso al panel por el contenido del token.
+      }
       onSuccess?.();
       router.replace(destination);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "No pudimos iniciar sesión.");
+      setError(
+          cause instanceof Error
+              ? cause.message
+              : "No pudimos iniciar sesión."
+      );
       busy.current = false;
       setLoading(false);
     }
   }
-
   return (
     <>
       <form onSubmit={iniciarSesion} className={styles.form} aria-busy={loading}>
