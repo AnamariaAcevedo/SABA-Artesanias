@@ -2,6 +2,7 @@ package com.marketplace.marketplace_backend.modules.rol;
 
 import com.marketplace.marketplace_backend.common.Pagination;
 import com.marketplace.marketplace_backend.common.StandardResponseDto;
+import com.marketplace.marketplace_backend.modules.rol.dto.RolConPermisosRequestDto;
 import com.marketplace.marketplace_backend.modules.rol.dto.RolCreateRequestDto;
 import com.marketplace.marketplace_backend.modules.rol.dto.RolFilterDto;
 import com.marketplace.marketplace_backend.modules.rol.dto.RolResponseDto;
@@ -85,6 +86,28 @@ public class RolController {
         StandardResponseDto<List<RolResponseDto>> response = new StandardResponseDto<>();
         response.setSuccess(true);
         response.setData(rolService.findAllOptions());
+        response.setErrors(null);
+        response.setPagination(null);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/completo")
+    @PreAuthorize("hasAuthority('CREATE_ROLES') and hasAuthority('ASSIGN_PERMISOS')")
+    public ResponseEntity<StandardResponseDto<RolResponseDto>> crearConPermisos(@Valid @RequestBody RolConPermisosRequestDto request) {
+        StandardResponseDto<RolResponseDto> response = new StandardResponseDto<>();
+        response.setSuccess(true);
+        response.setData(rolService.crearConPermisos(request));
+        response.setErrors(null);
+        response.setPagination(null);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{id}/completo")
+    @PreAuthorize("hasAuthority('UPDATE_ROLES') and hasAuthority('ASSIGN_PERMISOS') and hasAuthority('REVOKE_PERMISOS')")
+    public ResponseEntity<StandardResponseDto<RolResponseDto>> actualizarConPermisos(@PathVariable Long id, @Valid @RequestBody RolConPermisosRequestDto request) {
+        StandardResponseDto<RolResponseDto> response = new StandardResponseDto<>();
+        response.setSuccess(true);
+        response.setData(rolService.actualizarConPermisos(id, request));
         response.setErrors(null);
         response.setPagination(null);
         return ResponseEntity.ok(response);
