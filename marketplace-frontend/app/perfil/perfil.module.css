@@ -1,0 +1,18 @@
+/* Complementa components/admin/admin.module.css con lo propio de la vista de perfil. */
+
+.contenedor { max-width: 880px; margin: 0 auto; }
+
+.encabezado { display: flex; align-items: center; gap: 24px; margin-bottom: 24px; }
+/* Tamaño de la foto grande; el resto del estilo viene de AvatarUsuario. */
+.encabezado .foto { width: 112px; height: 112px; font-size: 40px; }
+
+.datos { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 28px; margin: 0; font-family: Arial, sans-serif; }
+.dato { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.dato dt { font-size: 13px; letter-spacing: .5px; text-transform: uppercase; color: #6b4a22; }
+.dato dd { margin: 0; font-size: 16px; color: #291606; overflow-wrap: anywhere; }
+
+@media (max-width: 640px) {
+  .datos { grid-template-columns: 1fr; }
+  .encabezado { flex-direction: column; text-align: center; }
+  .encabezado .foto { width: 96px; height: 96px; font-size: 34px; }
+}

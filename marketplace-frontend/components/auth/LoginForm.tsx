@@ -62,7 +62,7 @@ export default function LoginForm({ idPrefix = "", onSuccess }: Props) {
         try { localStorage.removeItem("accessToken"); localStorage.removeItem("refreshToken"); } catch { /* Storage unavailable. */ }
         throw new Error("Habilitá el almacenamiento de este sitio en tu navegador para iniciar sesión.");
       }
-      let destination = "/";
+      let destination = "/home";
       // The claim selects navigation only. The backend must enforce authorization.
       try {
         const sesion = await apiFetch<{

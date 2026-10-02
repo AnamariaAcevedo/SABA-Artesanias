@@ -14,7 +14,7 @@ import {
   obtenerCategorias,
   obtenerSubcategoriasPorCategoria,
 } from "@/services/categoriaService";
-import LogoutButton from "@/components/auth/LogoutButton";
+import MenuUsuario from "@/components/auth/MenuUsuario";
 import ProductoCard from "@/components/catalogo/ProductoCard";
 import { useRolSesion } from "@/lib/auth";
 
@@ -256,7 +256,7 @@ async function cargarCategorias() {
         </Link>
 
         {rol === undefined ? null : rol ? (
-          <LogoutButton className={styles.logoutButton} />
+          <MenuUsuario />
         ) : (
           <Link href="/login" className={styles.logoutButton} style={{ marginLeft: "auto" }}>
             Iniciar sesión
