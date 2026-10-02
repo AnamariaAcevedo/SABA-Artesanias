@@ -45,7 +45,7 @@ public class DireccionController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('GET_DIRECCIONES')")
+    @PreAuthorize("hasAuthority('LIST_DIRECCIONES')")
     public ResponseEntity<StandardResponseDto<DireccionResponseDto>> get(@PathVariable Long id) {
         StandardResponseDto<DireccionResponseDto> response = new StandardResponseDto<>();
         response.setSuccess(true);

@@ -15,124 +15,51 @@ export type GrupoPermisos = Modulo & {
 };
 
 const modulos: Modulo[] = [
-    {
-        id: "productos",
-        nombre: "Productos",
-        recursos: ["PRODUCTOS", "IMAGENES", "IMAGENESPRODUCTOS"],
-    },
-    {
-        id: "catalogo",
-        nombre: "Catálogo",
-        recursos: [
-            "CATALOGO",
-            "CATEGORIAS",
-            "SUBCATEGORIAS",
-            "CATEGORIASUBCATEGORIAS",
-            "PRODUCTOSUBCATEGORIAS",
-        ],
-    },
-    {
-        id: "tienda",
-        nombre: "Tienda",
-        recursos: ["TIENDAS", "CONTACTOS", "TIPOS_CONTACTO"],
-    },
-    {
-        id: "ayudantes",
-        nombre: "Ayudantes",
-        recursos: ["AYUDANTES"],
-    },
-    {
-        id: "pedidos",
-        nombre: "Pedidos",
-        recursos: ["PEDIDOS"],
-    },
-    {
-        id: "facturacion",
-        nombre: "Facturación",
-        recursos: ["FACTURACION", "FACTURAS", "COMPROBANTES"],
-    },
-    {
-        id: "reportes",
-        nombre: "Reportes",
-        recursos: ["REPORTES"],
-    },
-    {
-        id: "usuarios",
-        nombre: "Usuarios",
-        recursos: ["USUARIOS"],
-    },
-    {
-        id: "roles",
-        nombre: "Roles",
-        recursos: ["ROLES", "PERMISOS"],
-    },
-    {
-        id: "perfil",
-        nombre: "Perfil",
-        recursos: ["PERFIL"],
-    },
-    {
-        id: "canales",
-        nombre: "Canales",
-        recursos: ["CANALES"],
-    },
-    {
-        id: "ubicaciones",
-        nombre: "Ubicaciones",
-        recursos: [
-            "PAISES",
-            "DEPARTAMENTOS",
-            "CIUDADES",
-            "BARRIOS",
-            "DIRECCIONES",
-        ],
-    },
+    { id: "productos", nombre: "Productos", recursos: ["PRODUCTOS", "IMAGENES"] },
+    { id: "categorias", nombre: "Categorías", recursos: ["CATEGORIAS", "SUBCATEGORIAS"] },
+    { id: "tiendas", nombre: "Tiendas", recursos: ["TIENDAS"] },
+    { id: "usuarios", nombre: "Usuarios", recursos: ["USUARIOS"] },
+    { id: "roles", nombre: "Roles", recursos: ["ROLES"] },
+    { id: "permisos", nombre: "Permisos", recursos: ["PERMISOS"] },
+    { id: "contactos", nombre: "Contactos", recursos: ["CONTACTOS"] },
+    { id: "tipos-contacto", nombre: "Tipos de contacto", recursos: ["TIPOS_CONTACTO"] },
+    { id: "ubicacion", nombre: "Ubicación", recursos: ["DIRECCIONES"] },
 ];
 
 const acciones: Record<string, string> = {
-    LIST: "Listar",
-    GET: "Consultar",
+    LIST: "Consultar",
     CREATE: "Crear",
     UPDATE: "Editar",
     DELETE: "Eliminar",
     OPTIONS: "Consultar opciones de",
     ASSIGN: "Asignar",
     REVOKE: "Quitar",
-    EXPORT: "Exportar",
-    DOWNLOAD: "Descargar",
 };
 
 const recursos: Record<string, string> = {
-    HOME: "inicio",
-    INICIO: "inicio",
-    CATALOGO: "catálogo",
     PRODUCTOS: "productos",
     IMAGENES: "imágenes de productos",
-    IMAGENESPRODUCTOS: "imágenes de productos",
-    CATEGORIAS: "categorías",
+    CATEGORIAS: "categorías y subcategorías",
     SUBCATEGORIAS: "subcategorías",
-    CATEGORIASUBCATEGORIAS: "relaciones entre categorías y subcategorías",
-    PRODUCTOSUBCATEGORIAS: "subcategorías de productos",
-    PEDIDOS: "pedidos",
-    FACTURACION: "facturación",
-    FACTURAS: "facturas",
-    COMPROBANTES: "comprobantes",
-    REPORTES: "reportes",
     TIENDAS: "tiendas",
-    CONTACTOS: "contactos de tiendas",
+    CONTACTOS: "contactos",
     TIPOS_CONTACTO: "tipos de contacto",
-    AYUDANTES: "ayudantes",
-    PERFIL: "perfil personal",
     USUARIOS: "usuarios",
     ROLES: "roles",
     PERMISOS: "permisos",
-    PAISES: "países",
-    DEPARTAMENTOS: "departamentos",
-    CIUDADES: "ciudades",
-    BARRIOS: "barrios",
-    DIRECCIONES: "direcciones",
-    CANALES: "canales",
+    DIRECCIONES: "ubicaciones",
 };
+
+// Estos permisos deben retirarse mediante la migración del backend.
+// No se traducen a IDs nuevos: las asignaciones se migran en la base de datos.
+export function esPermisoObsoleto(permiso: Permiso): boolean {
+    const accion = normalizar(permiso.action);
+    const recurso = normalizar(permiso.resource);
+    return accion === "GET"
+        || (["PAISES", "DEPARTAMENTOS", "CIUDADES", "BARRIOS"].includes(recurso)
+            && ["CREATE", "UPDATE", "DELETE", "LIST"].includes(accion))
+        || (recurso === "SUBCATEGORIAS" && ["CREATE", "UPDATE", "DELETE"].includes(accion));
+}
 
 function normalizar(valor: string): string {
     return valor.trim().toUpperCase();
@@ -169,21 +96,8 @@ export function agruparPermisos(
         permisos: [],
     }));
 
-    const antiguos: GrupoPermisos = {
-        id: "permisos-antiguos",
-        nombre: "Permisos antiguos de configuración",
-        recursos: [],
-        permisos: [],
-    };
-
     for (const permiso of permisos) {
-        // Se muestran aparte para poder revisar y quitar
-        // asignaciones existentes, sin ocultarlas.
-        if (esPermisoDeDefinicion(permiso)) {
-            antiguos.permisos.push(permiso);
-            continue;
-        }
-
+        if (esPermisoObsoleto(permiso)) continue;
         const recurso = normalizar(permiso.resource);
 
         let grupo = grupos.find((item) =>
@@ -204,7 +118,6 @@ export function agruparPermisos(
         grupo.permisos.push(permiso);
     }
 
-    grupos.push(antiguos);
 
     return grupos
         .filter((grupo) => grupo.permisos.length > 0)

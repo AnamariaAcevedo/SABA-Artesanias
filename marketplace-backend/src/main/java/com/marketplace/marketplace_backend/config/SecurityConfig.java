@@ -45,10 +45,8 @@ public class SecurityConfig {
                 .requestMatchers("/login", "/refresh", "/registro").permitAll()
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                 .requestMatchers(HttpMethod.GET,
-                        "/paises", "/paises/**",
-                        "/departamentos", "/departamentos/**",
-                        "/ciudades", "/ciudades/**",
-                        "/barrios", "/barrios/**",
+                        "/public/ubicaciones/paises", "/public/ubicaciones/departamentos",
+                        "/public/ubicaciones/ciudades", "/public/ubicaciones/barrios",
                         "/productos", "/productos/**",
                         "/tiendas", "/tiendas/**",
                         "/categorias", "/categorias/**",

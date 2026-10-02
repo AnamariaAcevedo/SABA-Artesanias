@@ -45,7 +45,7 @@ public class PermisoController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('GET_PERMISOS')")
+    @PreAuthorize("hasAuthority('LIST_PERMISOS')")
     public ResponseEntity<StandardResponseDto<PermisoResponseDto>> get(@PathVariable Long id) {
         StandardResponseDto<PermisoResponseDto> response = new StandardResponseDto<>();
         response.setSuccess(true);

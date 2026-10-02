@@ -50,15 +50,15 @@ export default function UbicacionSelects({ onBarrioChange }: UbicacionSelectsPro
   const [idCiudad, setIdCiudad] = useState("");
   const [idBarrio, setIdBarrio] = useState("");
 
-  const { opciones: paises, cargando: cargandoPaises } = useOpcionesPorPadre("/paises?page=1");
+  const { opciones: paises, cargando: cargandoPaises } = useOpcionesPorPadre("/public/ubicaciones/paises?page=1");
   const { opciones: departamentos, cargando: cargandoDepartamentos } = useOpcionesPorPadre(
-    idPais ? `/departamentos?idPais=${idPais}&page=1` : null,
+    idPais ? `/public/ubicaciones/departamentos?idPais=${idPais}&page=1` : null,
   );
   const { opciones: ciudades, cargando: cargandoCiudades } = useOpcionesPorPadre(
-    idDepartamento ? `/ciudades?idDepartamento=${idDepartamento}&page=1` : null,
+    idDepartamento ? `/public/ubicaciones/ciudades?idDepartamento=${idDepartamento}&page=1` : null,
   );
   const { opciones: barrios, cargando: cargandoBarrios } = useOpcionesPorPadre(
-    idCiudad ? `/barrios?idCiudad=${idCiudad}&page=1` : null,
+    idCiudad ? `/public/ubicaciones/barrios?idCiudad=${idCiudad}&page=1` : null,
   );
 
   useEffect(() => {

@@ -37,7 +37,7 @@ function useOpciones(ruta: string | null) {
 
                 // Tus endpoints son paginados: cargar todas las páginas.
                 while (true) {
-                    const url = new URL(`${api.replace(/\/$/, "")}/${ruta}`);
+                    const url = new URL(`${api.replace(/\/$/, "")}/public/ubicaciones/${ruta}`);
                     url.searchParams.set("page", String(pagina));
                     url.searchParams.set("perPage", "100");
 
