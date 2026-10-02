@@ -6,27 +6,22 @@ import Link from "next/link";
 import styles from "./home.module.css";
 
 import { Producto } from "@/types/Producto";
-import { Tienda } from "@/types/Tienda";
 import { Categoria } from "@/types/Categoria";
 import { Subcategoria } from "@/types/Subcategoria";
 
 import { obtenerProductos } from "@/services/productoService";
-import { obtenerTiendas } from "@/services/tiendaService";
 import {
   obtenerCategorias,
   obtenerSubcategoriasPorCategoria,
 } from "@/services/categoriaService";
 import LogoutButton from "@/components/auth/LogoutButton";
+import ProductoCard from "@/components/catalogo/ProductoCard";
 import { useRolSesion } from "@/lib/auth";
-
-const API_URL =
-  (process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:8080").replace(/\/+$/, "");
 
 export default function HomePage() {
   const rol = useRolSesion();
 
   const [productos, setProductos] = useState<Producto[]>([]);
-  const [tiendas, setTiendas] = useState<Tienda[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [categoriaHover, setCategoriaHover] = useState<number | null>(null);
   const [subcategoriasPorCategoria, setSubcategoriasPorCategoria] = useState<
@@ -41,9 +36,6 @@ export default function HomePage() {
   const [menuEnHover, setMenuEnHover] = useState(false);
   const menuAbierto = menuFijado || menuEnHover;
 
-  const [tiendaSeleccionada, setTiendaSeleccionada] =
-    useState<number | null>(null);
-
   const [categoriaSeleccionada, setCategoriaSeleccionada] =
     useState<number | null>(null);
 
@@ -52,7 +44,6 @@ export default function HomePage() {
 
   async function cargarProductos(
     nombre?: string,
-    idTienda?: number,
     idCategoria?: number,
     idSubcategoria?: number
   ) {
@@ -62,7 +53,7 @@ export default function HomePage() {
 
       const respuesta = await obtenerProductos(
         nombre,
-        idTienda,
+        undefined,
         idCategoria,
         idSubcategoria
       );
@@ -79,16 +70,6 @@ export default function HomePage() {
       setMensaje("No fue posible cargar los productos.");
     } finally {
       setCargando(false);
-    }
-  }
-
-  async function cargarTiendas() {
-    try {
-      const respuesta = await obtenerTiendas();
-
-      setTiendas(respuesta.data);
-    } catch (error) {
-      console.error("Error cargando tiendas:", error);
     }
   }
 
@@ -113,7 +94,6 @@ async function cargarCategorias() {
 
   useEffect(() => {
     cargarProductos();
-    cargarTiendas();
     cargarCategorias();
   }, []);
 
@@ -122,7 +102,6 @@ async function cargarCategorias() {
 
     cargarProductos(
       busqueda,
-      tiendaSeleccionada ?? undefined,
       categoriaSeleccionada ?? undefined,
       subcategoriaSeleccionada ?? undefined
     );
@@ -152,10 +131,7 @@ async function cargarCategorias() {
       setCategoriaSeleccionada(null);
       setSubcategoriaSeleccionada(null);
 
-      cargarProductos(
-        busqueda,
-        tiendaSeleccionada ?? undefined
-      );
+      cargarProductos(busqueda);
 
       return;
     }
@@ -165,40 +141,18 @@ async function cargarCategorias() {
 
     await asegurarSubcategorias(idCategoria);
 
-    cargarProductos(
-      busqueda,
-      tiendaSeleccionada ?? undefined,
-      idCategoria
-    );
+    cargarProductos(busqueda, idCategoria);
   }
 
   function seleccionarSubcategoria(idCategoria: number, idSubcategoria: number) {
     setCategoriaSeleccionada(idCategoria);
     setSubcategoriaSeleccionada(idSubcategoria);
 
-    cargarProductos(
-      busqueda,
-      tiendaSeleccionada ?? undefined,
-      idCategoria,
-      idSubcategoria
-    );
-  }
-
-  function seleccionarTienda(idTienda: number) {
-    setTiendaSeleccionada(idTienda);
-
-    cargarProductos(
-      busqueda,
-      idTienda,
-      categoriaSeleccionada ?? undefined,
-      subcategoriaSeleccionada ?? undefined
-    );
+    cargarProductos(busqueda, idCategoria, idSubcategoria);
   }
 
   function mostrarTodos() {
     setBusqueda("");
-
-    setTiendaSeleccionada(null);
 
     setCategoriaSeleccionada(null);
     setSubcategoriaSeleccionada(null);
@@ -206,9 +160,9 @@ async function cargarCategorias() {
     cargarProductos();
   }
 
-  // Sin un filtro de tienda o categoría activo, el catálogo se separa en
-  // secciones por categoría en vez de mostrar todos los productos juntos.
-  const sinFiltro = tiendaSeleccionada === null && categoriaSeleccionada === null;
+  // Sin un filtro de categoría activo, el catálogo se separa en secciones
+  // por categoría en vez de mostrar todos los productos juntos.
+  const sinFiltro = categoriaSeleccionada === null;
 
   const productosPorCategoria = useMemo(() => {
     if (!sinFiltro || categorias.length === 0) return [];
@@ -253,112 +207,6 @@ async function cargarCategorias() {
     return seccionesConProductos;
   }, [sinFiltro, productos, categorias, subcategoriasPorCategoria]);
 
-  function renderProducto(producto: Producto) {
-    return (
-      <article
-        className={styles.productCard}
-        key={producto.id}
-      >
-        <div
-          className={styles.productImage}
-        >
-          {producto.idImagenPrincipal ? (
-            <img
-              src={`${API_URL}/imagenes/${producto.idImagenPrincipal}`}
-              alt={producto.nombre}
-              className={styles.productImageImg}
-            />
-          ) : (
-            <span>
-              {producto.nombre}
-            </span>
-          )}
-        </div>
-
-        <div
-          className={styles.productInfo}
-        >
-          <div>
-            <h4>
-              {producto.nombre}
-            </h4>
-
-            <small>
-              {
-                producto.nombreTienda
-              }
-            </small>
-          </div>
-
-          <strong>
-            {producto.precio.toLocaleString(
-              "es-PY"
-            )}{" "}
-            GS
-          </strong>
-        </div>
-
-        {producto.descripcion && (
-          <p
-            className={
-              styles.productDescription
-            }
-          >
-            {producto.descripcion}
-          </p>
-        )}
-
-        {producto.nombresSubcategorias &&
-          producto
-            .nombresSubcategorias
-            .length > 0 && (
-            <div
-              className={
-                styles.productCategories
-              }
-            >
-              {producto.nombresSubcategorias.map(
-                (
-                  nombreSubcategoria
-                ) => (
-                  <span
-                    key={
-                      nombreSubcategoria
-                    }
-                  >
-                    {
-                      nombreSubcategoria
-                    }
-                  </span>
-                )
-              )}
-            </div>
-          )}
-
-        <div
-          className={styles.productExtra}
-        >
-          {producto.puntuacion !==
-            null && (
-            <span>
-              ★{" "}
-              {
-                producto.puntuacion
-              }
-            </span>
-          )}
-
-          <span>
-            Stock:{" "}
-            {
-              producto.cantidadDisponible
-            }
-          </span>
-        </div>
-      </article>
-    );
-  }
-
   return (
     <main className={styles.homeContainer}>
       <header className={styles.homeHeader}>
@@ -402,6 +250,11 @@ async function cargarCategorias() {
             Buscar
           </button>
         </form>
+
+        <Link href="/tiendas" className={styles.navButton}>
+          Tiendas
+        </Link>
+
         {rol === undefined ? null : rol ? (
           <LogoutButton className={styles.logoutButton} />
         ) : (
@@ -486,43 +339,6 @@ async function cargarCategorias() {
                 </div>
               );
             })}
-
-            {tiendas.length > 0 && (
-              <div className={styles.storeFilter}>
-                <h4>Tiendas</h4>
-
-                <div className={styles.storeChips}>
-                  <button
-                    type="button"
-                    className={
-                      tiendaSeleccionada === null
-                        ? `${styles.storeChip} ${styles.selectedStore}`
-                        : styles.storeChip
-                    }
-                    onClick={mostrarTodos}
-                  >
-                    Todas
-                  </button>
-
-                  {tiendas.map((tienda) => (
-                    <button
-                      type="button"
-                      key={tienda.id}
-                      onClick={() =>
-                        seleccionarTienda(tienda.id)
-                      }
-                      className={
-                        tiendaSeleccionada === tienda.id
-                          ? `${styles.storeChip} ${styles.selectedStore}`
-                          : styles.storeChip
-                      }
-                    >
-                      {tienda.nombre}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </aside>
 
@@ -541,24 +357,16 @@ async function cargarCategorias() {
           <section className={styles.storeSection}>
             <div className={styles.storeTitle}>
               <h3>
-                {tiendaSeleccionada
-                  ? tiendas.find(
-                      (tienda) =>
-                        tienda.id ===
-                        tiendaSeleccionada
+                {categoriaSeleccionada
+                  ? categorias.find(
+                      (categoria) =>
+                        categoria.id ===
+                        categoriaSeleccionada
                     )?.nombre
-                  : categoriaSeleccionada
-                    ? categorias.find(
-                        (categoria) =>
-                          categoria.id ===
-                          categoriaSeleccionada
-                      )?.nombre
-                    : "Artesanías disponibles"}
+                  : "Artesanías disponibles"}
               </h3>
 
-              {(tiendaSeleccionada ||
-                categoriaSeleccionada ||
-                subcategoriaSeleccionada) && (
+              {(categoriaSeleccionada || subcategoriaSeleccionada) && (
                 <button
                   type="button"
                   className={styles.showAllButton}
@@ -592,14 +400,18 @@ async function cargarCategorias() {
                       </h4>
 
                       <div className={styles.products}>
-                        {productosCategoria.map(renderProducto)}
+                        {productosCategoria.map((producto) => (
+                          <ProductoCard key={producto.id} producto={producto} />
+                        ))}
                       </div>
                     </section>
                   ))}
                 </div>
               ) : (
                 <div className={styles.products}>
-                  {productos.map(renderProducto)}
+                  {productos.map((producto) => (
+                    <ProductoCard key={producto.id} producto={producto} />
+                  ))}
                 </div>
               ))}
           </section>

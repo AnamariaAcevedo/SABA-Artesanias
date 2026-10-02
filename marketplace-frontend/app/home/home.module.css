@@ -222,6 +222,7 @@
   border-color: black;
 }
 
+.navButton,
 .logoutButton {
   display: inline-flex;
   align-items: center;
@@ -236,9 +237,11 @@
   font-family: Arial, sans-serif;
   text-decoration: none;
   cursor: pointer;
+  flex-shrink: 0;
   transition: background 0.15s ease;
 }
 
+.navButton:hover,
 .logoutButton:hover:not(:disabled) {
   background: #7a3216;
 }
@@ -321,55 +324,6 @@
   font-weight: bold;
   text-decoration: underline;
   color: #3d1607;
-}
-
-/* ========================================
-   FILTRO POR TIENDAS
-======================================== */
-
-.storeFilter {
-  margin-top: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.storeFilter h4 {
-  margin: 0;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 17px;
-  font-weight: normal;
-}
-
-.storeChips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.storeChip {
-  border: 1px solid #63240e;
-  background: transparent;
-  color: #63240e;
-  padding: 6px 14px;
-  border-radius: 999px;
-  font-family: Arial, sans-serif;
-  font-size: 13px;
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
-}
-
-.storeChip:hover {
-  background: #63240e;
-  color: #f7dfb9;
-  transform: translateY(-2px);
-}
-
-.selectedStore {
-  background: #63240e;
-  color: #f7dfb9;
-  border-color: #63240e;
-  font-weight: bold;
 }
 
 /* ========================================
@@ -509,6 +463,16 @@
   color: #63240e;
 }
 
+.productInfo small a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.productInfo small a:hover {
+  color: #7a3216;
+}
+
 .productInfo strong {
   color: #111;
   font-family: Georgia, "Times New Roman", serif;
@@ -596,12 +560,16 @@
     order: 0;
   }
 
-  .logoutButton {
+  .navButton {
     order: 2;
   }
 
-  .searchBar {
+  .logoutButton {
     order: 3;
+  }
+
+  .searchBar {
+    order: 4;
     max-width: none;
     width: 100%;
   }

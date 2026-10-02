@@ -1,0 +1,237 @@
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: transparent;
+  color: #63240e;
+  border: 1px solid #63240e;
+  padding: 0 18px;
+  height: 30px;
+  border-radius: 999px;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+
+.backButton:hover {
+  background: rgba(99, 36, 14, 0.08);
+}
+
+.content {
+  padding: 30px 45px 45px;
+}
+
+.pageTitle {
+  margin: 0 0 24px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 30px;
+  font-weight: normal;
+  color: #63240e;
+}
+
+.statusMessage {
+  margin: 0 0 20px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 20px;
+  color: #63240e;
+}
+
+/* ========================================
+   LISTADO DE TIENDAS (una debajo de otra)
+======================================== */
+
+.storeGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.storeRow {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  background: rgba(244, 221, 186, 0.8);
+  border-radius: 20px;
+  padding: 22px 26px;
+  color: #63240e;
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.storeRow:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 22px rgba(99, 36, 14, 0.18);
+}
+
+/* Portada/foto de perfil de la tienda. Hoy es un placeholder con la
+   inicial del nombre; cuando exista "Gestionar tienda" esto pasa a
+   mostrar la imagen que suba cada dueño de tienda. */
+.storeCover {
+  flex-shrink: 0;
+  width: 110px;
+  height: 110px;
+  border-radius: 16px;
+  background: #f4ddba;
+  border: 1px solid #b88b44;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 42px;
+  color: #7a5b34;
+}
+
+.storeCover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.storeInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.storeInfo h3 {
+  margin: 0 0 6px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 22px;
+  font-weight: normal;
+}
+
+.storeInfo p {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: #5f4638;
+  line-height: 1.4;
+}
+
+.storeCardAddress {
+  display: block;
+  margin-bottom: 14px;
+  font-size: 12px;
+  color: #63240e;
+  opacity: 0.75;
+}
+
+/* Recap: mini vista previa de algunos productos de la tienda */
+.storeRecap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.recapItem {
+  width: 92px;
+}
+
+.recapImage {
+  width: 92px;
+  height: 92px;
+  border-radius: 12px;
+  background: #fff6e6;
+  border: 1px solid #b88b44;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  text-align: center;
+  font-size: 10px;
+  color: #725638;
+}
+
+.recapImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.recapName {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  color: #63240e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ========================================
+   BANNER DE LA TIENDA (detalle)
+======================================== */
+
+.storeBanner {
+  display: flex;
+  gap: 26px;
+  align-items: center;
+  margin-bottom: 32px;
+  padding: 26px 30px;
+  background: rgba(244, 221, 186, 0.8);
+  border-radius: 22px;
+}
+
+.storeBannerCover {
+  flex-shrink: 0;
+  width: 140px;
+  height: 140px;
+  border-radius: 18px;
+  background: #f4ddba;
+  border: 1px solid #b88b44;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 54px;
+  color: #7a5b34;
+}
+
+.storeBannerCover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.storeBannerInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.storeBanner h2 {
+  margin: 0 0 8px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 30px;
+  font-weight: normal;
+  color: #63240e;
+}
+
+.storeBanner p {
+  margin: 0 0 10px;
+  font-size: 15px;
+  color: #5f4638;
+  line-height: 1.4;
+}
+
+@media (max-width: 700px) {
+  .content {
+    padding: 24px;
+  }
+
+  .storeRow {
+    flex-direction: column;
+  }
+
+  .storeBanner {
+    flex-direction: column;
+    text-align: center;
+    padding: 20px 22px;
+  }
+
+  .storeBannerInfo {
+    width: 100%;
+  }
+}
