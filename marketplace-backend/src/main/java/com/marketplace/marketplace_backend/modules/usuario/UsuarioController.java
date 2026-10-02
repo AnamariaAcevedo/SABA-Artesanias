@@ -45,7 +45,7 @@ public class UsuarioController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('GET_USUARIOS')")
+    @PreAuthorize("hasAuthority('LIST_USUARIOS')")
     public ResponseEntity<StandardResponseDto<UsuarioResponseDto>> get(@PathVariable Long id) {
         StandardResponseDto<UsuarioResponseDto> response = new StandardResponseDto<>();
         response.setSuccess(true);

@@ -5,12 +5,10 @@ export const ACCESO = {
         "LIST_USUARIOS",
         "CREATE_USUARIOS",
         "OPTIONS_ROLES",
-        "CREATE_DIRECCIONES",
     ],
 
     editarUsuario: [
         "LIST_USUARIOS",
-        "GET_USUARIOS",
         "UPDATE_USUARIOS",
         "OPTIONS_ROLES",
         "LIST_DIRECCIONES",
@@ -24,10 +22,8 @@ export const ACCESO = {
     crearRol: [
         "LIST_ROLES",
         "CREATE_ROLES",
-        "UPDATE_ROLES",
         "LIST_PERMISOS",
         "ASSIGN_PERMISOS",
-        "REVOKE_PERMISOS",
     ],
 
     editarRol: [

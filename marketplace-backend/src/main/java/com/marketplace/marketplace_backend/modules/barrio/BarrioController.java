@@ -23,7 +23,7 @@ public class BarrioController {
     private final BarrioService barrioService;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('CREATE_BARRIOS')")
+    @PreAuthorize("hasAuthority('CREATE_DIRECCIONES')")
     public ResponseEntity<StandardResponseDto<BarrioResponseDto>> create(@Valid @RequestBody BarrioCreateRequestDto request) {
         StandardResponseDto<BarrioResponseDto> response = new StandardResponseDto<>();
         response.setSuccess(true);
@@ -34,7 +34,7 @@ public class BarrioController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('UPDATE_BARRIOS')")
+    @PreAuthorize("hasAuthority('UPDATE_DIRECCIONES')")
     public ResponseEntity<StandardResponseDto<BarrioResponseDto>> update(@PathVariable Long id, @Valid @RequestBody BarrioUpdateRequestDto request) {
         StandardResponseDto<BarrioResponseDto> response = new StandardResponseDto<>();
         response.setSuccess(true);
@@ -45,6 +45,7 @@ public class BarrioController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('LIST_DIRECCIONES')")
     public ResponseEntity<StandardResponseDto<BarrioResponseDto>> get(@PathVariable Long id) {
         StandardResponseDto<BarrioResponseDto> response = new StandardResponseDto<>();
         response.setSuccess(true);
@@ -55,6 +56,7 @@ public class BarrioController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('LIST_DIRECCIONES')")
     public ResponseEntity<StandardResponseDto<List<BarrioResponseDto>>> findAll(@ModelAttribute BarrioFilterDto filter) {
         StandardResponseDto<List<BarrioResponseDto>> response = new StandardResponseDto<>();
         var result = barrioService.findAll(filter);
@@ -66,7 +68,7 @@ public class BarrioController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('DELETE_BARRIOS')")
+    @PreAuthorize("hasAuthority('DELETE_DIRECCIONES')")
     public ResponseEntity<StandardResponseDto<Void>> delete(@PathVariable Long id) {
         StandardResponseDto<Void> response = new StandardResponseDto<>();
         barrioService.delete(id);

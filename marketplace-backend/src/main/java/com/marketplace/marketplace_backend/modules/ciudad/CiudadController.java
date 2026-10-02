@@ -23,7 +23,7 @@ public class CiudadController {
     private final CiudadService ciudadService;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('CREATE_CIUDADES')")
+    @PreAuthorize("hasAuthority('CREATE_DIRECCIONES')")
     public ResponseEntity<StandardResponseDto<CiudadResponseDto>> create(@Valid @RequestBody CiudadCreateRequestDto request) {
         StandardResponseDto<CiudadResponseDto> response = new StandardResponseDto<>();
         response.setSuccess(true);
@@ -34,7 +34,7 @@ public class CiudadController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('UPDATE_CIUDADES')")
+    @PreAuthorize("hasAuthority('UPDATE_DIRECCIONES')")
     public ResponseEntity<StandardResponseDto<CiudadResponseDto>> update(@PathVariable Long id, @Valid @RequestBody CiudadUpdateRequestDto request) {
         StandardResponseDto<CiudadResponseDto> response = new StandardResponseDto<>();
         response.setSuccess(true);
@@ -45,6 +45,7 @@ public class CiudadController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('LIST_DIRECCIONES')")
     public ResponseEntity<StandardResponseDto<CiudadResponseDto>> get(@PathVariable Long id) {
         StandardResponseDto<CiudadResponseDto> response = new StandardResponseDto<>();
         response.setSuccess(true);
@@ -55,6 +56,7 @@ public class CiudadController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('LIST_DIRECCIONES')")
     public ResponseEntity<StandardResponseDto<List<CiudadResponseDto>>> findAll(@ModelAttribute CiudadFilterDto filter) {
         StandardResponseDto<List<CiudadResponseDto>> response = new StandardResponseDto<>();
         var result = ciudadService.findAll(filter);
@@ -66,7 +68,7 @@ public class CiudadController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('DELETE_CIUDADES')")
+    @PreAuthorize("hasAuthority('DELETE_DIRECCIONES')")
     public ResponseEntity<StandardResponseDto<Void>> delete(@PathVariable Long id) {
         StandardResponseDto<Void> response = new StandardResponseDto<>();
         ciudadService.delete(id);

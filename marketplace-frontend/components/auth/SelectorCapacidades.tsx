@@ -57,6 +57,9 @@ export default function SelectorCapacidades({
                     <p className={styles.pageSubtitle}>
                         {cantidad} de {idsDisponibles.length} seleccionados
                     </p>
+                    <p className={styles.pageSubtitle}>
+                        Consultar permite ver el listado y el detalle de cada registro.
+                    </p>
                 </div>
 
                 <div className={styles.rowActions}>
@@ -80,8 +83,8 @@ export default function SelectorCapacidades({
 
             {adicionales > 0 && (
                 <p className={styles.notice}>
-                    Hay {adicionales} permisos asignados que no aparecen
-                    en el catálogo recibido. Se conservarán al guardar.
+                    Hay {adicionales} permisos asignados que no se muestran
+                    entre las opciones actuales. Se conservarán al guardar.
                 </p>
             )}
 
@@ -108,6 +111,19 @@ export default function SelectorCapacidades({
                         </summary>
 
                         <div className={styles.permissionBody}>
+                            {modulo.id === "ubicacion" && (
+                                <p className={styles.pageSubtitle}>
+                                    Cada permiso se aplica a direcciones, países, departamentos,
+                                    ciudades y barrios. Los listados para seleccionar una ubicación
+                                    en el registro son públicos.
+                                </p>
+                            )}
+                            {modulo.id === "categorias" && (
+                                <p className={styles.pageSubtitle}>
+                                    Crear, editar y eliminar se aplican a categorías y subcategorías.
+                                    Asignar y quitar controlan sus asociaciones. La consulta es pública.
+                                </p>
+                            )}
                             <div className={styles.rowActions}>
                                 <button
                                     type="button"

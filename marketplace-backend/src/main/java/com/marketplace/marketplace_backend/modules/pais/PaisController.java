@@ -23,7 +23,7 @@ public class PaisController {
     private final PaisService paisService;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('CREATE_PAISES')")
+    @PreAuthorize("hasAuthority('CREATE_DIRECCIONES')")
     public ResponseEntity<StandardResponseDto<PaisResponseDto>> create(@Valid @RequestBody PaisCreateRequestDto request) {
         StandardResponseDto<PaisResponseDto> response = new StandardResponseDto<>();
         response.setSuccess(true);
@@ -34,7 +34,7 @@ public class PaisController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('UPDATE_PAISES')")
+    @PreAuthorize("hasAuthority('UPDATE_DIRECCIONES')")
     public ResponseEntity<StandardResponseDto<PaisResponseDto>> update(@PathVariable Long id, @Valid @RequestBody PaisUpdateRequestDto request) {
         StandardResponseDto<PaisResponseDto> response = new StandardResponseDto<>();
         response.setSuccess(true);
@@ -45,6 +45,7 @@ public class PaisController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('LIST_DIRECCIONES')")
     public ResponseEntity<StandardResponseDto<PaisResponseDto>> get(@PathVariable Long id) {
         StandardResponseDto<PaisResponseDto> response = new StandardResponseDto<>();
         response.setSuccess(true);
@@ -55,6 +56,7 @@ public class PaisController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('LIST_DIRECCIONES')")
     public ResponseEntity<StandardResponseDto<List<PaisResponseDto>>> findAll(@ModelAttribute PaisFilterDto filter) {
         StandardResponseDto<List<PaisResponseDto>> response = new StandardResponseDto<>();
         var result = paisService.findAll(filter);
@@ -66,7 +68,7 @@ public class PaisController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('DELETE_PAISES')")
+    @PreAuthorize("hasAuthority('DELETE_DIRECCIONES')")
     public ResponseEntity<StandardResponseDto<Void>> delete(@PathVariable Long id) {
         StandardResponseDto<Void> response = new StandardResponseDto<>();
         paisService.delete(id);

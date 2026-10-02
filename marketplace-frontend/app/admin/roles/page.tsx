@@ -5,7 +5,7 @@ import { apiFetch, apiFetchConPaginacion } from "@/lib/api";
 import styles from "@/components/admin/admin.module.css";
 import ConPermiso from "@/components/auth/ConPermiso";
 import { ACCESO } from "@/lib/access";
-import type { Permiso } from "@/lib/permisos";
+import { esPermisoObsoleto, type Permiso } from "@/lib/permisos";
 import { resolverModulos } from "@/lib/capacidades";
 import SelectorCapacidades from "@/components/auth/SelectorCapacidades";
 
@@ -351,6 +351,7 @@ function EditorRol({
             }
 
             guardado();
+            window.dispatchEvent(new Event("sesion-cambiada"));
         } catch (cause) {
             setError(mensajeError(cause));
         } finally {
@@ -366,6 +367,12 @@ function EditorRol({
             </h2>
 
             {cargando && <p role="status">Cargando permisos…</p>}
+            {!cargando && permisos.some(esPermisoObsoleto) && (
+                <p role="status">
+                    Hay permisos antiguos pendientes de migración en el servidor.
+                    No se muestran como opciones nuevas; sus asignaciones se conservan hasta migrarlas.
+                </p>
+            )}
 
             {errorCarga && (
                 <div className={styles.error} role="alert">

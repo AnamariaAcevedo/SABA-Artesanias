@@ -23,7 +23,7 @@ public class DepartamentoController {
     private final DepartamentoService departamentoService;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('CREATE_DEPARTAMENTOS')")
+    @PreAuthorize("hasAuthority('CREATE_DIRECCIONES')")
     public ResponseEntity<StandardResponseDto<DepartamentoResponseDto>> create(@Valid @RequestBody DepartamentoCreateRequestDto request) {
         StandardResponseDto<DepartamentoResponseDto> response = new StandardResponseDto<>();
         response.setSuccess(true);
@@ -34,7 +34,7 @@ public class DepartamentoController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('UPDATE_DEPARTAMENTOS')")
+    @PreAuthorize("hasAuthority('UPDATE_DIRECCIONES')")
     public ResponseEntity<StandardResponseDto<DepartamentoResponseDto>> update(@PathVariable Long id, @Valid @RequestBody DepartamentoUpdateRequestDto request) {
         StandardResponseDto<DepartamentoResponseDto> response = new StandardResponseDto<>();
         response.setSuccess(true);
@@ -45,6 +45,7 @@ public class DepartamentoController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('LIST_DIRECCIONES')")
     public ResponseEntity<StandardResponseDto<DepartamentoResponseDto>> get(@PathVariable Long id) {
         StandardResponseDto<DepartamentoResponseDto> response = new StandardResponseDto<>();
         response.setSuccess(true);
@@ -55,6 +56,7 @@ public class DepartamentoController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('LIST_DIRECCIONES')")
     public ResponseEntity<StandardResponseDto<List<DepartamentoResponseDto>>> findAll(@ModelAttribute DepartamentoFilterDto filter) {
         StandardResponseDto<List<DepartamentoResponseDto>> response = new StandardResponseDto<>();
         var result = departamentoService.findAll(filter);
@@ -66,7 +68,7 @@ public class DepartamentoController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('DELETE_DEPARTAMENTOS')")
+    @PreAuthorize("hasAuthority('DELETE_DIRECCIONES')")
     public ResponseEntity<StandardResponseDto<Void>> delete(@PathVariable Long id) {
         StandardResponseDto<Void> response = new StandardResponseDto<>();
         departamentoService.delete(id);

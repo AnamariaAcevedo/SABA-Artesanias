@@ -23,7 +23,7 @@ public class SubcategoriaController {
     private final SubcategoriaService subcategoriaService;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('CREATE_SUBCATEGORIAS')")
+    @PreAuthorize("hasAuthority('CREATE_CATEGORIAS')")
     public ResponseEntity<StandardResponseDto<SubcategoriaResponseDto>> create(@Valid @RequestBody SubcategoriaCreateRequestDto request) {
         StandardResponseDto<SubcategoriaResponseDto> response = new StandardResponseDto<>();
         response.setSuccess(true);
@@ -34,7 +34,7 @@ public class SubcategoriaController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('UPDATE_SUBCATEGORIAS')")
+    @PreAuthorize("hasAuthority('UPDATE_CATEGORIAS')")
     public ResponseEntity<StandardResponseDto<SubcategoriaResponseDto>> update(@PathVariable Long id, @Valid @RequestBody SubcategoriaUpdateRequestDto request) {
         StandardResponseDto<SubcategoriaResponseDto> response = new StandardResponseDto<>();
         response.setSuccess(true);
@@ -66,7 +66,7 @@ public class SubcategoriaController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('DELETE_SUBCATEGORIAS')")
+    @PreAuthorize("hasAuthority('DELETE_CATEGORIAS')")
     public ResponseEntity<StandardResponseDto<Void>> delete(@PathVariable Long id) {
         StandardResponseDto<Void> response = new StandardResponseDto<>();
         subcategoriaService.delete(id);

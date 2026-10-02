@@ -46,7 +46,7 @@ public class RolController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('GET_ROLES')")
+    @PreAuthorize("hasAuthority('LIST_ROLES')")
     public ResponseEntity<StandardResponseDto<RolResponseDto>> get(@PathVariable Long id) {
         StandardResponseDto<RolResponseDto> response = new StandardResponseDto<>();
         response.setSuccess(true);
