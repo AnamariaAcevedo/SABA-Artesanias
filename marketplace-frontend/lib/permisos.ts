@@ -16,7 +16,7 @@ export type GrupoPermisos = Modulo & {
 
 const modulos: Modulo[] = [
     { id: "productos", nombre: "Productos", recursos: ["PRODUCTOS", "IMAGENES"] },
-    { id: "categorias", nombre: "Categorías", recursos: ["CATEGORIAS", "SUBCATEGORIAS"] },
+    { id: "categorias", nombre: "Categorías y subcategorías", recursos: ["CATEGORIAS", "SUBCATEGORIAS"] },
     { id: "tiendas", nombre: "Tiendas", recursos: ["TIENDAS"] },
     { id: "usuarios", nombre: "Usuarios", recursos: ["USUARIOS"] },
     { id: "roles", nombre: "Roles", recursos: ["ROLES"] },

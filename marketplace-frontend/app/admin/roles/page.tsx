@@ -351,6 +351,7 @@ function EditorRol({
             }
 
             guardado();
+            window.dispatchEvent(new Event("sesion-cambiada"));
         } catch (cause) {
             setError(mensajeError(cause));
         } finally {
