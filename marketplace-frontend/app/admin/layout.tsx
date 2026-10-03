@@ -25,6 +25,11 @@ const secciones = [
     label: "Roles",
     permisos: ACCESO.verRoles,
   },
+  {
+    href: "/admin/categorias",
+    label: "Categorías",
+    permisos: ACCESO.verCategorias,
+  },
 ];
 
 export default function AdminLayout({
