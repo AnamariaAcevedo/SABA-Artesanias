@@ -109,6 +109,7 @@ export default function LoginForm({ idPrefix = "", onSuccess }: Props) {
         <span className={styles.srOnly} role="status">{loading ? "Verificando tus datos." : ""}</span>
       </form>
       <p className={styles.linkText}>¿No tenés cuenta? <Link href="/registro">Registrate.</Link></p>
+      <p className={styles.linkText}><Link href="/recuperar">¿Olvidaste tu contraseña?</Link></p>
     </>
   );
 }

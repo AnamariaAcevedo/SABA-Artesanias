@@ -42,7 +42,7 @@ public class SecurityConfig {
             .logout(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/login", "/refresh", "/registro").permitAll()
+                .requestMatchers("/login", "/refresh", "/registro", "/recuperar", "/recuperar/confirmar").permitAll()
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                 .requestMatchers(HttpMethod.GET,
                         "/public/ubicaciones/paises", "/public/ubicaciones/departamentos",
