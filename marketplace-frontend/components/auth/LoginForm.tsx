@@ -19,6 +19,7 @@ export default function LoginForm({ idPrefix = "", onSuccess }: Props) {
   const [contrasenha, setContrasenha] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [mostrarRecuperar, setMostrarRecuperar] = useState(false);
 
   async function iniciarSesion(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -84,6 +85,7 @@ export default function LoginForm({ idPrefix = "", onSuccess }: Props) {
               ? cause.message
               : "No pudimos iniciar sesión."
       );
+      setMostrarRecuperar(true);
       busy.current = false;
       setLoading(false);
     }
@@ -109,7 +111,9 @@ export default function LoginForm({ idPrefix = "", onSuccess }: Props) {
         <span className={styles.srOnly} role="status">{loading ? "Verificando tus datos." : ""}</span>
       </form>
       <p className={styles.linkText}>¿No tenés cuenta? <Link href="/registro">Registrate.</Link></p>
-      <p className={styles.linkText}><Link href="/recuperar">¿Olvidaste tu contraseña?</Link></p>
+      {mostrarRecuperar && (
+        <p className={styles.linkText}><Link href="/recuperar">¿Olvidaste tu contraseña?</Link></p>
+      )}
     </>
   );
 }

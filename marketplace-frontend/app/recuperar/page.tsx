@@ -18,7 +18,7 @@ export default function RecuperarPage() {
     if (busy.current) return;
     setError("");
     if (!email.trim()) {
-      setError("Ingresá tu correo electrónico.");
+      setError("Ingresá el correo con el que te registraste en SABA.");
       return;
     }
     busy.current = true;
