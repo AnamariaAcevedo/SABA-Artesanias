@@ -66,6 +66,19 @@ export default function CategoriasPage() {
   const [guardandoCategoria, setGuardandoCategoria] = useState(false);
   const [guardandoSubcategoria, setGuardandoSubcategoria] = useState(false);
 
+  const [categoriaEnEdicion, setCategoriaEnEdicion] = useState<number | null>(
+    null
+  );
+  const [nombreCategoriaEditada, setNombreCategoriaEditada] = useState("");
+  const [subcategoriaEnEdicion, setSubcategoriaEnEdicion] = useState<
+    number | null
+  >(null);
+  const [nombreSubcategoriaEditada, setNombreSubcategoriaEditada] =
+    useState("");
+  const [guardandoEdicion, setGuardandoEdicion] = useState<
+    "categoria" | "subcategoria" | null
+  >(null);
+
   useEffect(() => {
     let vigente = true;
 
@@ -122,7 +135,126 @@ export default function CategoriasPage() {
     setError("");
     setAviso("");
     setFormularioActivo(null);
+    cancelarEdiciones();
     setCategoriaSeleccionada(categoria);
+  }
+
+  function cancelarEdiciones() {
+    setCategoriaEnEdicion(null);
+    setNombreCategoriaEditada("");
+    setSubcategoriaEnEdicion(null);
+    setNombreSubcategoriaEditada("");
+  }
+
+  function comenzarEdicionCategoria(categoria: Categoria) {
+    setError("");
+    setAviso("");
+    setFormularioActivo(null);
+    setSubcategoriaEnEdicion(null);
+    setNombreSubcategoriaEditada("");
+    setCategoriaEnEdicion(categoria.id);
+    setNombreCategoriaEditada(categoria.nombre);
+  }
+
+  function comenzarEdicionSubcategoria(
+    subcategoria: SubcategoriaDeCategoria
+  ) {
+    setError("");
+    setAviso("");
+    setFormularioActivo(null);
+    setCategoriaEnEdicion(null);
+    setNombreCategoriaEditada("");
+    setSubcategoriaEnEdicion(subcategoria.subcategoriaId);
+    setNombreSubcategoriaEditada(subcategoria.subcategoriaNombre);
+  }
+
+  async function editarCategoria(
+    event: FormEvent<HTMLFormElement>,
+    categoria: Categoria
+  ) {
+    event.preventDefault();
+
+    const nombre = nombreCategoriaEditada.trim();
+
+    if (!nombre) {
+      setError("Escribí un nombre para la categoría.");
+      return;
+    }
+
+    if (nombre === categoria.nombre) {
+      cancelarEdiciones();
+      return;
+    }
+
+    setGuardandoEdicion("categoria");
+    setError("");
+    setAviso("");
+
+    try {
+      await apiFetch(`/categorias/${categoria.id}`, {
+        method: "PUT",
+        body: JSON.stringify({ nombre }),
+      });
+
+      setCategorias((actuales) =>
+        actuales.map((actual) =>
+          actual.id === categoria.id ? { ...actual, nombre } : actual
+        )
+      );
+      setCategoriaSeleccionada((actual) =>
+        actual?.id === categoria.id ? { ...actual, nombre } : actual
+      );
+      cancelarEdiciones();
+      setAviso("Categoría actualizada correctamente.");
+    } catch (cause) {
+      setError(mensajeError(cause));
+    } finally {
+      setGuardandoEdicion(null);
+    }
+  }
+
+  async function editarSubcategoria(
+    event: FormEvent<HTMLFormElement>,
+    subcategoria: SubcategoriaDeCategoria
+  ) {
+    event.preventDefault();
+
+    const nombre = nombreSubcategoriaEditada.trim();
+
+    if (!nombre) {
+      setError("Escribí un nombre para la subcategoría.");
+      return;
+    }
+
+    if (nombre === subcategoria.subcategoriaNombre) {
+      cancelarEdiciones();
+      return;
+    }
+
+    setGuardandoEdicion("subcategoria");
+    setError("");
+    setAviso("");
+
+    try {
+      await apiFetch(`/subcategorias/${subcategoria.subcategoriaId}`, {
+        method: "PUT",
+        body: JSON.stringify({ nombre }),
+      });
+
+      setSubcategorias((actuales) =>
+        actuales.map((actual) =>
+          actual.subcategoriaId === subcategoria.subcategoriaId
+            ? { ...actual, subcategoriaNombre: nombre }
+            : actual
+        )
+      );
+      cancelarEdiciones();
+      setAviso("Subcategoría actualizada correctamente.");
+    } catch (cause) {
+      setError(mensajeError(cause));
+    } finally {
+      setGuardandoEdicion(null);
+    }
   }
 
   async function crearCategoria(event: FormEvent<HTMLFormElement>) {
@@ -261,7 +393,7 @@ export default function CategoriasPage() {
       <div className={styles.sectionHeader}>
         <div>
           <h1 className={styles.title}>
-            Gestión de categorías y subcategorías
+            Categorías y subcategorías
           </h1>
         </div>
 
@@ -272,6 +404,7 @@ export default function CategoriasPage() {
             onClick={() => {
               setError("");
               setAviso("");
+              cancelarEdiciones();
               setFormularioActivo("categoria");
             }}
           >
@@ -351,17 +484,59 @@ export default function CategoriasPage() {
             <tbody>
               {categorias.map((categoria) => (
                 <tr key={categoria.id}>
-                  <td>{categoria.nombre}</td>
+                  <td>
+                    {categoriaEnEdicion === categoria.id ? (
+                      <form
+                        className={styles.inlineEdit}
+                        onSubmit={(event) =>
+                          void editarCategoria(event, categoria)
+                        }
+                      >
+                        <label
+                          className={styles.visuallyHidden}
+                          htmlFor={`editar-categoria-${categoria.id}`}
+                        >
+                          Nuevo nombre de la categoría
+                        </label>
+                        <input
+                          id={`editar-categoria-${categoria.id}`}
+                          className={styles.inlineEditInput}
+                          value={nombreCategoriaEditada}
+                          onChange={(event) =>
+                            setNombreCategoriaEditada(event.target.value)
+                          }
+                          maxLength={100}
+                          required
+                          autoFocus
+                          disabled={guardandoEdicion === "categoria"}
+                        />
+                        <div className={styles.inlineEditActions}>
+                          <button
+                            type="submit"
+                            className={styles.inlineSaveButton}
+                            disabled={guardandoEdicion === "categoria"}
+                          >
+                            {guardandoEdicion === "categoria"
+                              ? "Guardando…"
+                              : "Guardar"}
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.inlineCancelButton}
+                            onClick={cancelarEdiciones}
+                            disabled={guardandoEdicion === "categoria"}
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      categoria.nombre
+                    )}
+                  </td>
 
                   <td>
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: "1rem",
-                        alignItems: "center",
-                        flexWrap: "wrap",
-                      }}
-                    >
+                    <div className={styles.rowActions}>
                       <button
                         type="button"
                         className={styles.linkAction}
@@ -370,10 +545,21 @@ export default function CategoriasPage() {
                         Gestionar subcategorías
                       </button>
 
-                      <ConPermiso permisos={ACCESO.eliminarCategorias}>
+                      <ConPermiso permisos={ACCESO.editarCategorias}>
                         <button
                           type="button"
                           className={styles.linkAction}
+                          onClick={() => comenzarEdicionCategoria(categoria)}
+                          disabled={categoriaEnEdicion === categoria.id}
+                        >
+                          Editar
+                        </button>
+                      </ConPermiso>
+
+                      <ConPermiso permisos={ACCESO.eliminarCategorias}>
+                        <button
+                          type="button"
+                          className={`${styles.linkAction} ${styles.linkActionDanger}`}
                           onClick={() => void eliminarCategoria(categoria)}
                         >
                           Eliminar
@@ -410,6 +596,7 @@ export default function CategoriasPage() {
                 onClick={() => {
                   setError("");
                   setAviso("");
+                  cancelarEdiciones();
                   setFormularioActivo("subcategoria");
                 }}
               >
@@ -477,20 +664,88 @@ export default function CategoriasPage() {
                 <tbody>
                   {subcategorias.map((subcategoria) => (
                     <tr key={subcategoria.subcategoriaId}>
-                      <td>{subcategoria.subcategoriaNombre}</td>
-
                       <td>
-                        <ConPermiso permisos={ACCESO.eliminarCategorias}>
-                          <button
-                            type="button"
-                            className={styles.linkAction}
-                            onClick={() =>
-                              void eliminarSubcategoria(subcategoria)
+                        {subcategoriaEnEdicion ===
+                        subcategoria.subcategoriaId ? (
+                          <form
+                            className={styles.inlineEdit}
+                            onSubmit={(event) =>
+                              void editarSubcategoria(event, subcategoria)
                             }
                           >
-                            Eliminar
-                          </button>
-                        </ConPermiso>
+                            <label
+                              className={styles.visuallyHidden}
+                              htmlFor={`editar-subcategoria-${subcategoria.subcategoriaId}`}
+                            >
+                              Nuevo nombre de la subcategoría
+                            </label>
+                            <input
+                              id={`editar-subcategoria-${subcategoria.subcategoriaId}`}
+                              className={styles.inlineEditInput}
+                              value={nombreSubcategoriaEditada}
+                              onChange={(event) =>
+                                setNombreSubcategoriaEditada(event.target.value)
+                              }
+                              maxLength={100}
+                              required
+                              autoFocus
+                              disabled={guardandoEdicion === "subcategoria"}
+                            />
+                            <div className={styles.inlineEditActions}>
+                              <button
+                                type="submit"
+                                className={styles.inlineSaveButton}
+                                disabled={guardandoEdicion === "subcategoria"}
+                              >
+                                {guardandoEdicion === "subcategoria"
+                                  ? "Guardando…"
+                                  : "Guardar"}
+                              </button>
+                              <button
+                                type="button"
+                                className={styles.inlineCancelButton}
+                                onClick={cancelarEdiciones}
+                                disabled={guardandoEdicion === "subcategoria"}
+                              >
+                                Cancelar
+                              </button>
+                            </div>
+                          </form>
+                        ) : (
+                          subcategoria.subcategoriaNombre
+                        )}
+                      </td>
+
+                      <td>
+                        <div className={styles.rowActions}>
+                          <ConPermiso permisos={ACCESO.editarCategorias}>
+                            <button
+                              type="button"
+                              className={styles.linkAction}
+                              onClick={() =>
+                                comenzarEdicionSubcategoria(subcategoria)
+                              }
+                              disabled={
+                                subcategoriaEnEdicion ===
+                                subcategoria.subcategoriaId
+                              }
+                            >
+                              Editar
+                            </button>
+                          </ConPermiso>
+
+                          <ConPermiso permisos={ACCESO.eliminarCategorias}>
+                            <button
+                              type="button"
+                              className={`${styles.linkAction} ${styles.linkActionDanger}`}
+                              onClick={() =>
+                                void eliminarSubcategoria(subcategoria)
+                              }
+                            >
+                              Eliminar
+                            </button>
+                          </ConPermiso>
+                        </div>
                       </td>
                     </tr>
                   ))}
