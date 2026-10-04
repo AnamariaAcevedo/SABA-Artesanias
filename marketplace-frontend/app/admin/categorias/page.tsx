@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { Fragment, useEffect, useState, type FormEvent } from "react";
 import { apiFetch, apiFetchConPaginacion } from "@/lib/api";
 import styles from "@/components/admin/admin.module.css";
 import ConPermiso from "@/components/auth/ConPermiso";
@@ -100,12 +100,10 @@ export default function CategoriasPage() {
 
   useEffect(() => {
     if (!categoriaSeleccionada) {
-      setSubcategorias([]);
       return;
     }
 
     let vigente = true;
-    setCargandoSubcategorias(true);
 
     obtenerTodos<SubcategoriaDeCategoria>(
       `/categorias/${categoriaSeleccionada.id}/subcategorias`
@@ -127,6 +125,7 @@ export default function CategoriasPage() {
 
   function recargar() {
     setCargando(true);
+    setCargandoSubcategorias(Boolean(categoriaSeleccionada));
     setError("");
     setRevision((valor) => valor + 1);
   }
@@ -136,7 +135,11 @@ export default function CategoriasPage() {
     setAviso("");
     setFormularioActivo(null);
     cancelarEdiciones();
-    setCategoriaSeleccionada(categoria);
+    setSubcategorias([]);
+    setCargandoSubcategorias(categoriaSeleccionada?.id !== categoria.id);
+    setCategoriaSeleccionada((actual) =>
+      actual?.id === categoria.id ? null : categoria
+    );
   }
 
   function cancelarEdiciones() {
@@ -483,7 +486,8 @@ export default function CategoriasPage() {
 
             <tbody>
               {categorias.map((categoria) => (
-                <tr key={categoria.id}>
+                <Fragment key={categoria.id}>
+                <tr>
                   <td>
                     {categoriaEnEdicion === categoria.id ? (
                       <form
@@ -541,6 +545,9 @@ export default function CategoriasPage() {
                         type="button"
                         className={styles.linkAction}
                         onClick={() => seleccionarCategoria(categoria)}
+                        aria-expanded={
+                          categoriaSeleccionada?.id === categoria.id
+                        }
                       >
                         Gestionar subcategorías
                       </button>
@@ -568,6 +575,221 @@ export default function CategoriasPage() {
                     </div>
                   </td>
                 </tr>
+
+                {categoriaSeleccionada?.id === categoria.id && (
+                  <tr className="subcategory-expanded-row">
+                    <td colSpan={2} className="subcategory-cell">
+                      <section
+                        className="subcategory-panel"
+                        aria-label={`Subcategorías de ${categoria.nombre}`}
+                      >
+                        <div className="subcategory-toolbar">
+                          <span className="subcategory-count">
+                            {cargandoSubcategorias
+                              ? "Cargando…"
+                              : `${subcategorias.length} ${
+                                  subcategorias.length === 1
+                                    ? "subcategoría"
+                                    : "subcategorías"
+                                }`}
+                          </span>
+
+                          <ConPermiso permisos={ACCESO.crearCategorias}>
+                            <button
+                              type="button"
+                              className={styles.buttonPrimary}
+                              onClick={() => {
+                                setError("");
+                                setAviso("");
+                                cancelarEdiciones();
+                                setFormularioActivo("subcategoria");
+                              }}
+                            >
+                              + Nueva subcategoría
+                            </button>
+                          </ConPermiso>
+                        </div>
+
+                        {formularioActivo === "subcategoria" && (
+                          <ConPermiso permisos={ACCESO.crearCategorias}>
+                            <form
+                              onSubmit={crearSubcategoria}
+                              className={styles.form}
+                            >
+                              <div className={styles.field}>
+                                <label htmlFor="nueva-subcategoria">
+                                  Nombre de la subcategoría
+                                </label>
+                                <input
+                                  id="nueva-subcategoria"
+                                  value={nombreNuevaSubcategoria}
+                                  onChange={(event) =>
+                                    setNombreNuevaSubcategoria(event.target.value)
+                                  }
+                                  required
+                                  maxLength={100}
+                                  placeholder="Por ejemplo: Canastos"
+                                />
+                              </div>
+
+                              <button
+                                type="submit"
+                                className={styles.buttonPrimary}
+                                disabled={guardandoSubcategoria}
+                              >
+                                {guardandoSubcategoria
+                                  ? "Guardando…"
+                                  : "Crear y asignar"}
+                              </button>
+                              <button
+                                type="button"
+                                className={styles.buttonGhost}
+                                disabled={guardandoSubcategoria}
+                                onClick={() => setFormularioActivo(null)}
+                              >
+                                Cancelar
+                              </button>
+                            </form>
+                          </ConPermiso>
+                        )}
+
+                        {cargandoSubcategorias && (
+                          <p role="status">Cargando subcategorías…</p>
+                        )}
+
+                        {!cargandoSubcategorias && (
+                          <div className="subcategory-list">
+                            {subcategorias.map((subcategoria) => {
+                              const editando =
+                                subcategoriaEnEdicion ===
+                                subcategoria.subcategoriaId;
+
+                              return (
+                                <article
+                                  key={subcategoria.subcategoriaId}
+                                  className="subcategory-item"
+                                >
+                                  {editando ? (
+                                    <form
+                                      className={`${styles.inlineEdit} subcategory-edit-form`}
+                                      onSubmit={(event) =>
+                                        void editarSubcategoria(
+                                          event,
+                                          subcategoria
+                                        )
+                                      }
+                                    >
+                                      <label
+                                        className={styles.visuallyHidden}
+                                        htmlFor={`editar-subcategoria-${subcategoria.subcategoriaId}`}
+                                      >
+                                        Nuevo nombre de la subcategoría
+                                      </label>
+                                      <input
+                                        id={`editar-subcategoria-${subcategoria.subcategoriaId}`}
+                                        className={styles.inlineEditInput}
+                                        value={nombreSubcategoriaEditada}
+                                        onChange={(event) =>
+                                          setNombreSubcategoriaEditada(
+                                            event.target.value
+                                          )
+                                        }
+                                        maxLength={100}
+                                        required
+                                        autoFocus
+                                        disabled={
+                                          guardandoEdicion === "subcategoria"
+                                        }
+                                      />
+                                      <div
+                                        className={styles.inlineEditActions}
+                                      >
+                                        <button
+                                          type="submit"
+                                          className={styles.inlineSaveButton}
+                                          disabled={
+                                            guardandoEdicion === "subcategoria"
+                                          }
+                                        >
+                                          {guardandoEdicion === "subcategoria"
+                                            ? "Guardando…"
+                                            : "Guardar"}
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className={styles.inlineCancelButton}
+                                          onClick={cancelarEdiciones}
+                                          disabled={
+                                            guardandoEdicion === "subcategoria"
+                                          }
+                                        >
+                                          Cancelar
+                                        </button>
+                                      </div>
+                                    </form>
+                                  ) : (
+                                    <>
+                                      <div className="subcategory-name">
+                                        <span
+                                          className="subcategory-dot"
+                                          aria-hidden="true"
+                                        />
+                                        <span>
+                                          {subcategoria.subcategoriaNombre}
+                                        </span>
+                                      </div>
+
+                                      <div className="subcategory-actions">
+                                        <ConPermiso
+                                          permisos={ACCESO.editarCategorias}
+                                        >
+                                          <button
+                                            type="button"
+                                            className={styles.linkAction}
+                                            onClick={() =>
+                                              comenzarEdicionSubcategoria(
+                                                subcategoria
+                                              )
+                                            }
+                                          >
+                                            Editar
+                                          </button>
+                                        </ConPermiso>
+                                        <ConPermiso
+                                          permisos={ACCESO.eliminarCategorias}
+                                        >
+                                          <button
+                                            type="button"
+                                            className={`${styles.linkAction} ${styles.linkActionDanger}`}
+                                            onClick={() =>
+                                              void eliminarSubcategoria(
+                                                subcategoria
+                                              )
+                                            }
+                                          >
+                                            Eliminar
+                                          </button>
+                                        </ConPermiso>
+                                      </div>
+                                    </>
+                                  )}
+                                </article>
+                              );
+                            })}
+
+                            {subcategorias.length === 0 && (
+                              <div className="subcategory-empty">
+                                Todavía no hay subcategorías. Creá la primera
+                                para empezar.
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </section>
+                    </td>
+                  </tr>
+                )}
+                </Fragment>
               ))}
 
               {categorias.length === 0 && (
@@ -582,187 +804,163 @@ export default function CategoriasPage() {
         </div>
       )}
 
-      {categoriaSeleccionada && (
-        <section>
-          <div className={styles.sectionHeader}>
-            <h2 className={styles.pageTitle}>
-              Subcategorías de: {categoriaSeleccionada.nombre}
-            </h2>
+      <style jsx>{`
+        .subcategory-expanded-row,
+        .subcategory-expanded-row:hover {
+          background: transparent;
+        }
 
-            <ConPermiso permisos={ACCESO.crearCategorias}>
-              <button
-                type="button"
-                className={styles.buttonPrimary}
-                onClick={() => {
-                  setError("");
-                  setAviso("");
-                  cancelarEdiciones();
-                  setFormularioActivo("subcategoria");
-                }}
-              >
-                + Nueva subcategoría
-              </button>
-            </ConPermiso>
-          </div>
+        .subcategory-cell {
+          padding: 0 !important;
+          border-top: 0 !important;
+          background: linear-gradient(
+            135deg,
+            rgba(255, 246, 230, 0.92),
+            rgba(244, 221, 186, 0.62)
+          );
+        }
 
-          {formularioActivo === "subcategoria" && (
-            <ConPermiso permisos={ACCESO.crearCategorias}>
-              <form onSubmit={crearSubcategoria} className={styles.form}>
-                <div className={styles.field}>
-                  <label htmlFor="nueva-subcategoria">
-                    Nombre de la subcategoría
-                  </label>
+        .subcategory-panel {
+          margin: 0 18px 18px;
+          padding: 18px 20px 20px;
+          border-left: 3px solid #b98c47;
+          border-radius: 0 0 18px 18px;
+          animation: reveal-subcategories 220ms ease-out;
+        }
 
-                  <input
-                    id="nueva-subcategoria"
-                    value={nombreNuevaSubcategoria}
-                    onChange={(event) =>
-                      setNombreNuevaSubcategoria(event.target.value)
-                    }
-                    required
-                    maxLength={100}
-                    placeholder="Por ejemplo: Canastos"
-                  />
-                </div>
+        .subcategory-toolbar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          margin-bottom: 14px;
+        }
 
-                <button
-                  type="submit"
-                  className={styles.buttonPrimary}
-                  disabled={guardandoSubcategoria}
-                >
-                  {guardandoSubcategoria
-                    ? "Guardando…"
-                    : "Crear y asignar"}
-                </button>
+        .subcategory-count {
+          display: inline-flex;
+          align-items: center;
+          min-height: 30px;
+          padding: 5px 12px;
+          border: 1px solid rgba(184, 139, 68, 0.55);
+          border-radius: 999px;
+          background: rgba(255, 246, 230, 0.72);
+          color: #6b4a22;
+          font: 600 12px/1.2 Arial, sans-serif;
+          letter-spacing: 0.04em;
+        }
 
-                <button
-                  type="button"
-                  className={styles.buttonGhost}
-                  disabled={guardandoSubcategoria}
-                  onClick={() => setFormularioActivo(null)}
-                >
-                  Cancelar
-                </button>
-              </form>
-            </ConPermiso>
-          )}
+        .subcategory-list {
+          display: grid;
+          gap: 8px;
+        }
 
-          {cargandoSubcategorias && (
-            <p role="status">Cargando subcategorías…</p>
-          )}
+        .subcategory-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 18px;
+          min-height: 52px;
+          padding: 10px 14px;
+          border: 1px solid rgba(184, 139, 68, 0.38);
+          border-radius: 14px;
+          background: rgba(255, 246, 230, 0.76);
+          box-shadow: 0 3px 12px rgba(99, 36, 14, 0.04);
+          transition:
+            transform 160ms ease,
+            border-color 160ms ease,
+            box-shadow 160ms ease,
+            background 160ms ease;
+        }
 
-          {!cargandoSubcategorias && (
-            <div className={styles.tableWrap}>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th scope="col">Nombre</th>
-                    <th scope="col">Acciones</th>
-                  </tr>
-                </thead>
+        .subcategory-item:hover {
+          transform: translateX(4px);
+          border-color: rgba(155, 108, 46, 0.72);
+          background: rgba(255, 250, 241, 0.96);
+          box-shadow: 0 5px 16px rgba(99, 36, 14, 0.08);
+        }
 
-                <tbody>
-                  {subcategorias.map((subcategoria) => (
-                    <tr key={subcategoria.subcategoriaId}>
-                      <td>
-                        {subcategoriaEnEdicion ===
-                        subcategoria.subcategoriaId ? (
-                          <form
-                            className={styles.inlineEdit}
-                            onSubmit={(event) =>
-                              void editarSubcategoria(event, subcategoria)
-                            }
-                          >
-                            <label
-                              className={styles.visuallyHidden}
-                              htmlFor={`editar-subcategoria-${subcategoria.subcategoriaId}`}
-                            >
-                              Nuevo nombre de la subcategoría
-                            </label>
-                            <input
-                              id={`editar-subcategoria-${subcategoria.subcategoriaId}`}
-                              className={styles.inlineEditInput}
-                              value={nombreSubcategoriaEditada}
-                              onChange={(event) =>
-                                setNombreSubcategoriaEditada(event.target.value)
-                              }
-                              maxLength={100}
-                              required
-                              autoFocus
-                              disabled={guardandoEdicion === "subcategoria"}
-                            />
-                            <div className={styles.inlineEditActions}>
-                              <button
-                                type="submit"
-                                className={styles.inlineSaveButton}
-                                disabled={guardandoEdicion === "subcategoria"}
-                              >
-                                {guardandoEdicion === "subcategoria"
-                                  ? "Guardando…"
-                                  : "Guardar"}
-                              </button>
-                              <button
-                                type="button"
-                                className={styles.inlineCancelButton}
-                                onClick={cancelarEdiciones}
-                                disabled={guardandoEdicion === "subcategoria"}
-                              >
-                                Cancelar
-                              </button>
-                            </div>
-                          </form>
-                        ) : (
-                          subcategoria.subcategoriaNombre
-                        )}
-                      </td>
+        .subcategory-name {
+          display: flex;
+          align-items: center;
+          gap: 11px;
+          min-width: 0;
+          color: #48200f;
+          font: 500 14px/1.4 Arial, sans-serif;
+        }
 
-                      <td>
-                        <div className={styles.rowActions}>
-                          <ConPermiso permisos={ACCESO.editarCategorias}>
-                            <button
-                              type="button"
-                              className={styles.linkAction}
-                              onClick={() =>
-                                comenzarEdicionSubcategoria(subcategoria)
-                              }
-                              disabled={
-                                subcategoriaEnEdicion ===
-                                subcategoria.subcategoriaId
-                              }
-                            >
-                              Editar
-                            </button>
-                          </ConPermiso>
+        .subcategory-dot {
+          width: 8px;
+          height: 8px;
+          flex: 0 0 auto;
+          border-radius: 50%;
+          background: #b98c47;
+          box-shadow: 0 0 0 4px rgba(185, 140, 71, 0.15);
+        }
 
-                          <ConPermiso permisos={ACCESO.eliminarCategorias}>
-                            <button
-                              type="button"
-                              className={`${styles.linkAction} ${styles.linkActionDanger}`}
-                              onClick={() =>
-                                void eliminarSubcategoria(subcategoria)
-                              }
-                            >
-                              Eliminar
-                            </button>
-                          </ConPermiso>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+        .subcategory-actions {
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          gap: 14px;
+          flex: 0 0 auto;
+        }
 
-                  {subcategorias.length === 0 && (
-                    <tr>
-                      <td colSpan={2} className={styles.emptyRow}>
-                        Esta categoría todavía no tiene subcategorías.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-      )}
+        .subcategory-edit-form {
+          width: 100%;
+        }
+
+        .subcategory-empty {
+          padding: 24px 18px;
+          border: 1px dashed rgba(155, 108, 46, 0.58);
+          border-radius: 14px;
+          color: #6b4a22;
+          background: rgba(255, 246, 230, 0.5);
+          text-align: center;
+          font: 14px/1.5 Arial, sans-serif;
+        }
+
+        @keyframes reveal-subcategories {
+          from {
+            opacity: 0;
+            transform: translateY(-8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @media (max-width: 720px) {
+          .subcategory-panel {
+            margin: 0 8px 12px;
+            padding: 14px 10px 16px;
+          }
+
+          .subcategory-toolbar,
+          .subcategory-item {
+            align-items: stretch;
+            flex-direction: column;
+          }
+
+          .subcategory-actions {
+            justify-content: flex-start;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .subcategory-panel {
+            animation: none;
+          }
+
+          .subcategory-item {
+            transition: none;
+          }
+
+          .subcategory-item:hover {
+            transform: none;
+          }
+        }
+      `}</style>
     </section>
   );
 }
