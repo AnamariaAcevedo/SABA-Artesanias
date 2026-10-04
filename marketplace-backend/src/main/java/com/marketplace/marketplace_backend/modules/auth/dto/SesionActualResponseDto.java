@@ -11,7 +11,7 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-// DTO de respuesta con los datos del usuario autenticado y sus permisos vigentes
+// DTO de respuesta con los datos del usuario autenticado, sus permisos vigentes y la tienda que gestiona
 public class SesionActualResponseDto {
     private Long id;
     private String usuario;
@@ -20,4 +20,8 @@ public class SesionActualResponseDto {
     private String email;
     private String rol;
     private List<String> permisos;
+    // Tienda que gestiona el usuario (null si no gestiona ninguna) y su vinculo: PRINCIPAL o SECUNDARIO.
+    private Long idTienda;
+    private String nombreTienda;
+    private String vinculoTienda;
 }

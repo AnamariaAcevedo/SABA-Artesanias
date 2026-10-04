@@ -12,6 +12,8 @@ import com.marketplace.marketplace_backend.modules.refreshtoken.RefreshToken;
 import com.marketplace.marketplace_backend.modules.refreshtoken.RefreshTokenService;
 import com.marketplace.marketplace_backend.modules.rol.Rol;
 import com.marketplace.marketplace_backend.modules.rol.RolRepository;
+import com.marketplace.marketplace_backend.modules.tiendausuario.TiendaUsuario;
+import com.marketplace.marketplace_backend.modules.tiendausuario.TiendaUsuarioRepository;
 import com.marketplace.marketplace_backend.modules.usuario.Usuario;
 import com.marketplace.marketplace_backend.modules.usuario.UsuarioRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -41,6 +43,7 @@ public class AuthServiceImpl implements AuthService {
     private final DireccionRepository direccionRepository;
     private final BarrioRepository barrioRepository;
     private final PasswordEncoder passwordEncoder;
+    private final TiendaUsuarioRepository tiendaUsuarioRepository;
 
     @Override
     @Transactional
@@ -153,6 +156,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public SesionActualResponseDto obtenerSesionActual() {
         String nombreUsuario = SecurityContextHolder.getContext().getAuthentication().getName();
 
@@ -164,6 +168,8 @@ public class AuthServiceImpl implements AuthService {
                 .filter(authority -> !authority.startsWith("ROLE_"))
                 .toList();
 
+        TiendaUsuario vinculo = tiendaUsuarioRepository.findFirstByUsuario_Id(usuarioEntity.getId()).orElse(null);
+
         return new SesionActualResponseDto(
                 usuarioEntity.getId(),
                 usuarioEntity.getUsuario(),
@@ -171,7 +177,10 @@ public class AuthServiceImpl implements AuthService {
                 usuarioEntity.getApellido(),
                 usuarioEntity.getEmail(),
                 usuarioEntity.getRol().getNombre(),
-                permisos
+                permisos,
+                vinculo == null ? null : vinculo.getTienda().getId(),
+                vinculo == null ? null : vinculo.getTienda().getNombre(),
+                vinculo == null ? null : vinculo.getTipo().name()
         );
     }
 }

@@ -55,6 +55,31 @@
   border-radius: 2px;
 }
 
+/* Botón con ícono de casa para volver al catálogo (components/catalogo/BotonInicio). */
+.homeButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  align-self: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid #63240e;
+  color: #63240e;
+  background: transparent;
+  transition: background 0.15s ease;
+}
+
+.homeButton:hover {
+  background: rgba(99, 36, 14, 0.08);
+}
+
+.homeButton:focus-visible {
+  outline: 3px solid #63240e;
+  outline-offset: 3px;
+}
+
 .logo {
   width: 150px;
   text-align: center;

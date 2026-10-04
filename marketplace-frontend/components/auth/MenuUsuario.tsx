@@ -14,7 +14,8 @@ type Props = {
 };
 
 // Recuadro con la miniatura y el nombre de usuario de la sesión; al hacer clic
-// despliega un menú con "Ver perfil" (o "Ver catálogo" en el panel) y "Cerrar sesión".
+// despliega un menú con "Mi tienda" (si gestiona una), "Ver perfil" (o "Ver
+// catálogo" en el panel) y "Cerrar sesión".
 export default function MenuUsuario({ enPanel = false }: Props) {
     const { sesion } = useSesion();
     const [abierto, setAbierto] = useState(false);
@@ -110,6 +111,17 @@ export default function MenuUsuario({ enPanel = false }: Props) {
 
             {abierto && (
                 <ul id={`${id}-menu`} className={styles.menu}>
+                    {sesion.idTienda !== null && (
+                        <li>
+                            <Link
+                                href="/mi-tienda"
+                                className={styles.opcion}
+                                onClick={() => setAbierto(false)}
+                            >
+                                Mi tienda
+                            </Link>
+                        </li>
+                    )}
                     <li>
                         <Link
                             href={enPanel ? "/home" : "/perfil"}

@@ -32,7 +32,8 @@ function obtenerToken(): string | null {
 
 async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<StandardResponse<T>> {
   const headers = new Headers(init.headers);
-  headers.set("Content-Type", "application/json");
+  // Con FormData (subida de archivos) el navegador arma el Content-Type con su boundary.
+  if (!(init.body instanceof FormData)) headers.set("Content-Type", "application/json");
   const token = obtenerToken();
   if (token) headers.set("Authorization", `Bearer ${token}`);
 
