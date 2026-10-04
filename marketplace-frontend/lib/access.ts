@@ -33,6 +33,17 @@ export const ACCESO = {
         "ASSIGN_PERMISOS",
         "REVOKE_PERMISOS",
     ],
+        verCategorias: ["CREATE_CATEGORIAS"],
+
+    crearCategorias: ["CREATE_CATEGORIAS"],
+
+    editarCategorias: ["UPDATE_CATEGORIAS"],
+
+    eliminarCategorias: ["DELETE_CATEGORIAS"],
+
+    asignarSubcategorias: ["ASSIGN_SUBCATEGORIAS"],
+
+    quitarSubcategorias: ["REVOKE_SUBCATEGORIAS"],
 } satisfies Record<string, string[]>;
 
 export function cumplePermisos(
@@ -49,7 +60,8 @@ export function puedeEntrarAlPanel(
 ): boolean {
     return (
         cumplePermisos(permisos, ACCESO.verUsuarios) ||
-        cumplePermisos(permisos, ACCESO.verRoles)
+        cumplePermisos(permisos, ACCESO.verRoles) ||
+        cumplePermisos(permisos, ACCESO.verCategorias)
     );
 }
 
@@ -79,6 +91,8 @@ export function puedeAbrirRuta(
         return cumplePermisos(permisos, ACCESO.verRoles);
     }
 
-    // Una sección nueva necesita su regla explícita.
+    if (ruta === "/admin/categorias") {
+        return cumplePermisos(permisos, ACCESO.verCategorias);
+}
     return false;
 }

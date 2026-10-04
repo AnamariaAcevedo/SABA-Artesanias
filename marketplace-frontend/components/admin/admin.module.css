@@ -140,6 +140,19 @@
 .linkAction:disabled { opacity: .5; cursor: not-allowed; }
 .linkActionDanger { color: #8a2c14; }
 
+.inlineEdit { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.inlineEditInput { width: min(100%, 320px); min-height: 38px; border: 1px solid #9b6c2e; border-radius: 999px; padding: 7px 14px; background: #fff6e6; color: #291606; font: 14px Arial, sans-serif; }
+.inlineEditInput:focus { outline: 3px solid rgba(99, 36, 14, .2); border-color: #63240e; }
+.inlineEditInput:disabled { opacity: .7; }
+.inlineEditActions { display: flex; align-items: center; gap: 8px; }
+.inlineSaveButton, .inlineCancelButton { min-height: 34px; border-radius: 999px; padding: 6px 14px; font: 13px Arial, sans-serif; cursor: pointer; transition: background .15s ease, color .15s ease; }
+.inlineSaveButton { border: 1px solid #63240e; background: #63240e; color: #f7dfb9; }
+.inlineSaveButton:hover:not(:disabled) { background: #7a3216; }
+.inlineCancelButton { border: 1px solid #63240e; background: transparent; color: #63240e; }
+.inlineCancelButton:hover:not(:disabled) { background: rgba(99, 36, 14, .08); }
+.inlineSaveButton:disabled, .inlineCancelButton:disabled { opacity: .55; cursor: not-allowed; }
+.visuallyHidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
 .pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; font-family: Arial, sans-serif; font-size: 14px; color: #48200f; flex-wrap: wrap; gap: 12px; }
 .paginationButtons { display: flex; gap: 8px; }
 
