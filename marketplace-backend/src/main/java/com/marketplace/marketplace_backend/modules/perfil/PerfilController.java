@@ -2,6 +2,7 @@ package com.marketplace.marketplace_backend.modules.perfil;
 
 import com.marketplace.marketplace_backend.common.StandardResponseDto;
 import com.marketplace.marketplace_backend.modules.perfil.dto.PerfilActualizadoResponseDto;
+import com.marketplace.marketplace_backend.modules.perfil.dto.PerfilContrasenhaRequestDto;
 import com.marketplace.marketplace_backend.modules.perfil.dto.PerfilResponseDto;
 import com.marketplace.marketplace_backend.modules.perfil.dto.PerfilUpdateRequestDto;
 import jakarta.validation.Valid;
@@ -37,6 +38,17 @@ public class PerfilController {
         StandardResponseDto<PerfilActualizadoResponseDto> response = new StandardResponseDto<>();
         response.setSuccess(true);
         response.setData(perfilService.actualizarPerfil(request));
+        response.setErrors(null);
+        response.setPagination(null);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/contrasenha")
+    public ResponseEntity<StandardResponseDto<Void>> cambiarContrasenha(@Valid @RequestBody PerfilContrasenhaRequestDto request) {
+        StandardResponseDto<Void> response = new StandardResponseDto<>();
+        perfilService.cambiarContrasenha(request);
+        response.setSuccess(true);
+        response.setData(null);
         response.setErrors(null);
         response.setPagination(null);
         return ResponseEntity.ok(response);

@@ -11,6 +11,7 @@ import { useSesion } from "@/components/auth/SesionProvider";
 import { ApiError, apiFetch } from "@/lib/api";
 import {
   etiquetaDireccionPerfil,
+  etiquetaNumeroPerfil,
   etiquetaUbicacionPerfil,
   formatearFecha,
   type Perfil,
@@ -81,6 +82,7 @@ function PerfilContenido() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
   const [editando, setEditando] = useState(false);
+  const [cambiandoContrasenha, setCambiandoContrasenha] = useState(false);
   const [mensajeExito, setMensajeExito] = useState("");
 
   useEffect(() => {
@@ -119,17 +121,29 @@ function PerfilContenido() {
           <h2 className={styles.title}>
             {perfil.nombre} {perfil.apellido}
           </h2>
-          {!editando && (
-            <button
-              type="button"
-              className={styles.buttonPrimary}
-              onClick={() => {
-                setMensajeExito("");
-                setEditando(true);
-              }}
-            >
-              Editar perfil
-            </button>
+          {!editando && !cambiandoContrasenha && (
+            <div className={perfilStyles.acciones}>
+              <button
+                type="button"
+                className={styles.buttonPrimary}
+                onClick={() => {
+                  setMensajeExito("");
+                  setEditando(true);
+                }}
+              >
+                Editar perfil
+              </button>
+              <button
+                type="button"
+                className={styles.buttonOutline}
+                onClick={() => {
+                  setMensajeExito("");
+                  setCambiandoContrasenha(true);
+                }}
+              >
+                Cambiar contraseña
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -150,6 +164,8 @@ function PerfilContenido() {
             setMensajeExito("Tus datos se actualizaron correctamente.");
           }}
         />
+      ) : cambiandoContrasenha ? (
+        <CambioContrasenha onCancelar={() => setCambiandoContrasenha(false)} />
       ) : (
         <div className={styles.card}>
           <dl className={perfilStyles.datos}>
@@ -169,9 +185,13 @@ function PerfilContenido() {
               <dt>Correo electrónico</dt>
               <dd>{perfil.email}</dd>
             </div>
-            <div className={`${perfilStyles.dato} ${perfilStyles.datoAncho}`}>
+            <div className={perfilStyles.dato}>
               <dt>Dirección</dt>
               <dd>{etiquetaDireccionPerfil(perfil)}</dd>
+            </div>
+            <div className={perfilStyles.dato}>
+              <dt>Número de casa / departamento</dt>
+              <dd>{etiquetaNumeroPerfil(perfil)}</dd>
             </div>
             <div className={`${perfilStyles.dato} ${perfilStyles.datoAncho}`}>
               <dt>Ubicación</dt>
@@ -180,7 +200,115 @@ function PerfilContenido() {
           </dl>
         </div>
       )}
+
     </>
+  );
+}
+
+function CambioContrasenha({ onCancelar }: { onCancelar: () => void }) {
+  const enviandoRef = useRef(false);
+  const [actual, setActual] = useState("");
+  const [nueva, setNueva] = useState("");
+  const [repetir, setRepetir] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState("");
+  const [exito, setExito] = useState("");
+
+  async function enviar(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (enviandoRef.current) return;
+    setError("");
+    setExito("");
+
+    if (nueva.length < 8) {
+      setError("La contraseña nueva debe tener al menos 8 caracteres.");
+      return;
+    }
+    if (nueva !== repetir) {
+      setError("Las contraseñas nuevas no coinciden.");
+      return;
+    }
+
+    enviandoRef.current = true;
+    setEnviando(true);
+    try {
+      await apiFetch("/perfil/contrasenha", {
+        method: "PUT",
+        body: JSON.stringify({ contrasenhaActual: actual, contrasenhaNueva: nueva }),
+      });
+      setActual("");
+      setNueva("");
+      setRepetir("");
+      setExito("Tu contraseña se cambió. Por seguridad, cerramos tus otras sesiones.");
+    } catch (cause) {
+      setError(cause instanceof ApiError ? cause.message : "No pudimos cambiar tu contraseña.");
+    } finally {
+      enviandoRef.current = false;
+      setEnviando(false);
+    }
+  }
+
+  return (
+    <section className={styles.card}>
+      <h3 className={styles.sectionSubtitle}>Cambiar contraseña</h3>
+      <form onSubmit={enviar} className={styles.form} aria-busy={enviando}>
+        <div className={styles.field}>
+          <label htmlFor="contrasenha-actual">Contraseña actual</label>
+          <input
+            id="contrasenha-actual"
+            type="password"
+            autoComplete="current-password"
+            required
+            value={actual}
+            onChange={(e) => setActual(e.target.value)}
+          />
+        </div>
+        <div className={styles.row}>
+          <div className={styles.field}>
+            <label htmlFor="contrasenha-nueva">Contraseña nueva</label>
+            <input
+              id="contrasenha-nueva"
+              type="password"
+              autoComplete="new-password"
+              required
+              minLength={8}
+              value={nueva}
+              onChange={(e) => setNueva(e.target.value)}
+            />
+          </div>
+          <div className={styles.field}>
+            <label htmlFor="contrasenha-repetir">Repetir contraseña nueva</label>
+            <input
+              id="contrasenha-repetir"
+              type="password"
+              autoComplete="new-password"
+              required
+              minLength={8}
+              value={repetir}
+              onChange={(e) => setRepetir(e.target.value)}
+            />
+          </div>
+        </div>
+        {error && (
+          <p role="alert" className={styles.error}>
+            {error}
+          </p>
+        )}
+        {exito && (
+          <p role="status" className={perfilStyles.exito}>
+            {exito}
+          </p>
+        )}
+        <div className={perfilStyles.acciones}>
+          <button type="button" className={styles.buttonOutline} onClick={onCancelar} disabled={enviando}>
+            Volver a mi perfil
+          </button>
+          <button type="submit" disabled={enviando} className={styles.buttonPrimary}>
+            {enviando ? "Guardando…" : "Cambiar contraseña"}
+          </button>
+        </div>
+      </form>
+    </section>
   );
 }
 
