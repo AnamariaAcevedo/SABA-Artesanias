@@ -4,6 +4,7 @@ export interface Tienda {
   descripcion: string;
   idDireccion: number;
   nombreDireccion: string;
+  direccionCompleta: string;
   createdAt: string;
   updatedAt: string;
 }

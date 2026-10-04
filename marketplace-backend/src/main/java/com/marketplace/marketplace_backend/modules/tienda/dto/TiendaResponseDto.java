@@ -18,6 +18,8 @@ public class TiendaResponseDto {
     private String descripcion;
     private Long idDireccion;
     private String nombreDireccion;
+    // Dirección completa para mostrar: calle con número de casa o edificio, barrio, ciudad y país.
+    private String direccionCompleta;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

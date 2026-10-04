@@ -12,6 +12,7 @@ import { Tienda } from "@/types/Tienda";
 import { obtenerTiendaPorId } from "@/services/tiendaService";
 import { obtenerProductos } from "@/services/productoService";
 import MenuUsuario from "@/components/auth/MenuUsuario";
+import BotonInicio from "@/components/catalogo/BotonInicio";
 import ProductoCard from "@/components/catalogo/ProductoCard";
 import { useRolSesion } from "@/lib/auth";
 
@@ -66,6 +67,8 @@ function TiendaDetalleContenido({ id }: { id: string }) {
   return (
     <main className={homeStyles.homeContainer}>
       <header className={homeStyles.homeHeader}>
+        <BotonInicio />
+
         <div className={homeStyles.logo}>
           <h1>•SABA•</h1>
           <p>Artesanías</p>
@@ -97,7 +100,7 @@ function TiendaDetalleContenido({ id }: { id: string }) {
               <div className={styles.storeBannerInfo}>
                 <h2>{tienda.nombre}</h2>
                 {tienda.descripcion && <p>{tienda.descripcion}</p>}
-                <span className={styles.storeCardAddress}>{tienda.nombreDireccion}</span>
+                <span className={styles.storeCardAddress}>{tienda.direccionCompleta}</span>
               </div>
             </section>
 

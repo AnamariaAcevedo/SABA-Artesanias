@@ -20,6 +20,10 @@ type Sesion = {
     email: string;
     rol: string;
     permisos: string[];
+    // Tienda que gestiona el usuario (null si ninguna) y su vínculo con ella.
+    idTienda: number | null;
+    nombreTienda: string | null;
+    vinculoTienda: "PRINCIPAL" | "SECUNDARIO" | null;
 };
 
 type ContextoSesion = {
