@@ -3,16 +3,25 @@
 .contenedor { max-width: 880px; margin: 0 auto; }
 
 .encabezado { display: flex; align-items: center; gap: 24px; margin-bottom: 24px; }
+.encabezadoTexto { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; min-width: 0; }
 /* Tamaño de la foto grande; el resto del estilo viene de AvatarUsuario. */
 .encabezado .foto { width: 112px; height: 112px; font-size: 40px; }
 
 .datos { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 28px; margin: 0; font-family: Arial, sans-serif; }
 .dato { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.datoAncho { grid-column: 1 / -1; }
 .dato dt { font-size: 13px; letter-spacing: .5px; text-transform: uppercase; color: #6b4a22; }
 .dato dd { margin: 0; font-size: 16px; color: #291606; overflow-wrap: anywhere; }
+
+.ayuda { font: 13px/1.4 Arial, sans-serif; color: #6b4a22; padding-left: 4px; }
+
+.ubicacionActual { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; font-family: Arial, sans-serif; font-size: 15px; color: #291606; }
+
+.exito { font: 14px/1.6 Arial, sans-serif; padding: 12px 14px; border-radius: 10px; background: #eef7e6; color: #2f5d1f; margin-bottom: 16px; }
 
 @media (max-width: 640px) {
   .datos { grid-template-columns: 1fr; }
   .encabezado { flex-direction: column; text-align: center; }
+  .encabezadoTexto { align-items: center; }
   .encabezado .foto { width: 96px; height: 96px; font-size: 34px; }
 }

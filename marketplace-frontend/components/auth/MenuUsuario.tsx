@@ -7,9 +7,15 @@ import { useSesion } from "@/components/auth/SesionProvider";
 import { cerrarSesion } from "@/lib/logout";
 import styles from "./menuUsuario.module.css";
 
+type Props = {
+    // En el panel de administración el menú ofrece volver al catálogo en vez
+    // de ir al perfil.
+    enPanel?: boolean;
+};
+
 // Recuadro con la miniatura y el nombre de usuario de la sesión; al hacer clic
-// despliega un menú con "Ver perfil" y "Cerrar sesión".
-export default function MenuUsuario() {
+// despliega un menú con "Ver perfil" (o "Ver catálogo" en el panel) y "Cerrar sesión".
+export default function MenuUsuario({ enPanel = false }: Props) {
     const { sesion } = useSesion();
     const [abierto, setAbierto] = useState(false);
     const [cerrando, setCerrando] = useState(false);
@@ -106,11 +112,11 @@ export default function MenuUsuario() {
                 <ul id={`${id}-menu`} className={styles.menu}>
                     <li>
                         <Link
-                            href="/perfil"
+                            href={enPanel ? "/home" : "/perfil"}
                             className={styles.opcion}
                             onClick={() => setAbierto(false)}
                         >
-                            Ver perfil
+                            {enPanel ? "Ver catálogo" : "Ver perfil"}
                         </Link>
                     </li>
                     <li>

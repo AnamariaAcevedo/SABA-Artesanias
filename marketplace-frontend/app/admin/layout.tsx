@@ -116,7 +116,7 @@ export default function AdminLayout({
           <span className={styles.subtitle}>
                     Panel de gestión
                 </span>
-          <MenuUsuario />
+          <MenuUsuario enPanel />
         </header>
 
         <nav className={styles.nav} aria-label="Gestión">
