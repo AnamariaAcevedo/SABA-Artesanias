@@ -11,7 +11,7 @@ import { Producto } from "@/types/Producto";
 import { Tienda } from "@/types/Tienda";
 import { obtenerTiendaPorId } from "@/services/tiendaService";
 import { obtenerProductos } from "@/services/productoService";
-import LogoutButton from "@/components/auth/LogoutButton";
+import MenuUsuario from "@/components/auth/MenuUsuario";
 import ProductoCard from "@/components/catalogo/ProductoCard";
 import { useRolSesion } from "@/lib/auth";
 
@@ -76,7 +76,7 @@ function TiendaDetalleContenido({ id }: { id: string }) {
         </Link>
 
         {rol === undefined ? null : rol ? (
-          <LogoutButton className={homeStyles.logoutButton} />
+          <MenuUsuario />
         ) : (
           <Link href="/login" className={homeStyles.logoutButton} style={{ marginLeft: "auto" }}>
             Iniciar sesión

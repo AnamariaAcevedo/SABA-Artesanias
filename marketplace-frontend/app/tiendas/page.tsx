@@ -10,7 +10,7 @@ import { Producto } from "@/types/Producto";
 import { Tienda } from "@/types/Tienda";
 import { obtenerTiendas } from "@/services/tiendaService";
 import { obtenerProductos } from "@/services/productoService";
-import LogoutButton from "@/components/auth/LogoutButton";
+import MenuUsuario from "@/components/auth/MenuUsuario";
 import { useRolSesion } from "@/lib/auth";
 
 const API_URL =
@@ -109,7 +109,7 @@ export default function TiendasPage() {
         </form>
 
         {rol === undefined ? null : rol ? (
-          <LogoutButton className={homeStyles.logoutButton} />
+          <MenuUsuario />
         ) : (
           <Link href="/login" className={homeStyles.logoutButton} style={{ marginLeft: "auto" }}>
             Iniciar sesión

@@ -16,6 +16,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @Setter
@@ -53,4 +55,9 @@ public class Usuario extends BaseEntity {
 
     @Column(name = "activo", nullable = false)
     private Boolean activo = true;
+
+    // Fecha del último cambio de nombre de usuario desde el perfil propio.
+    // Se usa para exigir 30 días entre cambios; null = nunca lo cambió.
+    @Column(name = "fecha_cambio_usuario")
+    private LocalDateTime fechaCambioUsuario;
 }
