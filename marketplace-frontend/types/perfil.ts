@@ -43,10 +43,14 @@ export interface PerfilActualizado {
 }
 
 export function etiquetaDireccionPerfil(perfil: Perfil): string {
-  const numero = perfil.nombreEdificio
-    ? `${perfil.nombreEdificio}${perfil.nroDepartamento ? `, depto. ${perfil.nroDepartamento}` : ""}`
-    : perfil.nroCasa ?? "";
-  return `${perfil.calle} ${numero}`.trim();
+  return perfil.calle;
+}
+
+export function etiquetaNumeroPerfil(perfil: Perfil): string {
+  if (perfil.nombreEdificio) {
+    return `${perfil.nombreEdificio}${perfil.nroDepartamento ? `, depto. ${perfil.nroDepartamento}` : ""}`;
+  }
+  return perfil.nroCasa !== null ? String(perfil.nroCasa) : "";
 }
 
 export function etiquetaUbicacionPerfil(perfil: Perfil): string {

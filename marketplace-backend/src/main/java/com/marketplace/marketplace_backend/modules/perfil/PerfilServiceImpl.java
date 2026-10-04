@@ -6,6 +6,7 @@ import com.marketplace.marketplace_backend.modules.barrio.BarrioRepository;
 import com.marketplace.marketplace_backend.modules.direccion.Direccion;
 import com.marketplace.marketplace_backend.modules.direccion.DireccionRepository;
 import com.marketplace.marketplace_backend.modules.perfil.dto.PerfilActualizadoResponseDto;
+import com.marketplace.marketplace_backend.modules.perfil.dto.PerfilContrasenhaRequestDto;
 import com.marketplace.marketplace_backend.modules.perfil.dto.PerfilResponseDto;
 import com.marketplace.marketplace_backend.modules.perfil.dto.PerfilUpdateRequestDto;
 import com.marketplace.marketplace_backend.modules.refreshtoken.RefreshToken;
@@ -18,6 +19,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -42,6 +44,7 @@ public class PerfilServiceImpl implements PerfilService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final RefreshTokenService refreshTokenService;
     private final JwtUtil jwtUtil;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional(readOnly = true)
@@ -125,6 +128,23 @@ public class PerfilServiceImpl implements PerfilService {
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(guardado.getUsuario());
 
         return new PerfilActualizadoResponseDto(toResponse(guardado), accessToken, refreshToken.getToken());
+    }
+
+    @Override
+    @Transactional
+    public void cambiarContrasenha(PerfilContrasenhaRequestDto request) {
+        Usuario usuario = usuarioAutenticado();
+
+        if (!passwordEncoder.matches(request.getContrasenhaActual(), usuario.getContrasenha())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La contraseña actual no es correcta");
+        }
+
+        usuario.setContrasenha(passwordEncoder.encode(request.getContrasenhaNueva()));
+        usuarioRepository.save(usuario);
+
+        // Revoca todas las sesiones: el access token actual sigue valiendo hasta
+        // vencer, pero no se puede renovar y el usuario deberá iniciar sesión de nuevo.
+        refreshTokenRepository.deleteByUsuario_Id(usuario.getId());
     }
 
     private Usuario usuarioAutenticado() {

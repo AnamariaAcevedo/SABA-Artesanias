@@ -19,6 +19,8 @@
 
 .exito { font: 14px/1.6 Arial, sans-serif; padding: 12px 14px; border-radius: 10px; background: #eef7e6; color: #2f5d1f; margin-bottom: 16px; }
 
+.acciones { display: flex; flex-wrap: wrap; gap: 12px; }
+
 @media (max-width: 640px) {
   .datos { grid-template-columns: 1fr; }
   .encabezado { flex-direction: column; text-align: center; }
