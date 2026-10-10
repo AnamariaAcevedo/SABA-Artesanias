@@ -2,6 +2,8 @@ package com.marketplace.marketplace_backend.modules.mitienda;
 
 import com.marketplace.marketplace_backend.common.PagedResult;
 import com.marketplace.marketplace_backend.modules.contacto.dto.ContactoResponseDto;
+import com.marketplace.marketplace_backend.modules.cupon.dto.CuponRequestDto;
+import com.marketplace.marketplace_backend.modules.cupon.dto.CuponResponseDto;
 import com.marketplace.marketplace_backend.modules.imagenproducto.dto.ImagenProductoResponseDto;
 import com.marketplace.marketplace_backend.modules.mitienda.dto.MiContactoRequestDto;
 import com.marketplace.marketplace_backend.modules.mitienda.dto.MiProductoRequestDto;
@@ -54,4 +56,14 @@ public interface MiTiendaService {
     PedidoResponseDto entregarPedido(Long idPedido);
 
     PedidoResponseDto cancelarPedido(Long idPedido);
+
+    // Crear y eliminar cupones es solo del dueño (PRINCIPAL); listar/ver tambien lo puede
+    // hacer el colaborador (SECUNDARIO), para repartir el codigo o QR a los clientes.
+    CuponResponseDto crearCupon(CuponRequestDto request);
+
+    PagedResult<List<CuponResponseDto>> listarCupones(int page, int perPage);
+
+    CuponResponseDto obtenerCupon(Long idCupon);
+
+    void eliminarCupon(Long idCupon);
 }

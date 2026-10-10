@@ -1,5 +1,6 @@
 package com.marketplace.marketplace_backend.modules.producto.dto;
 
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -31,6 +32,7 @@ public class ProductoCreateRequestDto {
     private Double puntuacion;
 
     @PositiveOrZero(message = "El descuento no puede ser negativo")
+    @Max(value = 100, message = "El descuento no puede superar el 100%")
     private Double descuento;
 
     @NotNull(message = "La cantidad disponible es obligatoria")

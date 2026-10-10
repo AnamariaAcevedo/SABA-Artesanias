@@ -18,6 +18,8 @@ public class ProductoResponseDto {
     private String nombre;
     private String descripcion;
     private Double precio;
+    // Precio con el descuento ya aplicado; igual a precio si no tiene descuento.
+    private Double precioFinal;
     private Double puntuacion;
     private Double descuento;
     private Integer cantidadDisponible;

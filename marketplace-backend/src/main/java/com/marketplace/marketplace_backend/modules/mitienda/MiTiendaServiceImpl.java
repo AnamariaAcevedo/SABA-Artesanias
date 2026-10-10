@@ -9,6 +9,9 @@ import com.marketplace.marketplace_backend.modules.contacto.ContactoService;
 import com.marketplace.marketplace_backend.modules.contacto.dto.ContactoCreateRequestDto;
 import com.marketplace.marketplace_backend.modules.contacto.dto.ContactoFilterDto;
 import com.marketplace.marketplace_backend.modules.contacto.dto.ContactoResponseDto;
+import com.marketplace.marketplace_backend.modules.cupon.CuponService;
+import com.marketplace.marketplace_backend.modules.cupon.dto.CuponRequestDto;
+import com.marketplace.marketplace_backend.modules.cupon.dto.CuponResponseDto;
 import com.marketplace.marketplace_backend.modules.direccion.Direccion;
 import com.marketplace.marketplace_backend.modules.direccion.DireccionRepository;
 import com.marketplace.marketplace_backend.modules.imagenproducto.ImagenProducto;
@@ -81,6 +84,7 @@ public class MiTiendaServiceImpl implements MiTiendaService {
     private final ContactoService contactoService;
     private final TipoContactoRepository tipoContactoRepository;
     private final PedidoService pedidoService;
+    private final CuponService cuponService;
 
     // ---------------------------------------------------------------- Tienda
 
@@ -353,6 +357,30 @@ public class MiTiendaServiceImpl implements MiTiendaService {
     @Transactional
     public PedidoResponseDto cancelarPedido(Long idPedido) {
         return pedidoService.cancelarDeTienda(vinculoActual().getTienda().getId(), idPedido);
+    }
+
+    // --------------------------------------------------------------- Cupones
+
+    @Override
+    @Transactional
+    public CuponResponseDto crearCupon(CuponRequestDto request) {
+        return cuponService.crear(tiendaDelDueno().getId(), request);
+    }
+
+    @Override
+    public PagedResult<List<CuponResponseDto>> listarCupones(int page, int perPage) {
+        return cuponService.listarDeTienda(vinculoActual().getTienda().getId(), page, perPage);
+    }
+
+    @Override
+    public CuponResponseDto obtenerCupon(Long idCupon) {
+        return cuponService.obtenerDeTienda(vinculoActual().getTienda().getId(), idCupon);
+    }
+
+    @Override
+    @Transactional
+    public void eliminarCupon(Long idCupon) {
+        cuponService.eliminarDeTienda(tiendaDelDueno().getId(), idCupon);
     }
 
     // ------------------------------------------------------- Verificaciones
