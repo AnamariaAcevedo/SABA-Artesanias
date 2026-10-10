@@ -23,6 +23,7 @@ export default function UsuarioForm({ modo, usuarioId, valoresIniciales }: Usuar
   const [apellido, setApellido] = useState(valoresIniciales?.apellido ?? "");
   const [usuario, setUsuario] = useState(valoresIniciales?.usuario ?? "");
   const [email, setEmail] = useState(valoresIniciales?.email ?? "");
+  const [telefono, setTelefono] = useState(valoresIniciales?.telefono ?? "");
   const [contrasenha, setContrasenha] = useState("");
   const [idRol, setIdRol] = useState(valoresIniciales?.idRol ? String(valoresIniciales.idRol) : "");
   const [activo, setActivo] = useState(valoresIniciales?.activo ?? true);
@@ -75,8 +76,12 @@ export default function UsuarioForm({ modo, usuarioId, valoresIniciales }: Usuar
     if (enviandoRef.current) return;
     setError("");
 
-    if (!nombre.trim() || !apellido.trim() || !usuario.trim() || !email.trim() || !idRol) {
+    if (!nombre.trim() || !apellido.trim() || !usuario.trim() || !email.trim() || !telefono.trim() || !idRol) {
       setError("Completá todos los campos obligatorios.");
+      return;
+    }
+    if (!/^0\d{8,9}$/.test(telefono.trim())) {
+      setError("El teléfono debe empezar con 0 y tener 9 o 10 dígitos, sin espacios.");
       return;
     }
     if (modo === "crear" && contrasenha.length < 8) {
@@ -129,6 +134,7 @@ export default function UsuarioForm({ modo, usuarioId, valoresIniciales }: Usuar
             apellido: apellido.trim(),
             usuario: usuario.trim(),
             email: email.trim(),
+            telefono: telefono.trim(),
             contrasenha,
             idRol: Number(idRol),
             calle,
@@ -146,6 +152,7 @@ export default function UsuarioForm({ modo, usuarioId, valoresIniciales }: Usuar
             apellido: apellido.trim(),
             usuario: usuario.trim(),
             email: email.trim(),
+            telefono: telefono.trim(),
             idRol: Number(idRol),
             idDireccion: Number(idDireccion),
             activo,
@@ -190,6 +197,18 @@ export default function UsuarioForm({ modo, usuarioId, valoresIniciales }: Usuar
             <label htmlFor="email">Email</label>
             <input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
+        </div>
+
+        <div className={styles.field}>
+          <label htmlFor="telefono">Teléfono</label>
+          <input
+            id="telefono"
+            type="tel"
+            inputMode="numeric"
+            required
+            value={telefono}
+            onChange={(e) => setTelefono(e.target.value.replace(/\D/g, ""))}
+          />
         </div>
 
         {modo === "crear" ? (

@@ -19,6 +19,8 @@ import com.marketplace.marketplace_backend.modules.mitienda.dto.MiContactoReques
 import com.marketplace.marketplace_backend.modules.mitienda.dto.MiProductoRequestDto;
 import com.marketplace.marketplace_backend.modules.mitienda.dto.MiTiendaResponseDto;
 import com.marketplace.marketplace_backend.modules.mitienda.dto.MiTiendaUpdateRequestDto;
+import com.marketplace.marketplace_backend.modules.pedido.PedidoService;
+import com.marketplace.marketplace_backend.modules.pedido.dto.PedidoResponseDto;
 import com.marketplace.marketplace_backend.modules.producto.Producto;
 import com.marketplace.marketplace_backend.modules.producto.ProductoRepository;
 import com.marketplace.marketplace_backend.modules.producto.ProductoService;
@@ -78,6 +80,7 @@ public class MiTiendaServiceImpl implements MiTiendaService {
     private final ContactoRepository contactoRepository;
     private final ContactoService contactoService;
     private final TipoContactoRepository tipoContactoRepository;
+    private final PedidoService pedidoService;
 
     // ---------------------------------------------------------------- Tienda
 
@@ -314,6 +317,42 @@ public class MiTiendaServiceImpl implements MiTiendaService {
 
     private String normalizarTelefono(String nroTelefono) {
         return nroTelefono == null || nroTelefono.isBlank() ? null : nroTelefono.trim();
+    }
+
+    // --------------------------------------------------------------- Pedidos
+
+    @Override
+    public PagedResult<List<PedidoResponseDto>> listarPedidos(int page, int perPage) {
+        return pedidoService.listarDeTienda(vinculoActual().getTienda().getId(), page, perPage);
+    }
+
+    @Override
+    public PedidoResponseDto obtenerPedido(Long idPedido) {
+        return pedidoService.obtenerDeTienda(vinculoActual().getTienda().getId(), idPedido);
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponseDto confirmarPedido(Long idPedido) {
+        return pedidoService.confirmar(vinculoActual().getTienda().getId(), idPedido);
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponseDto enviarPedido(Long idPedido) {
+        return pedidoService.enviar(vinculoActual().getTienda().getId(), idPedido);
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponseDto entregarPedido(Long idPedido) {
+        return pedidoService.entregar(vinculoActual().getTienda().getId(), idPedido);
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponseDto cancelarPedido(Long idPedido) {
+        return pedidoService.cancelarDeTienda(vinculoActual().getTienda().getId(), idPedido);
     }
 
     // ------------------------------------------------------- Verificaciones

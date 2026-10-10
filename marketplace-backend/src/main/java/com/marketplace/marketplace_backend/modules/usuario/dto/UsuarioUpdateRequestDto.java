@@ -1,6 +1,7 @@
 package com.marketplace.marketplace_backend.modules.usuario.dto;
 
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,6 +22,9 @@ public class UsuarioUpdateRequestDto {
     private String email;
 
     private String usuario;
+
+    @Pattern(regexp = "^0\\d{8,9}$", message = "El teléfono debe empezar con 0 y tener 9 o 10 dígitos, sin espacios")
+    private String telefono;
 
     private Long idRol;
 

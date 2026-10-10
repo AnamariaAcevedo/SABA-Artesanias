@@ -8,6 +8,7 @@ import com.marketplace.marketplace_backend.modules.mitienda.dto.MiContactoReques
 import com.marketplace.marketplace_backend.modules.mitienda.dto.MiProductoRequestDto;
 import com.marketplace.marketplace_backend.modules.mitienda.dto.MiTiendaResponseDto;
 import com.marketplace.marketplace_backend.modules.mitienda.dto.MiTiendaUpdateRequestDto;
+import com.marketplace.marketplace_backend.modules.pedido.dto.PedidoResponseDto;
 import com.marketplace.marketplace_backend.modules.producto.dto.ProductoResponseDto;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -110,6 +111,44 @@ public class MiTiendaController {
     public ResponseEntity<StandardResponseDto<Void>> eliminarContacto(@PathVariable Long id) {
         miTiendaService.eliminarContacto(id);
         return ok(null);
+    }
+
+    @GetMapping("/pedidos")
+    public ResponseEntity<StandardResponseDto<List<PedidoResponseDto>>> listarPedidos(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int perPage) {
+        StandardResponseDto<List<PedidoResponseDto>> response = new StandardResponseDto<>();
+        var resultado = miTiendaService.listarPedidos(page, perPage);
+        response.setSuccess(true);
+        response.setData(resultado.data());
+        response.setErrors(null);
+        response.setPagination(new Pagination(resultado.page(), resultado.perPage(), resultado.total()));
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/pedidos/{id}")
+    public ResponseEntity<StandardResponseDto<PedidoResponseDto>> obtenerPedido(@PathVariable Long id) {
+        return ok(miTiendaService.obtenerPedido(id));
+    }
+
+    @PutMapping("/pedidos/{id}/confirmar")
+    public ResponseEntity<StandardResponseDto<PedidoResponseDto>> confirmarPedido(@PathVariable Long id) {
+        return ok(miTiendaService.confirmarPedido(id));
+    }
+
+    @PutMapping("/pedidos/{id}/enviar")
+    public ResponseEntity<StandardResponseDto<PedidoResponseDto>> enviarPedido(@PathVariable Long id) {
+        return ok(miTiendaService.enviarPedido(id));
+    }
+
+    @PutMapping("/pedidos/{id}/entregar")
+    public ResponseEntity<StandardResponseDto<PedidoResponseDto>> entregarPedido(@PathVariable Long id) {
+        return ok(miTiendaService.entregarPedido(id));
+    }
+
+    @PutMapping("/pedidos/{id}/cancelar")
+    public ResponseEntity<StandardResponseDto<PedidoResponseDto>> cancelarPedido(@PathVariable Long id) {
+        return ok(miTiendaService.cancelarPedido(id));
     }
 
     private <T> ResponseEntity<StandardResponseDto<T>> ok(T data) {

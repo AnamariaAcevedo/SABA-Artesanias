@@ -137,6 +137,7 @@ public class AuthServiceImpl implements AuthService {
         usuario.setContrasenha(passwordEncoder.encode(request.getContrasenha()));
         usuario.setEmail(request.getEmail());
         usuario.setUsuario(request.getUsuario());
+        usuario.setTelefono(normalizarTelefono(request.getTelefono()));
         usuario.setRol(rolCliente);
         usuario.setDireccion(direccionGuardada);
         usuario.setActivo(true);
@@ -153,6 +154,11 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public void logout(String refreshToken) {
         refreshTokenService.deleteToken(refreshToken);
+    }
+
+    // Convierte 0981123456 en 595981123456 (formato internacional sin +).
+    private static String normalizarTelefono(String telefono) {
+        return "595" + telefono.trim().substring(1);
     }
 
     @Override

@@ -186,6 +186,10 @@ function PerfilContenido() {
               <dd>{perfil.email}</dd>
             </div>
             <div className={perfilStyles.dato}>
+              <dt>Teléfono</dt>
+              <dd>{perfil.telefono}</dd>
+            </div>
+            <div className={perfilStyles.dato}>
               <dt>Dirección</dt>
               <dd>{etiquetaDireccionPerfil(perfil)}</dd>
             </div>
@@ -325,6 +329,7 @@ function PerfilForm({ perfil, onCancelar, onGuardado }: PerfilFormProps) {
   const [apellido, setApellido] = useState(perfil.apellido);
   const [email, setEmail] = useState(perfil.email);
   const [usuario, setUsuario] = useState(perfil.usuario);
+  const [telefono, setTelefono] = useState(perfil.telefono);
   const [calle, setCalle] = useState(perfil.calle);
   const [nombreEdificio, setNombreEdificio] = useState(perfil.nombreEdificio ?? "");
   const [numero, setNumero] = useState(
@@ -350,8 +355,12 @@ function PerfilForm({ perfil, onCancelar, onGuardado }: PerfilFormProps) {
 
     const numeroLimpio = numero.trim();
 
-    if (!nombre.trim() || !apellido.trim() || !email.trim() || !usuario.trim() || !calle.trim() || !numeroLimpio) {
+    if (!nombre.trim() || !apellido.trim() || !email.trim() || !usuario.trim() || !telefono.trim() || !calle.trim() || !numeroLimpio) {
       setError("Completá todos los campos obligatorios.");
+      return;
+    }
+    if (!/^0\d{8,9}$/.test(telefono.trim())) {
+      setError("El teléfono debe empezar con 0 y tener 9 o 10 dígitos, sin espacios.");
       return;
     }
     if (!hayEdificio && (!/^\d+$/.test(numeroLimpio) || Number(numeroLimpio) > 2147483647)) {
@@ -375,6 +384,7 @@ function PerfilForm({ perfil, onCancelar, onGuardado }: PerfilFormProps) {
       apellido: apellido.trim(),
       email: email.trim(),
       usuario: usuario.trim(),
+      telefono: telefono.trim(),
       calle: calle.trim(),
       nombreEdificio: hayEdificio ? nombreEdificio.trim() : null,
       nroCasa: hayEdificio ? null : Number(numeroLimpio),
@@ -453,6 +463,19 @@ function PerfilForm({ perfil, onCancelar, onGuardado }: PerfilFormProps) {
             <label htmlFor="email">Correo electrónico</label>
             <input id="email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
+        </div>
+
+        <div className={styles.field}>
+          <label htmlFor="telefono">Teléfono</label>
+          <input
+            id="telefono"
+            type="tel"
+            inputMode="numeric"
+            required
+            autoComplete="tel"
+            value={telefono}
+            onChange={(e) => setTelefono(e.target.value.replace(/\D/g, ""))}
+          />
         </div>
 
         <h3 className={styles.sectionSubtitle}>Dirección</h3>
