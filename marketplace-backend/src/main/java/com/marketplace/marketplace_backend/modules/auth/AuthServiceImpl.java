@@ -99,11 +99,14 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public AuthResponseDto registrar(RegistroRequestDto request) {
-        if (usuarioRepository.existsByEmailIgnoreCase(request.getEmail())) {
+        String email = request.getEmail().trim();
+        String nombreUsuario = request.getUsuario().trim();
+
+        if (usuarioRepository.existsByEmailIgnoreCase(email)) {
             throw new IllegalStateException("Ya existe un usuario con ese email");
         }
 
-        if (usuarioRepository.existsByUsuarioIgnoreCase(request.getUsuario())) {
+        if (usuarioRepository.existsByUsuarioIgnoreCase(nombreUsuario)) {
             throw new IllegalStateException("Ya existe un usuario con ese nombre de usuario");
         }
 
@@ -135,8 +138,8 @@ public class AuthServiceImpl implements AuthService {
         usuario.setNombre(request.getNombre());
         usuario.setApellido(request.getApellido());
         usuario.setContrasenha(passwordEncoder.encode(request.getContrasenha()));
-        usuario.setEmail(request.getEmail());
-        usuario.setUsuario(request.getUsuario());
+        usuario.setEmail(email);
+        usuario.setUsuario(nombreUsuario);
         usuario.setTelefono(normalizarTelefono(request.getTelefono()));
         usuario.setRol(rolCliente);
         usuario.setDireccion(direccionGuardada);

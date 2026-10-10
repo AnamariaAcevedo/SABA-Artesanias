@@ -238,7 +238,11 @@ function CambioContrasenha({ onCancelar }: { onCancelar: () => void }) {
     try {
       await apiFetch("/perfil/contrasenha", {
         method: "PUT",
-        body: JSON.stringify({ contrasenhaActual: actual, contrasenhaNueva: nueva }),
+        body: JSON.stringify({
+          contrasenhaActual: actual,
+          contrasenhaNueva: nueva,
+          confirmarContrasenhaNueva: repetir,
+        }),
       });
       setActual("");
       setNueva("");
@@ -408,17 +412,7 @@ function PerfilForm({ perfil, onCancelar, onGuardado }: PerfilFormProps) {
       window.dispatchEvent(new Event("sesion-cambiada"));
       onGuardado(resultado.perfil);
     } catch (cause) {
-      if (cause instanceof ApiError && cause.status === 409) {
-        setError(
-          cambiaUsuario
-            ? "No pudimos guardar los cambios: el nombre de usuario o el correo ya están en uso, o todavía no pasaron 30 días desde el último cambio de nombre de usuario."
-            : "Ya existe otra cuenta con ese correo electrónico.",
-        );
-      } else if (cause instanceof ApiError && cause.status === 400) {
-        setError("Revisá los datos ingresados. El servidor no pudo aceptar los cambios.");
-      } else {
-        setError(cause instanceof Error ? cause.message : "No pudimos guardar tus datos.");
-      }
+      setError(cause instanceof Error ? cause.message : "No pudimos guardar tus datos.");
       enviandoRef.current = false;
       setEnviando(false);
     }

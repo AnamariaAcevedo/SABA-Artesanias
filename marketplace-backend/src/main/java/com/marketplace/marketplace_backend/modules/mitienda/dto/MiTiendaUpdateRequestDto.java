@@ -1,6 +1,7 @@
 package com.marketplace.marketplace_backend.modules.mitienda.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -38,5 +39,6 @@ public class MiTiendaUpdateRequestDto {
     private String nroDepartamento;
 
     // Opcional: si no viene, se mantiene el barrio actual.
+    @Positive(message = "El barrio seleccionado no es válido")
     private Long idBarrio;
 }

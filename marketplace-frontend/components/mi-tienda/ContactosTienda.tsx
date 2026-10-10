@@ -177,13 +177,7 @@ function ContactoForm({ contacto, tipos, onGuardado, onCancelar }: ContactoFormP
       });
       onGuardado(resultado);
     } catch (cause) {
-      setError(
-        cause instanceof ApiError && cause.status === 400
-          ? "Revisá los datos ingresados. El servidor no pudo aceptar el contacto."
-          : cause instanceof Error
-            ? cause.message
-            : "No pudimos guardar el contacto.",
-      );
+      setError(cause instanceof Error ? cause.message : "No pudimos guardar el contacto.");
       enviandoRef.current = false;
       setEnviando(false);
     }

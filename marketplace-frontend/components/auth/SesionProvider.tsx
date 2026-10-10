@@ -77,7 +77,13 @@ export default function SesionProvider({
             setSesion(null);
 
             if (cause instanceof ApiError && cause.status === 401) {
-                setError("Tu sesión venció. Volvé a iniciar sesión.");
+                try {
+                    localStorage.removeItem("accessToken");
+                    localStorage.removeItem("refreshToken");
+                } catch {
+                    // El estado de sesión igualmente se limpia aunque Storage no esté disponible.
+                }
+                setError(cause.message);
             } else {
                 setError(
                     cause instanceof Error
@@ -94,6 +100,7 @@ export default function SesionProvider({
 
     useEffect(() => {
         // Al navegar, vuelve a consultar los permisos vigentes.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         void actualizar();
 
         function alCambiarStorage(event: StorageEvent) {
@@ -110,6 +117,8 @@ export default function SesionProvider({
         window.addEventListener("sesion-cambiada", alCambiarSesion);
 
         return () => {
+            // Invalida cualquier respuesta asíncrona iniciada por este efecto.
+            // eslint-disable-next-line react-hooks/exhaustive-deps
             solicitud.current++;
             window.removeEventListener("storage", alCambiarStorage);
             window.removeEventListener(

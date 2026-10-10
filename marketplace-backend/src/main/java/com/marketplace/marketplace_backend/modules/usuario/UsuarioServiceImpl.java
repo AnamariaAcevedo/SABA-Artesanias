@@ -37,11 +37,14 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Override
     @Transactional
     public UsuarioResponseDto create(UsuarioCreateRequestDto request) {
-        if (usuarioRepository.existsByEmailIgnoreCase(request.getEmail())) {
+        String email = request.getEmail().trim();
+        String nombreUsuario = request.getUsuario().trim();
+
+        if (usuarioRepository.existsByEmailIgnoreCase(email)) {
             throw new IllegalStateException("Ya existe un usuario con ese email");
         }
 
-        if (usuarioRepository.existsByUsuarioIgnoreCase(request.getUsuario())) {
+        if (usuarioRepository.existsByUsuarioIgnoreCase(nombreUsuario)) {
             throw new IllegalStateException("Ya existe un usuario con ese nombre de usuario");
         }
 
@@ -73,8 +76,8 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuario.setNombre(request.getNombre());
         usuario.setApellido(request.getApellido());
         usuario.setContrasenha(passwordEncoder.encode(request.getContrasenha()));
-        usuario.setEmail(request.getEmail());
-        usuario.setUsuario(request.getUsuario());
+        usuario.setEmail(email);
+        usuario.setUsuario(nombreUsuario);
         usuario.setTelefono(normalizarTelefono(request.getTelefono()));
         usuario.setRol(rol);
         usuario.setDireccion(direccionGuardada);
@@ -91,19 +94,27 @@ public class UsuarioServiceImpl implements UsuarioService {
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + id));
 
         if (request.getNombre() != null) {
-            usuario.setNombre(request.getNombre());
+            usuario.setNombre(request.getNombre().trim());
         }
 
         if (request.getApellido() != null) {
-            usuario.setApellido(request.getApellido());
+            usuario.setApellido(request.getApellido().trim());
         }
 
         if (request.getEmail() != null) {
-            usuario.setEmail(request.getEmail());
+            String email = request.getEmail().trim();
+            if (usuarioRepository.existsByEmailIgnoreCaseAndIdNot(email, id)) {
+                throw new IllegalStateException("Ya existe un usuario con ese email");
+            }
+            usuario.setEmail(email);
         }
 
         if (request.getUsuario() != null) {
-            usuario.setUsuario(request.getUsuario());
+            String nombreUsuario = request.getUsuario().trim();
+            if (usuarioRepository.existsByUsuarioIgnoreCaseAndIdNot(nombreUsuario, id)) {
+                throw new IllegalStateException("Ya existe un usuario con ese nombre de usuario");
+            }
+            usuario.setUsuario(nombreUsuario);
         }
 
         if (request.getTelefono() != null) {
