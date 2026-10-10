@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -39,11 +40,14 @@ public class UsuarioCreateRequestDto {
     private String telefono;
 
     @NotNull(message = "El rol es obligatorio")
+    @Positive(message = "El rol seleccionado no es válido")
     private Long idRol;
 
     @NotBlank(message = "La calle no puede estar vacía")
+    @Size(max = 100, message = "La calle no puede superar los 100 caracteres")
     private String calle;
 
+    @Size(max = 100, message = "El nombre de edificio no puede superar los 100 caracteres")
     private String nombreEdificio;
 
     // Si no hay nombreEdificio, nroCasa es obligatorio.
@@ -51,8 +55,10 @@ public class UsuarioCreateRequestDto {
     // (se valida en el service, porque depende del otro campo).
     private Integer nroCasa;
 
+    @Size(max = 50, message = "El número de departamento no puede superar los 50 caracteres")
     private String nroDepartamento;
 
     @NotNull(message = "El barrio es obligatorio")
+    @Positive(message = "El barrio seleccionado no es válido")
     private Long idBarrio;
 }

@@ -30,6 +30,16 @@ function obtenerToken(): string | null {
   }
 }
 
+function limpiarSesionLocal() {
+  try {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    window.dispatchEvent(new Event("sesion-cambiada"));
+  } catch {
+    // La respuesta 401 igualmente se informa aunque Storage no esté disponible.
+  }
+}
+
 async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<StandardResponse<T>> {
   const headers = new Headers(init.headers);
   // Con FormData (subida de archivos) el navegador arma el Content-Type con su boundary.
@@ -51,17 +61,28 @@ async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<Stan
 
   const resultado = (await response.json().catch(() => null)) as StandardResponse<T> | null;
 
-  if (response.status === 401 || response.status === 403) {
-    throw new ApiError("No tenés permiso para realizar esta acción.", response.status);
+  const mensajes = resultado?.errors?.filter((mensaje): mensaje is string => typeof mensaje === "string") ?? [];
+
+  if (response.status === 401) {
+    limpiarSesionLocal();
+    throw new ApiError(
+      mensajes.join(" ") || "Tu sesión venció o ya no es válida. Iniciá sesión nuevamente.",
+      response.status,
+    );
+  }
+  if (response.status === 403) {
+    throw new ApiError(mensajes.join(" ") || "No tenés permiso para realizar esta acción.", response.status);
   }
   if (response.status === 404) {
-    throw new ApiError("No encontramos el recurso solicitado.", response.status);
+    throw new ApiError(mensajes.join(" ") || "No encontramos el recurso solicitado.", response.status);
   }
   if (response.status === 429) {
-    throw new ApiError("Demasiados intentos. Esperá un momento e intentá nuevamente.", response.status);
+    throw new ApiError(
+      mensajes.join(" ") || "Demasiados intentos. Esperá un momento e intentá nuevamente.",
+      response.status,
+    );
   }
   if (!response.ok || resultado?.success !== true) {
-    const mensajes = resultado?.errors?.filter((mensaje): mensaje is string => typeof mensaje === "string") ?? [];
     throw new ApiError(
       mensajes.join(" ") || "No pudimos completar la operación. Intentá nuevamente en unos momentos.",
       response.status,

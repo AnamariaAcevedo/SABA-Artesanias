@@ -81,6 +81,7 @@ export default function RegistroPage() {
       email: valor("email").trim(),
       telefono: valor("telefono").trim(),
       contrasenha: valor("contrasenha"),
+      confirmarContrasenha: valor("confirmar"),
       calle: valor("calle").trim(),
       nombreEdificio: hayEdificio ? nombreEdificio.trim() : null,
       nroCasa: hayEdificio ? null : Number(numero),
@@ -104,7 +105,6 @@ export default function RegistroPage() {
           : [];
         if (mensajes.length) throw new Error(mensajes.join(" "));
         if (response.status === 409) throw new Error("Ya existe una cuenta con ese usuario o correo.");
-        if (response.status === 400) throw new Error("Revisá los datos ingresados. El servidor no pudo aceptar el registro.");
         if (response.status === 429) throw new Error("Demasiados intentos. Esperá un momento antes de volver a intentar.");
         if (response.ok) throw new Error("No pudimos confirmar el registro. Intentá iniciar sesión antes de volver a enviarlo.");
         throw new Error("No se pudo completar el registro. Intentá nuevamente en unos momentos.");

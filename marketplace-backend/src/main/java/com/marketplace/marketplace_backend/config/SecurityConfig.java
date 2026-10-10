@@ -2,10 +2,12 @@ package com.marketplace.marketplace_backend.config;
 
 import java.util.List;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -42,7 +44,7 @@ public class SecurityConfig {
             .logout(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/login", "/refresh", "/registro", "/recuperar", "/recuperar/confirmar").permitAll()
+                .requestMatchers("/login", "/refresh", "/registro", "/recuperar", "/recuperar/confirmar", "/error").permitAll()
                 .requestMatchers(HttpMethod.POST, "/pedidos").permitAll()
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                 .requestMatchers(HttpMethod.GET,
@@ -58,12 +60,39 @@ public class SecurityConfig {
                 ).permitAll()
                 .anyRequest().authenticated()
             )
+            .exceptionHandling(errors -> errors
+                .authenticationEntryPoint((request, response, exception) ->
+                        escribirErrorSeguridad(
+                                response,
+                                HttpServletResponse.SC_UNAUTHORIZED,
+                                "Tu sesión venció o ya no es válida. Iniciá sesión nuevamente."
+                        ))
+                .accessDeniedHandler((request, response, exception) ->
+                        escribirErrorSeguridad(
+                                response,
+                                HttpServletResponse.SC_FORBIDDEN,
+                                "No tenés permiso para realizar esta acción."
+                        ))
+            )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .userDetailsService(usuarioDetailsService);
 
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    private static void escribirErrorSeguridad(
+            jakarta.servlet.http.HttpServletResponse response,
+            int estado,
+            String mensaje
+    ) throws java.io.IOException {
+        response.setStatus(estado);
+        response.setCharacterEncoding(java.nio.charset.StandardCharsets.UTF_8.name());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.getWriter().write(
+                "{\"success\":false,\"data\":null,\"errors\":[\"" + mensaje + "\"],\"pagination\":null}"
+        );
     }
 
     @Bean

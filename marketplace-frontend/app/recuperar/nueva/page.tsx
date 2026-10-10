@@ -36,7 +36,7 @@ export default function RecuperarNuevaPage() {
     try {
       await apiFetch("/recuperar/confirmar", {
         method: "POST",
-        body: JSON.stringify({ token, contrasenhaNueva: nueva }),
+        body: JSON.stringify({ token, contrasenhaNueva: nueva, confirmarContrasenhaNueva: repetir }),
       });
       setListo(true);
     } catch (cause) {

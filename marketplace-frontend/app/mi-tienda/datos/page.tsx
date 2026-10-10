@@ -111,13 +111,7 @@ function DatosTiendaForm({ tienda, onGuardado }: { tienda: MiTienda; onGuardado:
       window.dispatchEvent(new Event("sesion-cambiada"));
       onGuardado(actualizada);
     } catch (cause) {
-      setError(
-        cause instanceof ApiError && cause.status === 400
-          ? "Revisá los datos ingresados. El servidor no pudo aceptar los cambios."
-          : cause instanceof Error
-            ? cause.message
-            : "No pudimos guardar los datos de la tienda.",
-      );
+      setError(cause instanceof Error ? cause.message : "No pudimos guardar los datos de la tienda.");
       enviandoRef.current = false;
       setEnviando(false);
       return;
