@@ -7,6 +7,7 @@ export interface Usuario {
   apellido: string;
   email: string;
   usuario: string;
+  telefono: string;
   idRol: number;
   nombreRol: string;
   idDireccion: number;

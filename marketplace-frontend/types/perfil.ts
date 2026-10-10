@@ -7,6 +7,7 @@ export interface Perfil {
   apellido: string;
   email: string;
   usuario: string;
+  telefono: string;
   // Desde cuándo puede volver a cambiar su nombre de usuario; null = ya puede.
   proximoCambioUsuario: string | null;
   calle: string;
@@ -28,6 +29,7 @@ export interface PerfilUpdateInput {
   apellido: string;
   email: string;
   usuario: string;
+  telefono: string;
   calle: string;
   nombreEdificio: string | null;
   nroCasa: number | null;
