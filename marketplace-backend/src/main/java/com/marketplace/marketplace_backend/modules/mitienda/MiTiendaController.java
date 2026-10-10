@@ -8,6 +8,8 @@ import com.marketplace.marketplace_backend.modules.mitienda.dto.MiContactoReques
 import com.marketplace.marketplace_backend.modules.mitienda.dto.MiProductoRequestDto;
 import com.marketplace.marketplace_backend.modules.mitienda.dto.MiTiendaResponseDto;
 import com.marketplace.marketplace_backend.modules.mitienda.dto.MiTiendaUpdateRequestDto;
+import com.marketplace.marketplace_backend.modules.cupon.dto.CuponRequestDto;
+import com.marketplace.marketplace_backend.modules.cupon.dto.CuponResponseDto;
 import com.marketplace.marketplace_backend.modules.pedido.dto.PedidoResponseDto;
 import com.marketplace.marketplace_backend.modules.producto.dto.ProductoResponseDto;
 import jakarta.validation.Valid;
@@ -149,6 +151,35 @@ public class MiTiendaController {
     @PutMapping("/pedidos/{id}/cancelar")
     public ResponseEntity<StandardResponseDto<PedidoResponseDto>> cancelarPedido(@PathVariable Long id) {
         return ok(miTiendaService.cancelarPedido(id));
+    }
+
+    @PostMapping("/cupones")
+    public ResponseEntity<StandardResponseDto<CuponResponseDto>> crearCupon(@Valid @RequestBody CuponRequestDto request) {
+        return ok(miTiendaService.crearCupon(request));
+    }
+
+    @GetMapping("/cupones")
+    public ResponseEntity<StandardResponseDto<List<CuponResponseDto>>> listarCupones(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int perPage) {
+        StandardResponseDto<List<CuponResponseDto>> response = new StandardResponseDto<>();
+        var resultado = miTiendaService.listarCupones(page, perPage);
+        response.setSuccess(true);
+        response.setData(resultado.data());
+        response.setErrors(null);
+        response.setPagination(new Pagination(resultado.page(), resultado.perPage(), resultado.total()));
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/cupones/{id}")
+    public ResponseEntity<StandardResponseDto<CuponResponseDto>> obtenerCupon(@PathVariable Long id) {
+        return ok(miTiendaService.obtenerCupon(id));
+    }
+
+    @DeleteMapping("/cupones/{id}")
+    public ResponseEntity<StandardResponseDto<Void>> eliminarCupon(@PathVariable Long id) {
+        miTiendaService.eliminarCupon(id);
+        return ok(null);
     }
 
     private <T> ResponseEntity<StandardResponseDto<T>> ok(T data) {

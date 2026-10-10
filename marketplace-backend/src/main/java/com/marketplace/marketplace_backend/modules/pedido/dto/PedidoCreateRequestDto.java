@@ -42,4 +42,7 @@ public class PedidoCreateRequestDto {
     private String direccion;
 
     private String referencia;
+
+    // Opcional: codigo de un cupon de descuento de la misma tienda.
+    private String codigoCupon;
 }

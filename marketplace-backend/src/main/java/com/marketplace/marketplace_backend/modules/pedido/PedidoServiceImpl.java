@@ -3,6 +3,8 @@ package com.marketplace.marketplace_backend.modules.pedido;
 import com.marketplace.marketplace_backend.common.PagedResult;
 import com.marketplace.marketplace_backend.modules.barrio.Barrio;
 import com.marketplace.marketplace_backend.modules.barrio.BarrioRepository;
+import com.marketplace.marketplace_backend.modules.cupon.Cupon;
+import com.marketplace.marketplace_backend.modules.cupon.CuponRepository;
 import com.marketplace.marketplace_backend.modules.direccion.Direccion;
 import com.marketplace.marketplace_backend.modules.pedido.dto.PedidoCreateRequestDto;
 import com.marketplace.marketplace_backend.modules.pedido.dto.PedidoItemRequestDto;
@@ -29,6 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,6 +51,7 @@ public class PedidoServiceImpl implements PedidoService {
     private final TiendaRepository tiendaRepository;
     private final ProductoRepository productoRepository;
     private final BarrioRepository barrioRepository;
+    private final CuponRepository cuponRepository;
     private final JavaMailSender mailSender;
     private final String remitente;
 
@@ -58,6 +62,7 @@ public class PedidoServiceImpl implements PedidoService {
             TiendaRepository tiendaRepository,
             ProductoRepository productoRepository,
             BarrioRepository barrioRepository,
+            CuponRepository cuponRepository,
             JavaMailSender mailSender,
             @Value("${spring.mail.username}") String remitente) {
         this.pedidoRepository = pedidoRepository;
@@ -66,6 +71,7 @@ public class PedidoServiceImpl implements PedidoService {
         this.tiendaRepository = tiendaRepository;
         this.productoRepository = productoRepository;
         this.barrioRepository = barrioRepository;
+        this.cuponRepository = cuponRepository;
         this.mailSender = mailSender;
         this.remitente = remitente;
     }
@@ -94,14 +100,20 @@ public class PedidoServiceImpl implements PedidoService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No hay stock suficiente de " + producto.getNombre());
             }
 
-            double subtotal = producto.getPrecio() * item.getCantidad();
+            double precioUnitario = precioFinal(producto);
+            double subtotal = precioUnitario * item.getCantidad();
             ProductoPedido linea = new ProductoPedido();
             linea.setProducto(producto);
             linea.setCantidad(item.getCantidad());
-            linea.setPrecioUnitario(producto.getPrecio());
+            linea.setPrecioUnitario(precioUnitario);
             linea.setTotal(subtotal);
             lineas.add(linea);
             total += subtotal;
+        }
+
+        Cupon cupon = resolverCupon(request.getCodigoCupon(), tienda);
+        if (cupon != null) {
+            total -= total * cupon.getPorcentaje() / 100;
         }
 
         Pedido pedido = new Pedido();
@@ -120,6 +132,11 @@ public class PedidoServiceImpl implements PedidoService {
 
         lineas.forEach(linea -> linea.setPedido(guardado));
         productoPedidoRepository.saveAll(lineas);
+
+        if (cupon != null) {
+            cupon.setPedido(guardado);
+            cuponRepository.save(cupon);
+        }
 
         if (usuario == null) {
             enviarCorreoConfirmacion(guardado, lineas);
@@ -285,6 +302,39 @@ public class PedidoServiceImpl implements PedidoService {
                 barrio,
                 request.getDireccion().trim()
         );
+    }
+
+    // Precio con el descuento (porcentaje) del producto ya aplicado; sin descuento devuelve el precio tal cual.
+    private static double precioFinal(Producto producto) {
+        Double descuento = producto.getDescuento();
+        if (descuento == null || descuento <= 0) {
+            return producto.getPrecio();
+        }
+        return producto.getPrecio() * (1 - descuento / 100);
+    }
+
+    // Null si no vino codigo. Si vino, valida que exista, sea de la misma tienda, este vigente
+    // y no se haya usado todavia; si no cumple algo, tira error en vez de ignorarlo en silencio.
+    private Cupon resolverCupon(String codigoCupon, Tienda tienda) {
+        if (codigoCupon == null || codigoCupon.isBlank()) {
+            return null;
+        }
+
+        Cupon cupon = cuponRepository.findByCodigoIgnoreCase(codigoCupon.trim())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cupón no encontrado"));
+
+        if (!cupon.getTienda().getId().equals(tienda.getId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Este cupón no es válido para esta tienda");
+        }
+        if (cupon.getPedido() != null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Este cupón ya fue usado");
+        }
+        LocalDate hoy = LocalDate.now();
+        if (hoy.isBefore(cupon.getFechaInicio()) || hoy.isAfter(cupon.getFechaFin())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Este cupón no está vigente");
+        }
+
+        return cupon;
     }
 
     // Arma un texto libre a partir de una direccion estructurada, ej: "Mcal. Estigarribia, Casa 123".
