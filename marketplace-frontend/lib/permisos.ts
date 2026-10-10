@@ -24,6 +24,7 @@ const modulos: Modulo[] = [
     { id: "contactos", nombre: "Contactos", recursos: ["CONTACTOS"] },
     { id: "tipos-contacto", nombre: "Tipos de contacto", recursos: ["TIPOS_CONTACTO"] },
     { id: "ubicacion", nombre: "Ubicación", recursos: ["DIRECCIONES"] },
+    { id: "solicitudes-vendedor", nombre: "Solicitudes de vendedor", recursos: ["SOLICITUDES_VENDEDOR"] },
 ];
 
 const acciones: Record<string, string> = {
@@ -48,6 +49,7 @@ const recursos: Record<string, string> = {
     ROLES: "roles",
     PERMISOS: "permisos",
     DIRECCIONES: "ubicaciones",
+    SOLICITUDES_VENDEDOR: "solicitudes de vendedor",
 };
 
 // Estos permisos deben retirarse mediante la migración del backend.

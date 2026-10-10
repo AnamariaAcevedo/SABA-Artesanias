@@ -29,6 +29,7 @@ public class SolicitudVendedorResponseDto {
     private String nroDepartamento;
     private Long idBarrio;
     private String nombreBarrio;
+    private String nombreCiudad;
     private String telefono;
     private LocalDateTime createdAt;
 }

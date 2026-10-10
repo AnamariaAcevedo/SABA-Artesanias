@@ -24,9 +24,11 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -39,6 +41,7 @@ public class SolicitudVendedorServiceImpl implements SolicitudVendedorService {
 
     private static final String ROL_VENDEDOR_PRINCIPAL = "VendedorPrincipal";
     private static final String TIPO_CONTACTO_WHATSAPP = "WhatsApp";
+    private static final long HORAS_PARA_ELIMINAR = 24;
 
     private final SolicitudVendedorRepository solicitudRepository;
     private final UsuarioRepository usuarioRepository;
@@ -61,28 +64,16 @@ public class SolicitudVendedorServiceImpl implements SolicitudVendedorService {
         if (solicitudRepository.existsByUsuario_IdAndEstado(usuario.getId(), EstadoSolicitudVendedor.PENDIENTE)) {
             throw new IllegalStateException("Ya tenés una solicitud pendiente");
         }
-
-        boolean hayEdificio = request.getNombreEdificio() != null && !request.getNombreEdificio().isBlank();
-        if (!hayEdificio && request.getNroCasa() == null) {
-            throw new IllegalArgumentException("El número de casa es obligatorio si no se indica un edificio");
+        if (solicitudRepository.existsByUsuario_IdAndEstado(usuario.getId(), EstadoSolicitudVendedor.RECHAZADA)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Tu solicitud fue rechazada y no podés presentar otra"
+            );
         }
-        if (hayEdificio && (request.getNroDepartamento() == null || request.getNroDepartamento().isBlank())) {
-            throw new IllegalArgumentException("El número de departamento es obligatorio si se indica un edificio");
-        }
-
-        Barrio barrio = barrioRepository.findById(request.getIdBarrio())
-                .orElseThrow(() -> new EntityNotFoundException("Barrio no encontrado"));
 
         SolicitudVendedor solicitud = new SolicitudVendedor();
         solicitud.setUsuario(usuario);
-        solicitud.setNombreTienda(request.getNombreTienda().trim());
-        solicitud.setDescripcionTienda(request.getDescripcionTienda().trim());
-        solicitud.setCalle(request.getCalle().trim());
-        solicitud.setNombreEdificio(hayEdificio ? request.getNombreEdificio().trim() : null);
-        solicitud.setNroCasa(hayEdificio ? null : request.getNroCasa());
-        solicitud.setNroDepartamento(hayEdificio ? request.getNroDepartamento().trim() : null);
-        solicitud.setBarrio(barrio);
-        solicitud.setTelefono(normalizarTelefono(request.getTelefono()));
+        aplicarDatos(solicitud, request);
         solicitud.setEstado(EstadoSolicitudVendedor.PENDIENTE);
 
         return toResponse(solicitudRepository.save(solicitud));
@@ -94,7 +85,7 @@ public class SolicitudVendedorServiceImpl implements SolicitudVendedorService {
         Usuario usuario = usuarioAutenticado();
         return solicitudRepository.findFirstByUsuario_IdOrderByIdDesc(usuario.getId())
                 .map(this::toResponse)
-                .orElseThrow(() -> new EntityNotFoundException("No tenés ninguna solicitud"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No tenés ninguna solicitud"));
     }
 
     @Override
@@ -104,6 +95,14 @@ public class SolicitudVendedorServiceImpl implements SolicitudVendedorService {
         SolicitudVendedor pendiente = solicitudRepository
                 .findFirstByUsuario_IdAndEstado(usuario.getId(), EstadoSolicitudVendedor.PENDIENTE)
                 .orElseThrow(() -> new EntityNotFoundException("No tenés una solicitud pendiente"));
+
+        LocalDateTime limite = pendiente.getCreatedAt().plusHours(HORAS_PARA_ELIMINAR);
+        if (!LocalDateTime.now().isBefore(limite)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "El plazo de 24 horas para eliminar la solicitud ya venció"
+            );
+        }
 
         pendiente.setDeletedAt(LocalDateTime.now());
         solicitudRepository.save(pendiente);
@@ -198,6 +197,28 @@ public class SolicitudVendedorServiceImpl implements SolicitudVendedorService {
         }
     }
 
+    private void aplicarDatos(SolicitudVendedor solicitud, SolicitudVendedorRequestDto request) {
+        boolean hayEdificio = request.getNombreEdificio() != null && !request.getNombreEdificio().isBlank();
+        if (!hayEdificio && request.getNroCasa() == null) {
+            throw new IllegalArgumentException("El número de casa es obligatorio si no se indica un edificio");
+        }
+        if (hayEdificio && (request.getNroDepartamento() == null || request.getNroDepartamento().isBlank())) {
+            throw new IllegalArgumentException("El número de departamento es obligatorio si se indica un edificio");
+        }
+
+        Barrio barrio = barrioRepository.findById(request.getIdBarrio())
+                .orElseThrow(() -> new EntityNotFoundException("Barrio no encontrado"));
+
+        solicitud.setNombreTienda(request.getNombreTienda().trim());
+        solicitud.setDescripcionTienda(request.getDescripcionTienda().trim());
+        solicitud.setCalle(request.getCalle().trim());
+        solicitud.setNombreEdificio(hayEdificio ? request.getNombreEdificio().trim() : null);
+        solicitud.setNroCasa(hayEdificio ? null : request.getNroCasa());
+        solicitud.setNroDepartamento(hayEdificio ? request.getNroDepartamento().trim() : null);
+        solicitud.setBarrio(barrio);
+        solicitud.setTelefono(normalizarTelefono(request.getTelefono()));
+    }
+
     // Convierte 0981123456 en 595981123456 (formato internacional sin +).
     private static String normalizarTelefono(String telefono) {
         return "595" + telefono.trim().substring(1);
@@ -211,6 +232,7 @@ public class SolicitudVendedorServiceImpl implements SolicitudVendedorService {
 
     private SolicitudVendedorResponseDto toResponse(SolicitudVendedor solicitud) {
         Usuario usuario = solicitud.getUsuario();
+        Barrio barrio = solicitud.getBarrio();
         return new SolicitudVendedorResponseDto(
                 solicitud.getId(),
                 solicitud.getEstado().name(),
@@ -226,8 +248,9 @@ public class SolicitudVendedorServiceImpl implements SolicitudVendedorService {
                 solicitud.getNombreEdificio(),
                 solicitud.getNroCasa(),
                 solicitud.getNroDepartamento(),
-                solicitud.getBarrio().getId(),
-                solicitud.getBarrio().getNombre(),
+                barrio.getId(),
+                barrio.getNombre(),
+                barrio.getCiudad().getNombre(),
                 solicitud.getTelefono(),
                 solicitud.getCreatedAt()
         );

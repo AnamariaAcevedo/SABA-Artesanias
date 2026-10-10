@@ -10,9 +10,11 @@ import { puedeEntrarAlPanel } from "@/lib/access";
 type Props = {
   idPrefix?: string;
   onSuccess?: () => void;
+  showSellerLink?: boolean;
+  successDestination?: string;
 };
 
-export default function LoginForm({ idPrefix = "", onSuccess }: Props) {
+export default function LoginForm({ idPrefix = "", onSuccess, showSellerLink = true, successDestination }: Props) {
   const router = useRouter();
   const busy = useRef(false);
   const [usuario, setUsuario] = useState("");
@@ -63,19 +65,21 @@ export default function LoginForm({ idPrefix = "", onSuccess }: Props) {
         try { localStorage.removeItem("accessToken"); localStorage.removeItem("refreshToken"); } catch { /* Storage unavailable. */ }
         throw new Error("Habilitá el almacenamiento de este sitio en tu navegador para iniciar sesión.");
       }
-      let destination = "/home";
-      // The claim selects navigation only. The backend must enforce authorization.
-      try {
-        const sesion = await apiFetch<{
-          permisos: string[];
-        }>("/me");
+      let destination = successDestination ?? "/home";
+      if (!successDestination) {
+        // The claim selects navigation only. The backend must enforce authorization.
+        try {
+          const sesion = await apiFetch<{
+            permisos: string[];
+          }>("/me");
 
-        if (puedeEntrarAlPanel(sesion.permisos)) {
-          destination = "/admin";
+          if (puedeEntrarAlPanel(sesion.permisos)) {
+            destination = "/admin";
+          }
+        } catch {
+          // El proveedor de sesión mostrará el error de verificación.
+          // No se concede acceso al panel por el contenido del token.
         }
-      } catch {
-        // El proveedor de sesión mostrará el error de verificación.
-        // No se concede acceso al panel por el contenido del token.
       }
       onSuccess?.();
       router.replace(destination);
@@ -111,6 +115,9 @@ export default function LoginForm({ idPrefix = "", onSuccess }: Props) {
         <span className={styles.srOnly} role="status">{loading ? "Verificando tus datos." : ""}</span>
       </form>
       <p className={styles.linkText}>¿No tenés cuenta? <Link href="/registro">Registrate.</Link></p>
+      {showSellerLink && (
+        <p className={styles.linkText}>¿Querés vender tus artesanías? <Link href="/solicitar-vendedor">Solicitá ser vendedor.</Link></p>
+      )}
       {mostrarRecuperar && (
         <p className={styles.linkText}><Link href="/recuperar">¿Olvidaste tu contraseña?</Link></p>
       )}

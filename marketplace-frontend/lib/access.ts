@@ -41,6 +41,10 @@ export const ACCESO = {
 
     eliminarCategorias: ["DELETE_CATEGORIAS"],
 
+    verSolicitudesVendedor: ["LIST_SOLICITUDES_VENDEDOR"],
+
+    gestionarSolicitudesVendedor: ["UPDATE_SOLICITUDES_VENDEDOR"],
+
     asignarSubcategorias: ["ASSIGN_SUBCATEGORIAS"],
 
     quitarSubcategorias: ["REVOKE_SUBCATEGORIAS"],
@@ -61,7 +65,8 @@ export function puedeEntrarAlPanel(
     return (
         cumplePermisos(permisos, ACCESO.verUsuarios) ||
         cumplePermisos(permisos, ACCESO.verRoles) ||
-        cumplePermisos(permisos, ACCESO.verCategorias)
+        cumplePermisos(permisos, ACCESO.verCategorias) ||
+        cumplePermisos(permisos, ACCESO.verSolicitudesVendedor)
     );
 }
 
@@ -93,6 +98,11 @@ export function puedeAbrirRuta(
 
     if (ruta === "/admin/categorias") {
         return cumplePermisos(permisos, ACCESO.verCategorias);
-}
+    }
+
+    if (ruta === "/admin/solicitudes-vendedor") {
+        return cumplePermisos(permisos, ACCESO.verSolicitudesVendedor);
+    }
+
     return false;
 }
