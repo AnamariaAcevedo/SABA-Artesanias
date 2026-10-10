@@ -109,6 +109,7 @@ public class PerfilServiceImpl implements PerfilService {
         usuario.setNombre(request.getNombre().trim());
         usuario.setApellido(request.getApellido().trim());
         usuario.setEmail(email);
+        usuario.setTelefono(normalizarTelefono(request.getTelefono()));
 
         if (!cambioUsuario) {
             Usuario guardado = usuarioRepository.save(usuario);
@@ -153,6 +154,11 @@ public class PerfilServiceImpl implements PerfilService {
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado: " + nombreUsuario));
     }
 
+    // Convierte 0981123456 en 595981123456 (formato internacional sin +).
+    private static String normalizarTelefono(String telefono) {
+        return "595" + telefono.trim().substring(1);
+    }
+
     // Devuelve desde cuándo puede volver a cambiar el nombre de usuario, o null si ya puede.
     private LocalDateTime proximoCambioUsuario(Usuario usuario) {
         if (usuario.getFechaCambioUsuario() == null) {
@@ -175,6 +181,7 @@ public class PerfilServiceImpl implements PerfilService {
                 usuario.getApellido(),
                 usuario.getEmail(),
                 usuario.getUsuario(),
+                usuario.getTelefono(),
                 proximoCambioUsuario(usuario),
                 direccion.getCalle(),
                 direccion.getNombreEdificio(),

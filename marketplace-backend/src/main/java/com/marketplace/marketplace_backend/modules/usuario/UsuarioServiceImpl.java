@@ -75,6 +75,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuario.setContrasenha(passwordEncoder.encode(request.getContrasenha()));
         usuario.setEmail(request.getEmail());
         usuario.setUsuario(request.getUsuario());
+        usuario.setTelefono(normalizarTelefono(request.getTelefono()));
         usuario.setRol(rol);
         usuario.setDireccion(direccionGuardada);
         usuario.setActivo(true);
@@ -103,6 +104,10 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         if (request.getUsuario() != null) {
             usuario.setUsuario(request.getUsuario());
+        }
+
+        if (request.getTelefono() != null) {
+            usuario.setTelefono(normalizarTelefono(request.getTelefono()));
         }
 
         if (request.getActivo() != null) {
@@ -186,6 +191,11 @@ public class UsuarioServiceImpl implements UsuarioService {
                 .toList();
     }
 
+    // Convierte 0981123456 en 595981123456 (formato internacional sin +).
+    private static String normalizarTelefono(String telefono) {
+        return "595" + telefono.trim().substring(1);
+    }
+
     private UsuarioResponseDto toResponse(Usuario usuario) {
         return new UsuarioResponseDto(
                 usuario.getId(),
@@ -193,6 +203,7 @@ public class UsuarioServiceImpl implements UsuarioService {
                 usuario.getApellido(),
                 usuario.getEmail(),
                 usuario.getUsuario(),
+                usuario.getTelefono(),
                 usuario.getRol().getId(),
                 usuario.getRol().getNombre(),
                 usuario.getDireccion().getId(),

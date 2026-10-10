@@ -3,6 +3,7 @@ package com.marketplace.marketplace_backend.modules.usuario.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -32,6 +33,10 @@ public class UsuarioCreateRequestDto {
 
     @NotBlank(message = "El usuario no puede estar vacío")
     private String usuario;
+
+    @NotBlank(message = "El teléfono no puede estar vacío")
+    @Pattern(regexp = "^0\\d{8,9}$", message = "El teléfono debe empezar con 0 y tener 9 o 10 dígitos, sin espacios")
+    private String telefono;
 
     @NotNull(message = "El rol es obligatorio")
     private Long idRol;

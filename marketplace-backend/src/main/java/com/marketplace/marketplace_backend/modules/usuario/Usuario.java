@@ -45,6 +45,11 @@ public class Usuario extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String usuario;
 
+    // Numero en formato internacional de Paraguay, sin el signo +, por ejemplo 595981123456.
+    // Se usa para contactar al usuario por sus pedidos.
+    @Column(nullable = false, length = 20)
+    private String telefono;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "rol_id", nullable = false)
     private Rol rol;

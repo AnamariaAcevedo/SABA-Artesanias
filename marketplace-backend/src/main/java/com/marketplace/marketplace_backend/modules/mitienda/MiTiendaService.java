@@ -7,6 +7,7 @@ import com.marketplace.marketplace_backend.modules.mitienda.dto.MiContactoReques
 import com.marketplace.marketplace_backend.modules.mitienda.dto.MiProductoRequestDto;
 import com.marketplace.marketplace_backend.modules.mitienda.dto.MiTiendaResponseDto;
 import com.marketplace.marketplace_backend.modules.mitienda.dto.MiTiendaUpdateRequestDto;
+import com.marketplace.marketplace_backend.modules.pedido.dto.PedidoResponseDto;
 import com.marketplace.marketplace_backend.modules.producto.dto.ProductoResponseDto;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -41,4 +42,16 @@ public interface MiTiendaService {
     ContactoResponseDto actualizarContacto(Long idContacto, MiContactoRequestDto request);
 
     void eliminarContacto(Long idContacto);
+
+    PagedResult<List<PedidoResponseDto>> listarPedidos(int page, int perPage);
+
+    PedidoResponseDto obtenerPedido(Long idPedido);
+
+    PedidoResponseDto confirmarPedido(Long idPedido);
+
+    PedidoResponseDto enviarPedido(Long idPedido);
+
+    PedidoResponseDto entregarPedido(Long idPedido);
+
+    PedidoResponseDto cancelarPedido(Long idPedido);
 }

@@ -19,6 +19,7 @@ public class PerfilResponseDto {
     private String apellido;
     private String email;
     private String usuario;
+    private String telefono;
     // Desde cuándo puede volver a cambiar su nombre de usuario; null = ya puede.
     private LocalDateTime proximoCambioUsuario;
     private String calle;
