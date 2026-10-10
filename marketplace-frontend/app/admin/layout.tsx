@@ -30,6 +30,11 @@ const secciones = [
     label: "Categorías",
     permisos: ACCESO.verCategorias,
   },
+  {
+    href: "/admin/solicitudes-vendedor",
+    label: "Solicitudes de vendedor",
+    permisos: ACCESO.verSolicitudesVendedor,
+  },
 ];
 
 export default function AdminLayout({

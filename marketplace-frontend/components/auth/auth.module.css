@@ -9,18 +9,21 @@
 .form { display: flex; flex-direction: column; gap: 16px; }
 .field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 .field label { font-size: 25px; line-height: 1.2; color: #48200f; }
-.field input, .field select { width: 100%; min-width: 0; min-height: 52px; border: 1px solid #b88b44; border-radius: 999px; padding: 10px 18px; background: #f4ddba; color: #291606; font-family: Arial, sans-serif; font-size: 16px; }
+.field input, .field select, .field textarea { width: 100%; min-width: 0; min-height: 52px; border: 1px solid #b88b44; border-radius: 999px; padding: 10px 18px; background: #f4ddba; color: #291606; font-family: Arial, sans-serif; font-size: 16px; }
+.field textarea { min-height: 120px; border-radius: 26px; resize: vertical; }
 .field input::placeholder { color: #503715; }
 .field select:disabled { opacity: 1; color: #503715; }
 .page :is(input, select, button, a):focus-visible { outline: 3px solid #63240e; outline-offset: 4px; }
 .formActions { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 16px; margin-top: 2px; }
-.submit { background: #63240e; color: #f7dfb9; padding: 10px 32px; min-height: 44px; font-size: 20px; cursor: pointer; border: none; border-radius: 999px; transition: background 0.15s ease; }
+.submit { display: inline-flex; align-items: center; justify-content: center; background: #63240e; color: #f7dfb9; padding: 10px 32px; min-height: 44px; font-size: 20px; cursor: pointer; border: none; border-radius: 999px; text-decoration: none; transition: background 0.15s ease; }
 .submit:hover:not(:disabled) { background: #7a3216; }
 .submit:disabled { opacity: .65; cursor: not-allowed; }
 .cancelLink { display: inline-flex; align-items: center; justify-content: center; background: transparent; color: #63240e; padding: 10px 32px; min-height: 44px; font-size: 20px; border: 1px solid #63240e; border-radius: 999px; text-decoration: none; transition: background 0.15s ease; }
 .cancelLink:hover { background: rgba(99, 36, 14, .08); }
 .linkText { text-align: center; font-size: 23px; line-height: 1.4; margin-top: 18px; }
 .linkText a { text-decoration: underline; text-underline-offset: 4px; }
+.heading { margin: 0 0 8px; text-align: center; font-size: 31px; line-height: 1.2; }
+.intro { margin: 0 0 22px; text-align: center; font: 16px/1.55 Arial, sans-serif; color: #503715; }
 .row { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; }
 .address { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 24px; }
 .error, .notice { font: 14px/1.6 Arial, sans-serif; padding: 12px 14px; border-radius: 10px; background: #fae8c9; color: #63240e; }
