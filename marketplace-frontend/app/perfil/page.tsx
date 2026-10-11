@@ -7,8 +7,10 @@ import styles from "@/components/admin/admin.module.css";
 import UbicacionSelects from "@/components/admin/usuarios/UbicacionSelects";
 import AvatarUsuario from "@/components/auth/AvatarUsuario";
 import MenuUsuario from "@/components/auth/MenuUsuario";
+import BotonInicio from "@/components/catalogo/BotonInicio";
 import { useSesion } from "@/components/auth/SesionProvider";
 import { ApiError, apiFetch } from "@/lib/api";
+import { puedeEntrarAlPanel } from "@/lib/access";
 import {
   etiquetaDireccionPerfil,
   etiquetaNumeroPerfil,
@@ -56,28 +58,41 @@ export default function PerfilPage() {
     );
   }
 
+  // Mismo criterio que app/admin/layout.tsx: el acceso al panel depende de los permisos.
+  const accedeAlPanel = puedeEntrarAlPanel(sesion.permisos);
+
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
-        <span className={styles.logo}>•SABA•</span>
-        <span className={styles.subtitle}>Mi perfil</span>
+      <header className={`${styles.header} ${perfilStyles.header}`}>
+        <BotonInicio />
+        <div className={perfilStyles.marca}>
+          <span className={styles.logo}>•SABA•</span>
+          <span className={styles.subtitle}>Mi perfil</span>
+        </div>
         <MenuUsuario />
       </header>
 
       <main className={styles.main}>
         <div className={perfilStyles.contenedor}>
-          <Link href="/home" className={styles.backLink}>
-            ← Volver al inicio
-          </Link>
           {/* `key` remonta el contenido si cambia el usuario de la sesión. */}
-          <PerfilContenido key={sesion.id} />
+          <PerfilContenido
+            key={sesion.id}
+            accedeAlPanel={accedeAlPanel}
+            puedeSolicitarVendedor={sesion.idTienda === null && !accedeAlPanel}
+          />
         </div>
       </main>
     </div>
   );
 }
 
-function PerfilContenido() {
+function PerfilContenido({
+  accedeAlPanel,
+  puedeSolicitarVendedor,
+}: {
+  accedeAlPanel: boolean;
+  puedeSolicitarVendedor: boolean;
+}) {
   const [perfil, setPerfil] = useState<Perfil | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
@@ -143,6 +158,17 @@ function PerfilContenido() {
               >
                 Cambiar contraseña
               </button>
+              {/* Mismo destino que el link del login: la página decide según el estado de la solicitud. */}
+              {puedeSolicitarVendedor && (
+                <Link href="/solicitar-vendedor" className={styles.buttonOutline}>
+                  Solicitar ser vendedor
+                </Link>
+              )}
+              {accedeAlPanel && (
+                <Link href="/admin" className={styles.buttonOutline}>
+                  Panel de administración
+                </Link>
+              )}
             </div>
           )}
         </div>

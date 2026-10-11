@@ -1,5 +1,9 @@
 /* Complementa components/admin/admin.module.css con lo propio de la vista de perfil. */
 
+/* Header: botón de inicio, logo y subtítulo centrados verticalmente. */
+header.header { align-items: center; }
+.marca { display: flex; align-items: baseline; gap: 14px; min-width: 0; }
+
 .contenedor { max-width: 880px; margin: 0 auto; }
 
 .encabezado { display: flex; align-items: center; gap: 24px; margin-bottom: 24px; }

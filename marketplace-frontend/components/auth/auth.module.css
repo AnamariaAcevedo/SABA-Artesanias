@@ -1,4 +1,6 @@
-.page { min-height: 100svh; background: #fff6e6; color: #63240e; padding: 28px 20px; display: flex; align-items: center; justify-content: center; font-family: Georgia, 'Times New Roman', serif; }
+.page { min-height: 100svh; background: #fff6e6; color: #63240e; padding: 28px 20px; display: flex; align-items: center; justify-content: center; font-family: Georgia, 'Times New Roman', serif; position: relative; }
+/* Botón con la casita, fijo arriba a la izquierda, que lleva a la portada (/). */
+.botonInicio { position: absolute; top: 20px; left: 24px; }
 .card { background: rgba(244, 221, 186, 0.8); border: none; border-radius: 34px; width: 100%; max-width: 485px; padding: 28px 48px 24px; }
 .wide { max-width: 870px; padding: 20px 44px 28px; }
 .brand { display: flex; flex-direction: column; align-items: center; width: fit-content; max-width: 100%; margin: 0 auto 24px; color: #63240e; text-decoration: none; }
@@ -30,7 +32,8 @@
 .notice { margin-top: 20px; }
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 @media (max-width: 600px) {
-  .page { padding: 20px 14px; }
+  .page { padding: 76px 14px 20px; }
+  .botonInicio { top: 16px; left: 14px; }
   .card, .wide { padding: 26px 24px; border-radius: 28px; }
   .logo, .wide .logo { font-size: clamp(60px, 17vw, 86px); letter-spacing: -4px; }
   .subtitle { font-size: 22px; }
