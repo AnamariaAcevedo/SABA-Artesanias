@@ -14,7 +14,7 @@ import { obtenerProductos } from "@/services/productoService";
 import MenuUsuario from "@/components/auth/MenuUsuario";
 import BotonInicio from "@/components/catalogo/BotonInicio";
 import ProductoCard from "@/components/catalogo/ProductoCard";
-import { useRolSesion } from "@/lib/auth";
+import { useHaySesion } from "@/lib/auth";
 
 export default function TiendaDetallePage() {
   const { id } = useParams<{ id: string }>();
@@ -25,7 +25,7 @@ export default function TiendaDetallePage() {
 }
 
 function TiendaDetalleContenido({ id }: { id: string }) {
-  const rol = useRolSesion();
+  const haySesion = useHaySesion();
   const idTienda = Number(id);
 
   const [tienda, setTienda] = useState<Tienda | null>(null);
@@ -78,7 +78,7 @@ function TiendaDetalleContenido({ id }: { id: string }) {
           ← Volver a tiendas
         </Link>
 
-        {rol === undefined ? null : rol ? (
+        {haySesion === undefined ? null : haySesion ? (
           <MenuUsuario />
         ) : (
           <Link href="/login" className={homeStyles.logoutButton} style={{ marginLeft: "auto" }}>

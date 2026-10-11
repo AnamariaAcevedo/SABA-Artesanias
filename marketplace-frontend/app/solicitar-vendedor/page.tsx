@@ -168,7 +168,7 @@ export default function SolicitarVendedorPage() {
   }
 
   if (cargando || (sesion && sesion.idTienda === null && consultando)) {
-    return <AuthShell title="Solicitar ser vendedor"><p className={styles.notice} role="status">Verificando tu solicitud…</p></AuthShell>;
+    return <AuthShell inicioHref="/home" title="Solicitar ser vendedor"><p className={styles.notice} role="status">Verificando tu solicitud…</p></AuthShell>;
   }
 
   if (!sesion) {
@@ -184,7 +184,7 @@ export default function SolicitarVendedorPage() {
 
   if (sesion.idTienda !== null) {
     return (
-      <AuthShell title="Solicitar ser vendedor">
+      <AuthShell inicioHref="/home" title="Solicitar ser vendedor">
         <h2 className={styles.heading}>Ya tenés una tienda</h2>
         <p className={styles.notice}>Tu usuario ya está asociado a {sesion.nombreTienda ?? "una tienda"}.</p>
         <div className={styles.formActions}>
@@ -197,7 +197,7 @@ export default function SolicitarVendedorPage() {
 
   if (solicitud?.estado === "PENDIENTE") {
     return (
-      <AuthShell title="Solicitud pendiente">
+      <AuthShell inicioHref="/home" title="Solicitud pendiente">
         <h2 className={styles.heading}>Ya tenés una tienda en espera de aprobación</h2>
         <p className={styles.notice} role="status">
           La solicitud de <strong>{solicitud.nombreTienda}</strong> está siendo revisada. Una vez enviada, no es posible modificar sus datos.
@@ -222,7 +222,7 @@ export default function SolicitarVendedorPage() {
 
   if (solicitud?.estado === "ACEPTADA") {
     return (
-      <AuthShell title="Solicitud aprobada">
+      <AuthShell inicioHref="/home" title="Solicitud aprobada">
         <h2 className={styles.heading}>Tu solicitud fue aprobada</h2>
         <p className={styles.notice}>La tienda <strong>{solicitud.nombreTienda}</strong> ya fue habilitada. Volvé a iniciar sesión si todavía no aparece en tu menú.</p>
         <div className={styles.formActions}><Link href="/home" className={styles.submit}>Volver al catálogo</Link></div>
@@ -232,7 +232,7 @@ export default function SolicitarVendedorPage() {
 
   if (solicitud?.estado === "RECHAZADA") {
     return (
-      <AuthShell title="Solicitud rechazada">
+      <AuthShell inicioHref="/home" title="Solicitud rechazada">
         <h2 className={styles.heading}>Tu solicitud fue rechazada</h2>
         <p className={styles.notice}><strong>Motivo:</strong> {solicitud.motivoRechazo ?? "El administrador no indicó un motivo."}</p>
         <p className={styles.intro}>El rechazo es definitivo y no es posible enviar otra solicitud con esta cuenta.</p>
@@ -244,7 +244,7 @@ export default function SolicitarVendedorPage() {
   }
 
   return (
-    <AuthShell title="Solicitar ser vendedor" wide>
+    <AuthShell inicioHref="/home" title="Solicitar ser vendedor" wide>
       <h2 className={styles.heading}>Solicitar ser vendedor</h2>
       <p className={styles.intro}>Contanos sobre tu tienda. Un administrador revisará los datos antes de habilitarla. Revisalos bien: una vez enviada, la solicitud no se puede modificar.</p>
       <form onSubmit={enviarSolicitud} onChange={() => setError("")} aria-busy={enviando}>

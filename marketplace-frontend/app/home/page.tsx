@@ -15,11 +15,12 @@ import {
   obtenerSubcategoriasPorCategoria,
 } from "@/services/categoriaService";
 import MenuUsuario from "@/components/auth/MenuUsuario";
+import BotonBuscar from "@/components/catalogo/BotonBuscar";
 import ProductoCard from "@/components/catalogo/ProductoCard";
-import { useRolSesion } from "@/lib/auth";
+import { useHaySesion } from "@/lib/auth";
 
 export default function HomePage() {
-  const rol = useRolSesion();
+  const haySesion = useHaySesion();
 
   const [productos, setProductos] = useState<Producto[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
@@ -234,8 +235,6 @@ async function cargarCategorias() {
           className={styles.searchBar}
           onSubmit={buscarProducto}
         >
-          <span className={styles.searchIcon} aria-hidden="true">⌕</span>
-
           <input
             type="text"
             placeholder="Buscar productos..."
@@ -246,21 +245,25 @@ async function cargarCategorias() {
             suppressHydrationWarning
           />
 
-          <button type="submit" className={styles.searchButton} suppressHydrationWarning>
-            Buscar
-          </button>
+          <BotonBuscar />
         </form>
 
         <Link href="/tiendas" className={styles.navButton}>
           Tiendas
         </Link>
 
-        {rol === undefined ? null : rol ? (
+        {haySesion === undefined ? null : haySesion ? (
           <MenuUsuario />
         ) : (
-          <Link href="/login" className={styles.logoutButton} style={{ marginLeft: "auto" }}>
-            Iniciar sesión
-          </Link>
+          <>
+            {/* Sin sesión, acceso a la portada (/) junto a "Iniciar sesión". */}
+            <Link href="/" className={styles.navButton} style={{ marginLeft: "auto" }}>
+              Inicio
+            </Link>
+            <Link href="/login" className={styles.logoutButton}>
+              Iniciar sesión
+            </Link>
+          </>
         )}
       </header>
 
