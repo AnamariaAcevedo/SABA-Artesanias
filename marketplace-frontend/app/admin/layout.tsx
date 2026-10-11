@@ -121,6 +121,15 @@ export default function AdminLayout({
           <span className={styles.subtitle}>
                     Panel de gestión
                 </span>
+          {/* Accesos rápidos para salir del panel: portada (/) y catálogo (/home). */}
+          <div className={styles.accesos}>
+            <Link href="/" className={styles.accesoLink}>
+              Inicio
+            </Link>
+            <Link href="/home" className={styles.accesoLink}>
+              Home
+            </Link>
+          </div>
           <MenuUsuario enPanel />
         </header>
 
@@ -133,7 +142,7 @@ export default function AdminLayout({
                       : ""
               }`}
           >
-            Inicio
+            Dashboard
           </Link>
 
           {visibles.map((seccion) => {
