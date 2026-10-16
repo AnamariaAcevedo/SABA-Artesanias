@@ -3,6 +3,8 @@ export interface Producto {
   nombre: string;
   descripcion: string;
   precio: number;
+  // Precio con el descuento ya aplicado; igual a precio si no tiene descuento.
+  precioFinal: number;
   puntuacion: number | null;
   descuento: number | null;
   cantidadDisponible: number;

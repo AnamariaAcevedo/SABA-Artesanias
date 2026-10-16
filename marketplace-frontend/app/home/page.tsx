@@ -15,6 +15,7 @@ import {
   obtenerSubcategoriasPorCategoria,
 } from "@/services/categoriaService";
 import MenuUsuario from "@/components/auth/MenuUsuario";
+import Carrito from "@/components/carrito/Carrito";
 import BotonBuscar from "@/components/catalogo/BotonBuscar";
 import ProductoCard from "@/components/catalogo/ProductoCard";
 import { useHaySesion } from "@/lib/auth";
@@ -265,6 +266,8 @@ async function cargarCategorias() {
             </Link>
           </>
         )}
+
+        <Carrito />
       </header>
 
       <div className={styles.homeContent}>
