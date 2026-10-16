@@ -8,6 +8,7 @@ import type { Pagination } from "@/types/api";
 import type { Usuario } from "@/types/usuario";
 import ConPermiso from "@/components/auth/ConPermiso";
 import { ACCESO } from "@/lib/access";
+import BuscadorConSugerencias, { type Sugerencia } from "@/components/buscador/BuscadorConSugerencias";
 
 
 type FiltroActivo = "todos" | "activos" | "inactivos";
@@ -61,6 +62,33 @@ export default function UsuariosPage() {
     setNombreBuscado(nombre);
   }
 
+  // Al vaciar el buscador se vuelven a listar todos los usuarios.
+  function cambiarNombre(valor: string) {
+    setNombre(valor);
+    if (valor.trim() === "" && nombreBuscado) {
+      setPage(1);
+      setNombreBuscado("");
+    }
+  }
+
+  async function sugerirUsuarios(texto: string): Promise<Sugerencia[]> {
+    const params = new URLSearchParams({ page: "1", perPage: "6", nombre: texto });
+    const { data } = await apiFetchConPaginacion<Usuario[]>(`/usuarios?${params.toString()}`);
+    return data.map((usuario) => ({
+      clave: usuario.id,
+      texto: `${usuario.nombre} ${usuario.apellido}`,
+      detalle: `${usuario.usuario} · ${usuario.email}`,
+    }));
+  }
+
+  // El backend busca por nombre: al elegir un usuario se filtra por su nombre.
+  function elegirUsuario(sugerencia: Sugerencia) {
+    const nombreUsuario = sugerencia.texto.split(" ")[0];
+    setNombre(nombreUsuario);
+    setPage(1);
+    setNombreBuscado(nombreUsuario);
+  }
+
   async function alternarActivo(usuarioSeleccionado: Usuario) {
     setAccionEnCurso(usuarioSeleccionado.id);
     setError("");
@@ -112,10 +140,12 @@ export default function UsuariosPage() {
       <form onSubmit={buscar} className={styles.toolbar}>
         <div className={styles.field}>
           <label htmlFor="nombre">Nombre</label>
-          <input
+          <BuscadorConSugerencias
             id="nombre"
-            value={nombre}
-            onChange={(event) => setNombre(event.target.value)}
+            valor={nombre}
+            alCambiar={cambiarNombre}
+            obtenerSugerencias={sugerirUsuarios}
+            alSeleccionar={elegirUsuario}
             placeholder="Buscar por nombre..."
           />
         </div>

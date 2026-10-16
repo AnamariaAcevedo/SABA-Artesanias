@@ -17,9 +17,13 @@ public interface PedidoService {
 
     PedidoResponseDto cancelarMio(Long id);
 
-    PagedResult<List<PedidoResponseDto>> listarDeTienda(Long idTienda, int page, int perPage);
+    // numero es opcional: si viene, filtra por el numero de pedido de la tienda.
+    PagedResult<List<PedidoResponseDto>> listarDeTienda(Long idTienda, Integer numero, int page, int perPage);
 
     PedidoResponseDto obtenerDeTienda(Long idTienda, Long id);
+
+    // Sugerencias para el buscador: pedidos cuyo numero empieza con prefijoNumero.
+    List<PedidoResponseDto> sugerirDeTienda(Long idTienda, String prefijoNumero, int limite);
 
     PedidoResponseDto confirmar(Long idTienda, Long id);
 

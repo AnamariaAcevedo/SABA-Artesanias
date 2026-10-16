@@ -48,6 +48,20 @@ export async function obtenerProductos(
   return respuesta.json();
 }
 
+// Sugerencias del buscador del catálogo: pocos productos cuyo nombre contiene el texto.
+export async function sugerirProductos(
+  nombre: string
+): Promise<ApiResponse<Producto[]>> {
+  const parametros = new URLSearchParams({ page: "1", perPage: "6", nombre: nombre.trim() });
+  const respuesta = await fetch(`${API_URL}/productos?${parametros.toString()}`);
+
+  if (!respuesta.ok) {
+    throw new Error(`Error ${respuesta.status}`);
+  }
+
+  return respuesta.json();
+}
+
 export async function obtenerProductoPorId(
   id: number
 ): Promise<ApiResponse<Producto>> {

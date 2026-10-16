@@ -45,9 +45,11 @@ public interface MiTiendaService {
 
     void eliminarContacto(Long idContacto);
 
-    PagedResult<List<PedidoResponseDto>> listarPedidos(int page, int perPage);
+    PagedResult<List<PedidoResponseDto>> listarPedidos(Integer numero, int page, int perPage);
 
     PedidoResponseDto obtenerPedido(Long idPedido);
+
+    List<PedidoResponseDto> sugerirPedidos(String prefijoNumero, int limite);
 
     PedidoResponseDto confirmarPedido(Long idPedido);
 

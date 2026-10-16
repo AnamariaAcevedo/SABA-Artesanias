@@ -1,0 +1,38 @@
+/* Complementa components/admin/admin.module.css con lo propio de los pedidos
+   (gestión desde "Mi tienda" e historial en el perfil). */
+
+.badgeConfirmado { background: #e1ecf7; color: #1f4467; }
+.badgeEnviado { background: #ece3f6; color: #4a2a6b; }
+
+.items { margin: 0; padding: 0; list-style: none; font-size: 13px; line-height: 1.5; }
+.items li { white-space: nowrap; }
+
+.secundario { display: block; margin-top: 2px; color: #6b4a22; font-size: 12px; line-height: 1.4; overflow-wrap: anywhere; }
+
+.total { white-space: nowrap; font-weight: 600; }
+
+/* Historial del cliente: una tarjeta por pedido. */
+.historial { display: flex; flex-direction: column; gap: 14px; margin: 0; padding: 0; list-style: none; font-family: Arial, sans-serif; }
+
+.pedido { border: 1px solid #b88b44; border-radius: 16px; padding: 16px 20px; background: rgba(255, 246, 230, .6); }
+
+.pedidoCabecera { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.pedidoCabecera h4 { margin: 0; color: #291606; font-size: 16px; }
+.pedidoCabecera a { color: inherit; }
+
+.pedidoCuerpo { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 12px 24px; margin-top: 12px; color: #291606; font-size: 14px; }
+.pedidoCuerpo .items { font-size: 14px; }
+.pedidoCuerpo .items li { white-space: normal; }
+
+.pedidoPie { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; padding-top: 10px; border-top: 1px solid #e0c48f; font-size: 14px; color: #291606; }
+
+/* Línea de progreso PENDIENTE → CONFIRMADO → ENVIADO → ENTREGADO. */
+.progreso { display: flex; gap: 6px; margin: 12px 0 0; padding: 0; list-style: none; font-size: 11px; color: #6b4a22; }
+.progreso li { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.progreso li::before { content: ""; display: block; height: 4px; border-radius: 999px; background: #e0c48f; }
+.progreso .alcanzado { color: #291606; font-weight: 600; }
+.progreso .alcanzado::before { background: #63240e; }
+
+@media (max-width: 640px) {
+  .pedidoCuerpo { grid-template-columns: 1fr; }
+}
