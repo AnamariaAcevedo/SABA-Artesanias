@@ -11,6 +11,7 @@ import { Tienda } from "@/types/Tienda";
 import { obtenerTiendas } from "@/services/tiendaService";
 import { obtenerProductos } from "@/services/productoService";
 import MenuUsuario from "@/components/auth/MenuUsuario";
+import Carrito from "@/components/carrito/Carrito";
 import BotonBuscar from "@/components/catalogo/BotonBuscar";
 import BotonInicio from "@/components/catalogo/BotonInicio";
 import { useHaySesion } from "@/lib/auth";
@@ -111,6 +112,8 @@ export default function TiendasPage() {
             Iniciar sesión
           </Link>
         )}
+
+        <Carrito />
       </header>
 
       <div className={styles.content}>

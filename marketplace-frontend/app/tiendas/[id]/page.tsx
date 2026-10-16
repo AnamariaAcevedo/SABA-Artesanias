@@ -12,6 +12,7 @@ import { Tienda } from "@/types/Tienda";
 import { obtenerTiendaPorId } from "@/services/tiendaService";
 import { obtenerProductos } from "@/services/productoService";
 import MenuUsuario from "@/components/auth/MenuUsuario";
+import Carrito from "@/components/carrito/Carrito";
 import BotonInicio from "@/components/catalogo/BotonInicio";
 import ProductoCard from "@/components/catalogo/ProductoCard";
 import { useHaySesion } from "@/lib/auth";
@@ -85,6 +86,8 @@ function TiendaDetalleContenido({ id }: { id: string }) {
             Iniciar sesión
           </Link>
         )}
+
+        <Carrito />
       </header>
 
       <div className={styles.content}>

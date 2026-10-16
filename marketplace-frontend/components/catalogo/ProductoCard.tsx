@@ -8,7 +8,7 @@ const API_URL =
 export default function ProductoCard({ producto }: { producto: Producto }) {
   return (
     <article className={styles.productCard}>
-      <div className={styles.productImage}>
+      <Link href={`/productos/${producto.id}`} className={styles.productImage} aria-label={`Ver ${producto.nombre}`}>
         {producto.idImagenPrincipal ? (
           <img
             src={`${API_URL}/imagenes/${producto.idImagenPrincipal}`}
@@ -18,11 +18,13 @@ export default function ProductoCard({ producto }: { producto: Producto }) {
         ) : (
           <span>{producto.nombre}</span>
         )}
-      </div>
+      </Link>
 
       <div className={styles.productInfo}>
         <div>
-          <h4>{producto.nombre}</h4>
+          <h4>
+            <Link href={`/productos/${producto.id}`}>{producto.nombre}</Link>
+          </h4>
 
           <small>
             <Link href={`/tiendas/${producto.idTienda}`}>{producto.nombreTienda}</Link>
@@ -46,7 +48,7 @@ export default function ProductoCard({ producto }: { producto: Producto }) {
 
       <div className={styles.productExtra}>
         {producto.puntuacion !== null && <span>★ {producto.puntuacion}</span>}
-        <span>Stock: {producto.cantidadDisponible}</span>
+        <span>{producto.cantidadDisponible > 0 ? `Stock: ${producto.cantidadDisponible}` : "Sin stock"}</span>
       </div>
     </article>
   );
