@@ -81,7 +81,7 @@ public class PedidoServiceImpl implements PedidoService {
     public PedidoResponseDto crear(PedidoCreateRequestDto request) {
         Usuario usuario = usuarioAutenticadoOpcional();
 
-        Tienda tienda = tiendaRepository.findById(request.getIdTienda())
+        Tienda tienda = tiendaRepository.findByIdParaActualizar(request.getIdTienda())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tienda no encontrada"));
 
         DatosEntrega entrega = resolverDatosEntrega(usuario, request);
@@ -119,6 +119,8 @@ public class PedidoServiceImpl implements PedidoService {
         Pedido pedido = new Pedido();
         pedido.setUsuario(usuario);
         pedido.setTienda(tienda);
+        // La tienda quedo bloqueada arriba, asi que el siguiente numero no lo puede tomar otra compra.
+        pedido.setNumero(pedidoRepository.maxNumeroDeTienda(tienda.getId()) + 1);
         pedido.setNombreReceptor(entrega.nombreReceptor);
         pedido.setTelefonoReceptor(entrega.telefonoReceptor);
         pedido.setEmailReceptor(entrega.emailReceptor);
@@ -175,10 +177,24 @@ public class PedidoServiceImpl implements PedidoService {
 
     @Override
     @Transactional(readOnly = true)
-    public PagedResult<List<PedidoResponseDto>> listarDeTienda(Long idTienda, int page, int perPage) {
+    public PagedResult<List<PedidoResponseDto>> listarDeTienda(Long idTienda, Integer numero, int page, int perPage) {
         PageRequest pageable = PageRequest.of(Math.max(page, 1) - 1, Math.max(perPage, 1));
-        Page<Pedido> resultado = pedidoRepository.findByTienda_IdOrderByIdDesc(idTienda, pageable);
+        Page<Pedido> resultado = numero == null
+                ? pedidoRepository.findByTienda_IdOrderByIdDesc(idTienda, pageable)
+                : pedidoRepository.findByTienda_IdAndNumeroOrderByIdDesc(idTienda, numero, pageable);
         return paginar(resultado, page, perPage);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PedidoResponseDto> sugerirDeTienda(Long idTienda, String prefijoNumero, int limite) {
+        if (prefijoNumero == null || !prefijoNumero.matches("\\d{1,9}")) {
+            return List.of();
+        }
+        PageRequest pageable = PageRequest.of(0, Math.min(Math.max(limite, 1), 20));
+        return pedidoRepository.buscarPorPrefijoDeNumero(idTienda, prefijoNumero, pageable).stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @Override
@@ -396,10 +412,10 @@ public class PedidoServiceImpl implements PedidoService {
         SimpleMailMessage mensaje = new SimpleMailMessage();
         mensaje.setFrom(remitente);
         mensaje.setTo(pedido.getEmailReceptor());
-        mensaje.setSubject("Confirmación de tu pedido #" + pedido.getId() + " en SABA");
+        mensaje.setSubject("Confirmación de tu pedido N.º " + pedido.getNumero() + " en " + pedido.getTienda().getNombre());
         mensaje.setText(
                 "Hola " + pedido.getNombreReceptor() + ",\n\n"
-                        + "Recibimos tu pedido #" + pedido.getId() + " en " + pedido.getTienda().getNombre() + ":\n\n"
+                        + "Recibimos tu pedido N.º " + pedido.getNumero() + " en " + pedido.getTienda().getNombre() + ":\n\n"
                         + detalle
                         + "\nTotal: Gs. " + String.format("%,.0f", pedido.getTotal()) + "\n\n"
                         + "Se va a entregar en: " + pedido.getDireccion() + "\n\n"
@@ -451,6 +467,7 @@ public class PedidoServiceImpl implements PedidoService {
 
         return new PedidoResponseDto(
                 pedido.getId(),
+                pedido.getNumero(),
                 pedido.getTienda().getId(),
                 pedido.getTienda().getNombre(),
                 pedido.getUsuario() == null ? null : pedido.getUsuario().getId(),

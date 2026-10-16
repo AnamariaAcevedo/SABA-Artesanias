@@ -8,6 +8,7 @@ import { ApiError, apiFetch, apiFetchConPaginacion } from "@/lib/api";
 import type { Pagination } from "@/types/api";
 import type { Producto } from "@/types/Producto";
 import { urlImagen } from "@/types/miTienda";
+import BuscadorConSugerencias, { type Sugerencia } from "@/components/buscador/BuscadorConSugerencias";
 
 export default function MisProductosPage() {
   const [productos, setProductos] = useState<Producto[]>([]);
@@ -52,6 +53,31 @@ export default function MisProductosPage() {
     setNombreBuscado(nombre);
   }
 
+  // Al vaciar el buscador se vuelven a listar todos los productos.
+  function cambiarNombre(valor: string) {
+    setNombre(valor);
+    if (valor.trim() === "" && nombreBuscado) {
+      setPage(1);
+      setNombreBuscado("");
+    }
+  }
+
+  async function sugerirMisProductos(texto: string): Promise<Sugerencia[]> {
+    const params = new URLSearchParams({ page: "1", perPage: "6", nombre: texto });
+    const { data } = await apiFetchConPaginacion<Producto[]>(`/mi-tienda/productos?${params.toString()}`);
+    return data.map((producto) => ({
+      clave: producto.id,
+      texto: producto.nombre,
+      detalle: `${producto.precio.toLocaleString("es-PY")} Gs · Stock: ${producto.cantidadDisponible}`,
+    }));
+  }
+
+  function elegirProducto(sugerencia: Sugerencia) {
+    setNombre(sugerencia.texto);
+    setPage(1);
+    setNombreBuscado(sugerencia.texto);
+  }
+
   async function eliminar(producto: Producto) {
     if (!window.confirm(`¿Eliminar el producto "${producto.nombre}"? Esta acción no se puede deshacer.`)) {
       return;
@@ -87,10 +113,12 @@ export default function MisProductosPage() {
       <form onSubmit={buscar} className={styles.toolbar}>
         <div className={styles.field}>
           <label htmlFor="nombre">Nombre</label>
-          <input
+          <BuscadorConSugerencias
             id="nombre"
-            value={nombre}
-            onChange={(event) => setNombre(event.target.value)}
+            valor={nombre}
+            alCambiar={cambiarNombre}
+            obtenerSugerencias={sugerirMisProductos}
+            alSeleccionar={elegirProducto}
             placeholder="Buscar por nombre..."
           />
         </div>

@@ -8,6 +8,7 @@ import UbicacionSelects from "@/components/admin/usuarios/UbicacionSelects";
 import AvatarUsuario from "@/components/auth/AvatarUsuario";
 import MenuUsuario from "@/components/auth/MenuUsuario";
 import BotonInicio from "@/components/catalogo/BotonInicio";
+import HistorialPedidos from "@/components/pedidos/HistorialPedidos";
 import { useSesion } from "@/components/auth/SesionProvider";
 import { ApiError, apiFetch } from "@/lib/api";
 import { puedeEntrarAlPanel } from "@/lib/access";
@@ -96,9 +97,19 @@ function PerfilContenido({
   const [perfil, setPerfil] = useState<Perfil | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
-  const [editando, setEditando] = useState(false);
-  const [cambiandoContrasenha, setCambiandoContrasenha] = useState(false);
+  // Qué muestra el recuadro debajo de los botones; los botones quedan siempre visibles.
+  const [vista, setVista] = useState<"datos" | "editar" | "contrasenha" | "pedidos">("datos");
   const [mensajeExito, setMensajeExito] = useState("");
+
+  // Volver a tocar el botón de la vista abierta regresa a los datos.
+  function abrir(destino: "editar" | "contrasenha" | "pedidos") {
+    setMensajeExito("");
+    setVista((actual) => (actual === destino ? "datos" : destino));
+  }
+
+  function claseBoton(destino: "editar" | "contrasenha" | "pedidos") {
+    return vista === destino ? styles.buttonPrimary : styles.buttonOutline;
+  }
 
   useEffect(() => {
     let cancelado = false;
@@ -136,41 +147,43 @@ function PerfilContenido({
           <h2 className={styles.title}>
             {perfil.nombre} {perfil.apellido}
           </h2>
-          {!editando && !cambiandoContrasenha && (
-            <div className={perfilStyles.acciones}>
-              <button
-                type="button"
-                className={styles.buttonPrimary}
-                onClick={() => {
-                  setMensajeExito("");
-                  setEditando(true);
-                }}
-              >
-                Editar perfil
-              </button>
-              <button
-                type="button"
-                className={styles.buttonOutline}
-                onClick={() => {
-                  setMensajeExito("");
-                  setCambiandoContrasenha(true);
-                }}
-              >
-                Cambiar contraseña
-              </button>
-              {/* Mismo destino que el link del login: la página decide según el estado de la solicitud. */}
-              {puedeSolicitarVendedor && (
-                <Link href="/solicitar-vendedor" className={styles.buttonOutline}>
-                  Solicitar ser vendedor
-                </Link>
-              )}
-              {accedeAlPanel && (
-                <Link href="/admin" className={styles.buttonOutline}>
-                  Panel de administración
-                </Link>
-              )}
-            </div>
-          )}
+          <div className={perfilStyles.acciones}>
+            <button
+              type="button"
+              className={claseBoton("editar")}
+              aria-pressed={vista === "editar"}
+              onClick={() => abrir("editar")}
+            >
+              Editar perfil
+            </button>
+            <button
+              type="button"
+              className={claseBoton("pedidos")}
+              aria-pressed={vista === "pedidos"}
+              onClick={() => abrir("pedidos")}
+            >
+              Mis pedidos
+            </button>
+            <button
+              type="button"
+              className={claseBoton("contrasenha")}
+              aria-pressed={vista === "contrasenha"}
+              onClick={() => abrir("contrasenha")}
+            >
+              Cambiar contraseña
+            </button>
+            {/* Mismo destino que el link del login: la página decide según el estado de la solicitud. */}
+            {puedeSolicitarVendedor && (
+              <Link href="/solicitar-vendedor" className={styles.buttonOutline}>
+                Solicitar ser vendedor
+              </Link>
+            )}
+            {accedeAlPanel && (
+              <Link href="/admin" className={styles.buttonOutline}>
+                Panel de administración
+              </Link>
+            )}
+          </div>
         </div>
       </div>
 
@@ -180,18 +193,20 @@ function PerfilContenido({
         </p>
       )}
 
-      {editando ? (
+      {vista === "editar" ? (
         <PerfilForm
           perfil={perfil}
-          onCancelar={() => setEditando(false)}
+          onCancelar={() => setVista("datos")}
           onGuardado={(actualizado) => {
             setPerfil(actualizado);
-            setEditando(false);
+            setVista("datos");
             setMensajeExito("Tus datos se actualizaron correctamente.");
           }}
         />
-      ) : cambiandoContrasenha ? (
-        <CambioContrasenha onCancelar={() => setCambiandoContrasenha(false)} />
+      ) : vista === "contrasenha" ? (
+        <CambioContrasenha onCancelar={() => setVista("datos")} />
+      ) : vista === "pedidos" ? (
+        <HistorialPedidos onVolver={() => setVista("datos")} />
       ) : (
         <div className={styles.card}>
           <dl className={perfilStyles.datos}>
@@ -230,7 +245,6 @@ function PerfilContenido({
           </dl>
         </div>
       )}
-
     </>
   );
 }

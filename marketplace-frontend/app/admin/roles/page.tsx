@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { apiFetch, apiFetchConPaginacion } from "@/lib/api";
+import BuscadorConSugerencias, { coincide } from "@/components/buscador/BuscadorConSugerencias";
 import styles from "@/components/admin/admin.module.css";
 import ConPermiso from "@/components/auth/ConPermiso";
 import { ACCESO } from "@/lib/access";
@@ -54,6 +55,8 @@ function mensajeError(cause: unknown) {
 export default function RolesPage() {
     const [roles, setRoles] = useState<Rol[]>([]);
     const [busqueda, setBusqueda] = useState("");
+    // Filtro aplicado al listado: cambia con Enter, al elegir una sugerencia o al vaciar el buscador.
+    const [busquedaAplicada, setBusquedaAplicada] = useState("");
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState("");
     const [aviso, setAviso] = useState("");
@@ -87,11 +90,18 @@ export default function RolesPage() {
         setRevision((valor) => valor + 1);
     }
 
-    const visibles = roles.filter((rol) =>
-        rol.nombre.toLocaleLowerCase().includes(
-            busqueda.trim().toLocaleLowerCase()
-        )
-    );
+    const visibles = roles.filter((rol) => coincide(rol.nombre, busquedaAplicada));
+
+    function cambiarBusqueda(valor: string) {
+        setBusqueda(valor);
+        if (valor.trim() === "") setBusquedaAplicada("");
+    }
+
+    function sugerirRoles(texto: string) {
+        return roles
+            .filter((rol) => coincide(rol.nombre, texto))
+            .map((rol) => ({ clave: rol.id, texto: rol.nombre }));
+    }
     return (
         <section className={styles.card}>
             <div className={styles.sectionHeader}>
@@ -131,18 +141,31 @@ export default function RolesPage() {
                 />
             ) : (
                 <>
-                    <div className={styles.toolbar}>
+                    <form
+                        className={styles.toolbar}
+                        onSubmit={(event) => {
+                            event.preventDefault();
+                            setBusquedaAplicada(busqueda);
+                        }}
+                    >
                         <div className={styles.field}>
                             <label htmlFor="buscar-rol">Nombre</label>
-                            <input
+                            <BuscadorConSugerencias
                                 id="buscar-rol"
-                                type="search"
                                 placeholder="Buscar por nombre..."
-                                value={busqueda}
-                                onChange={(event) => setBusqueda(event.target.value)}
+                                valor={busqueda}
+                                alCambiar={cambiarBusqueda}
+                                obtenerSugerencias={sugerirRoles}
+                                alSeleccionar={(sugerencia) => {
+                                    setBusqueda(sugerencia.texto);
+                                    setBusquedaAplicada(sugerencia.texto);
+                                }}
                             />
                         </div>
-                    </div>
+                        <button type="submit" className={styles.buttonGhost}>
+                            Buscar
+                        </button>
+                    </form>
 
                     {aviso && (
                         <p className={styles.notice} role="status">{aviso}</p>

@@ -326,8 +326,13 @@ public class MiTiendaServiceImpl implements MiTiendaService {
     // --------------------------------------------------------------- Pedidos
 
     @Override
-    public PagedResult<List<PedidoResponseDto>> listarPedidos(int page, int perPage) {
-        return pedidoService.listarDeTienda(vinculoActual().getTienda().getId(), page, perPage);
+    public PagedResult<List<PedidoResponseDto>> listarPedidos(Integer numero, int page, int perPage) {
+        return pedidoService.listarDeTienda(vinculoActual().getTienda().getId(), numero, page, perPage);
+    }
+
+    @Override
+    public List<PedidoResponseDto> sugerirPedidos(String prefijoNumero, int limite) {
+        return pedidoService.sugerirDeTienda(vinculoActual().getTienda().getId(), prefijoNumero, limite);
     }
 
     @Override
