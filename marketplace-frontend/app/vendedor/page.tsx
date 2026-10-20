@@ -7,6 +7,7 @@ import vendedorStyles from "@/components/vendedor/vendedor.module.css";
 import ConPermiso from "@/components/auth/ConPermiso";
 import { useSesion } from "@/components/auth/SesionProvider";
 import { ACCESO } from "@/lib/access";
+import MiTienda from "@/components/vendedor/MiTienda";
 import { ApiError, apiFetchConPaginacion } from "@/lib/api";
 import type { Producto } from "@/types/Producto";
 import type { Tienda } from "@/types/Tienda";
@@ -21,7 +22,6 @@ export default function VendedorPage() {
   const { sesion } = useSesion();
   const [resumen, setResumen] = useState<Resumen | null>(null);
   const [error, setError] = useState("");
-
   useEffect(() => {
     let cancelado = false;
     async function cargarResumen() {
@@ -56,6 +56,8 @@ export default function VendedorPage() {
       <p className={styles.pageSubtitle}>
         Bienvenido{sesion ? `, ${sesion.nombre}` : ""}. Desde acá gestionás tus productos y tiendas.
       </p>
+
+      {sesion && <MiTienda idTienda={sesion.idTienda} nombreTienda={sesion.nombreTienda} />}
 
       {error ? (
         <p role="alert" className={`${styles.error} ${vendedorStyles.spaced}`}>
