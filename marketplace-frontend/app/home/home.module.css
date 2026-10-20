@@ -55,6 +55,31 @@
   border-radius: 2px;
 }
 
+/* Botón con ícono de casa para volver al catálogo (components/catalogo/BotonInicio). */
+.homeButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  align-self: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid #63240e;
+  color: #63240e;
+  background: transparent;
+  transition: background 0.15s ease;
+}
+
+.homeButton:hover {
+  background: rgba(99, 36, 14, 0.08);
+}
+
+.homeButton:focus-visible {
+  outline: 3px solid #63240e;
+  outline-offset: 3px;
+}
+
 .logo {
   width: 150px;
   text-align: center;
@@ -90,12 +115,6 @@
   box-shadow: inset 0 1px 3px rgba(99, 36, 14, 0.15);
 }
 
-.searchIcon {
-  flex-shrink: 0;
-  font-size: 17px;
-  color: #63240e;
-}
-
 .searchBar input {
   flex: 1;
   min-width: 0;
@@ -115,8 +134,12 @@
 
 .searchButton {
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
   height: 30px;
-  padding: 0 18px;
+  padding: 0;
   border: none;
   border-radius: 999px;
   background: #63240e;
@@ -129,6 +152,11 @@
 
 .searchButton:hover {
   background: #7a3216;
+}
+
+.searchButton:focus-visible {
+  outline: 3px solid #63240e;
+  outline-offset: 2px;
 }
 
 /* ========================================
@@ -455,6 +483,15 @@
   color: #111;
   font-family: Georgia, "Times New Roman", serif;
   font-size: 21px;
+}
+
+.productInfo h4 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.productInfo h4 a:hover {
+  text-decoration: underline;
 }
 
 .productInfo small {

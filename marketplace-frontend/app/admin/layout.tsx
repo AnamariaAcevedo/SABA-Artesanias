@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import styles from "@/components/admin/admin.module.css";
-import LogoutButton from "@/components/auth/LogoutButton";
+import MenuUsuario from "@/components/auth/MenuUsuario";
 import { useSesion } from "@/components/auth/SesionProvider";
 import {
   ACCESO,
@@ -29,6 +29,11 @@ const secciones = [
     href: "/admin/categorias",
     label: "Categorías",
     permisos: ACCESO.verCategorias,
+  },
+  {
+    href: "/admin/solicitudes-vendedor",
+    label: "Solicitudes de vendedor",
+    permisos: ACCESO.verSolicitudesVendedor,
   },
 ];
 
@@ -116,7 +121,16 @@ export default function AdminLayout({
           <span className={styles.subtitle}>
                     Panel de gestión
                 </span>
-          <LogoutButton className={styles.logoutButton} />
+          {/* Accesos rápidos para salir del panel: portada (/) y catálogo (/home). */}
+          <div className={styles.accesos}>
+            <Link href="/" className={styles.accesoLink}>
+              Inicio
+            </Link>
+            <Link href="/home" className={styles.accesoLink}>
+              Home
+            </Link>
+          </div>
+          <MenuUsuario enPanel />
         </header>
 
         <nav className={styles.nav} aria-label="Gestión">
@@ -128,7 +142,7 @@ export default function AdminLayout({
                       : ""
               }`}
           >
-            Inicio
+            Dashboard
           </Link>
 
           {visibles.map((seccion) => {

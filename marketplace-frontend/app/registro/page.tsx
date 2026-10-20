@@ -25,12 +25,17 @@ export default function RegistroPage() {
     const datos = new FormData(form);
     const valor = (nombre: string) => String(datos.get(nombre) ?? "");
 
-    for (const nombre of ["nombre", "apellido", "usuario", "email", "contrasenha", "confirmar", "calle", campoNumero]) {
+    for (const nombre of ["nombre", "apellido", "usuario", "email", "telefono", "contrasenha", "confirmar", "calle", campoNumero]) {
       if (!valor(nombre).trim()) {
         setError("Completá los campos obligatorios. No pueden contener solamente espacios.");
         (form.elements.namedItem(nombre) as HTMLInputElement)?.focus();
         return;
       }
+    }
+    if (!/^0\d{8,9}$/.test(valor("telefono").trim())) {
+      setError("El teléfono debe empezar con 0 y tener 9 o 10 dígitos, sin espacios.");
+      (form.elements.namedItem("telefono") as HTMLInputElement).focus();
+      return;
     }
     if (valor("contrasenha").length < 8 || valor("confirmar").length < 8) {
       setError("La contraseña debe tener al menos 8 caracteres.");
@@ -74,7 +79,9 @@ export default function RegistroPage() {
       apellido: valor("apellido").trim(),
       usuario: valor("usuario").trim(),
       email: valor("email").trim(),
+      telefono: valor("telefono").trim(),
       contrasenha: valor("contrasenha"),
+      confirmarContrasenha: valor("confirmar"),
       calle: valor("calle").trim(),
       nombreEdificio: hayEdificio ? nombreEdificio.trim() : null,
       nroCasa: hayEdificio ? null : Number(numero),
@@ -98,7 +105,6 @@ export default function RegistroPage() {
           : [];
         if (mensajes.length) throw new Error(mensajes.join(" "));
         if (response.status === 409) throw new Error("Ya existe una cuenta con ese usuario o correo.");
-        if (response.status === 400) throw new Error("Revisá los datos ingresados. El servidor no pudo aceptar el registro.");
         if (response.status === 429) throw new Error("Demasiados intentos. Esperá un momento antes de volver a intentar.");
         if (response.ok) throw new Error("No pudimos confirmar el registro. Intentá iniciar sesión antes de volver a enviarlo.");
         throw new Error("No se pudo completar el registro. Intentá nuevamente en unos momentos.");
@@ -147,6 +153,8 @@ export default function RegistroPage() {
         </div>
         <div className={styles.field}><label htmlFor="nuevo-usuario" suppressHydrationWarning>Nombre de usuario:</label><input id="nuevo-usuario" name="usuario" autoComplete="username" autoCapitalize="none" spellCheck={false} required /></div>
         <div className={styles.field}><label htmlFor="correo" suppressHydrationWarning>Correo electrónico:</label><input id="correo" name="email" type="email" autoComplete="email" required /></div>
+        <div className={styles.field}><label htmlFor="telefono" suppressHydrationWarning>Teléfono:</label><input id="telefono" name="telefono" type="tel" inputMode="numeric" autoComplete="tel" required
+          onInput={(e) => { e.currentTarget.value = e.currentTarget.value.replace(/\D/g, ""); }} /></div>
         <div className={styles.field}><label htmlFor="nueva-contrasenha" suppressHydrationWarning>Contraseña:</label><input id="nueva-contrasenha" name="contrasenha" type="password" autoComplete="new-password" required minLength={8} aria-describedby="password-help" /><small id="password-help">Mínimo 8 caracteres.</small></div>
         <div className={styles.field}><label htmlFor="confirmar" suppressHydrationWarning>Confirmar contraseña:</label><input id="confirmar" name="confirmar" type="password" autoComplete="new-password" required minLength={8} /></div>
         <UbicacionFields onSelectionChange={limpiarMensaje} />

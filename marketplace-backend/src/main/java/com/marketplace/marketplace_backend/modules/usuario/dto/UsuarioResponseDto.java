@@ -18,6 +18,7 @@ public class UsuarioResponseDto {
     private String apellido;
     private String email;
     private String usuario;
+    private String telefono;
     private Long idRol;
     private String nombreRol;
     private Long idDireccion;

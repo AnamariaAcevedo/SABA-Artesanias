@@ -16,6 +16,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @Setter
@@ -43,6 +45,11 @@ public class Usuario extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String usuario;
 
+    // Numero en formato internacional de Paraguay, sin el signo +, por ejemplo 595981123456.
+    // Se usa para contactar al usuario por sus pedidos.
+    @Column(nullable = false, length = 20)
+    private String telefono;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "rol_id", nullable = false)
     private Rol rol;
@@ -53,4 +60,9 @@ public class Usuario extends BaseEntity {
 
     @Column(name = "activo", nullable = false)
     private Boolean activo = true;
+
+    // Fecha del último cambio de nombre de usuario desde el perfil propio.
+    // Se usa para exigir 30 días entre cambios; null = nunca lo cambió.
+    @Column(name = "fecha_cambio_usuario")
+    private LocalDateTime fechaCambioUsuario;
 }

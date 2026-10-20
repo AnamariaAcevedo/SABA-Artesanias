@@ -9,4 +9,8 @@ public interface TiendaRepository extends JpaRepository<Tienda, Long> {
     Page<Tienda> findAllByOrderByIdAsc(Pageable pageable);
 
     Page<Tienda> findByNombreContainingIgnoreCase(String nombre, Pageable pageable);
+
+    boolean existsByDireccion_Id(Long idDireccion);
+
+    long countByDireccion_Id(Long idDireccion);
 }

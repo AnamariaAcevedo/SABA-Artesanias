@@ -200,6 +200,15 @@ public class ProductoServiceImpl implements ProductoService {
         return porSubcategoria != null ? porSubcategoria : porCategoria;
     }
 
+    // Precio con el descuento (porcentaje) ya aplicado; sin descuento devuelve el precio tal cual.
+    private static Double precioFinal(Producto producto) {
+        Double descuento = producto.getDescuento();
+        if (descuento == null || descuento <= 0) {
+            return producto.getPrecio();
+        }
+        return producto.getPrecio() * (1 - descuento / 100);
+    }
+
     private ProductoResponseDto toResponse(Producto producto) {
         List<ProductoSubcategoria> subcategorias = productoSubcategoriaRepository.findByProducto_Id(producto.getId());
         List<Long> idsSubcategorias = subcategorias.stream()
@@ -218,6 +227,7 @@ public class ProductoServiceImpl implements ProductoService {
                 producto.getNombre(),
                 producto.getDescripcion(),
                 producto.getPrecio(),
+                precioFinal(producto),
                 producto.getPuntuacion(),
                 producto.getDescuento(),
                 producto.getCantidadDisponible(),

@@ -1,0 +1,223 @@
+.content {
+  padding: 30px 45px 45px;
+}
+
+.statusMessage {
+  margin: 0 0 20px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 20px;
+  color: #63240e;
+}
+
+/* ========================================
+   DETALLE DEL PRODUCTO
+======================================== */
+
+.detalle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 48px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.galeria {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.imagenPrincipal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: #f4ddba;
+  border: 1px solid #b88b44;
+  border-radius: 14px;
+  color: #725638;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 22px;
+  text-align: center;
+}
+
+.imagenPrincipal img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.miniaturas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.miniatura {
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  overflow: hidden;
+  background: #f4ddba;
+  border: 1px solid #b88b44;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.miniatura[aria-pressed="true"] {
+  border: 2px solid #63240e;
+}
+
+.miniatura img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  color: #63240e;
+}
+
+.nombre {
+  margin: 0;
+  color: #111;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 34px;
+  font-weight: normal;
+}
+
+.tienda {
+  align-self: flex-start;
+  color: #63240e;
+  font-size: 15px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.precio {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.precio strong {
+  color: #111;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 28px;
+}
+
+.precio s {
+  color: #8a5a3c;
+  font-size: 16px;
+}
+
+.descuento {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #63240e;
+  color: #f7dfb9;
+  font-size: 13px;
+}
+
+.puntuacion {
+  margin: 0;
+  font-size: 15px;
+}
+
+.bloque h3 {
+  margin: 0 0 6px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 18px;
+  font-weight: normal;
+}
+
+.bloque p {
+  margin: 0;
+  color: #5f4638;
+  font-size: 15px;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.stock {
+  margin: 0;
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.sinStock {
+  color: #a3261b;
+}
+
+.compra {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+}
+
+.cantidad {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.cantidad input {
+  width: 90px;
+  height: 42px;
+  padding: 0 10px;
+  border: 1px solid #63240e;
+  border-radius: 10px;
+  background: #fff;
+  color: #63240e;
+  font-size: 15px;
+}
+
+.botonAgregar {
+  flex: 1;
+  height: 42px;
+  border: none;
+  border-radius: 999px;
+  background: #63240e;
+  color: #f7dfb9;
+  font: 15px Arial, sans-serif;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.botonAgregar:hover:not(:disabled) {
+  background: #7a3216;
+}
+
+.botonAgregar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.botonAgregar:focus-visible {
+  outline: 3px solid #63240e;
+  outline-offset: 2px;
+}
+
+.aviso {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #fae8c9;
+  font-size: 14px;
+}
+
+@media (max-width: 850px) {
+  .detalle {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .content {
+    padding: 25px;
+  }
+}

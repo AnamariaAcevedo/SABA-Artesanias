@@ -61,3 +61,18 @@ export async function obtenerProductoPorId(
 
   return respuesta.json();
 }
+
+
+export async function obtenerImagenesProducto(
+  id: number
+): Promise<ApiResponse<{ id: number; contentType: string; idProducto: number }[]>> {
+  const respuesta = await fetch(
+    `${API_URL}/productos/${id}/imagenes`
+  );
+
+  if (!respuesta.ok) {
+    throw new Error(`Error ${respuesta.status}`);
+  }
+
+  return respuesta.json();
+}

@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -41,7 +42,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             jwt = authHeader.substring(7);
             try {
                 usuario = jwtUtil.extractUsuario(jwt);
-            } catch (JwtException e) {
+            } catch (JwtException | IllegalArgumentException e) {
                 jwt = null;
             }
         }
@@ -55,8 +56,10 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
-            } catch (JwtException ignored) {
-                // Token invalido o expirado: no se autentica, Spring Security decide segun la ruta.
+            } catch (JwtException | IllegalArgumentException | UsernameNotFoundException ignored) {
+                // Token inválido, expirado o perteneciente a un usuario eliminado:
+                // se continúa como anónimo y Spring Security devuelve 401 si la ruta es privada.
+                SecurityContextHolder.clearContext();
             }
         }
 

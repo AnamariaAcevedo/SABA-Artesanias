@@ -11,9 +11,11 @@ import { Producto } from "@/types/Producto";
 import { Tienda } from "@/types/Tienda";
 import { obtenerTiendaPorId } from "@/services/tiendaService";
 import { obtenerProductos } from "@/services/productoService";
-import LogoutButton from "@/components/auth/LogoutButton";
+import MenuUsuario from "@/components/auth/MenuUsuario";
+import Carrito from "@/components/carrito/Carrito";
+import BotonInicio from "@/components/catalogo/BotonInicio";
 import ProductoCard from "@/components/catalogo/ProductoCard";
-import { useRolSesion } from "@/lib/auth";
+import { useHaySesion } from "@/lib/auth";
 
 export default function TiendaDetallePage() {
   const { id } = useParams<{ id: string }>();
@@ -24,7 +26,7 @@ export default function TiendaDetallePage() {
 }
 
 function TiendaDetalleContenido({ id }: { id: string }) {
-  const rol = useRolSesion();
+  const haySesion = useHaySesion();
   const idTienda = Number(id);
 
   const [tienda, setTienda] = useState<Tienda | null>(null);
@@ -66,6 +68,8 @@ function TiendaDetalleContenido({ id }: { id: string }) {
   return (
     <main className={homeStyles.homeContainer}>
       <header className={homeStyles.homeHeader}>
+        <BotonInicio />
+
         <div className={homeStyles.logo}>
           <h1>•SABA•</h1>
           <p>Artesanías</p>
@@ -75,13 +79,15 @@ function TiendaDetalleContenido({ id }: { id: string }) {
           ← Volver a tiendas
         </Link>
 
-        {rol === undefined ? null : rol ? (
-          <LogoutButton className={homeStyles.logoutButton} />
+        {haySesion === undefined ? null : haySesion ? (
+          <MenuUsuario />
         ) : (
           <Link href="/login" className={homeStyles.logoutButton} style={{ marginLeft: "auto" }}>
             Iniciar sesión
           </Link>
         )}
+
+        <Carrito />
       </header>
 
       <div className={styles.content}>
@@ -97,7 +103,7 @@ function TiendaDetalleContenido({ id }: { id: string }) {
               <div className={styles.storeBannerInfo}>
                 <h2>{tienda.nombre}</h2>
                 {tienda.descripcion && <p>{tienda.descripcion}</p>}
-                <span className={styles.storeCardAddress}>{tienda.nombreDireccion}</span>
+                <span className={styles.storeCardAddress}>{tienda.direccionCompleta}</span>
               </div>
             </section>
 

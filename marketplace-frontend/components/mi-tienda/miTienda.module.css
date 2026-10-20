@@ -1,0 +1,36 @@
+/* Complementa components/admin/admin.module.css con lo propio de "Mi tienda". */
+
+.secciones { display: flex; flex-direction: column; gap: 24px; }
+
+/* Header del panel: botón de inicio, logo y nombre de la tienda centrados verticalmente. */
+header.header { align-items: center; }
+.marca { display: flex; align-items: center; gap: 14px; min-width: 0; }
+
+.miniatura { display: block; width: 48px; height: 48px; object-fit: cover; border-radius: 8px; border: 1px solid #b88b44; background: #fff6e6; }
+.miniaturaVacia { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 8px; border: 1px dashed #b88b44; color: #6b4a22; font-size: 10px; text-align: center; }
+.subcategorias { margin-top: 2px; font-size: 12px; color: #6b4a22; }
+
+.textarea { min-height: 96px; resize: vertical; border: 1px solid #b88b44; border-radius: 16px; padding: 10px 16px; background: #f4ddba; color: #291606; font: 15px/1.4 Arial, sans-serif; }
+.textarea:focus-visible { outline: 3px solid #63240e; outline-offset: 3px; }
+.ayuda { font: 13px/1.4 Arial, sans-serif; color: #6b4a22; padding-left: 4px; }
+
+.grupoSubcategorias { border: 1px solid #b88b44; border-radius: 16px; padding: 14px 18px; margin: 0; font-family: Arial, sans-serif; }
+.grupoSubcategorias legend { padding: 0 6px; font-size: 15px; color: #48200f; }
+.listaCategorias { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px 24px; }
+.categoria { display: flex; flex-direction: column; gap: 6px; }
+.categoria strong { font-size: 14px; color: #291606; font-weight: 600; }
+.opcionSubcategoria { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #48200f; cursor: pointer; }
+.opcionSubcategoria input { width: 18px; height: 18px; accent-color: #63240e; }
+
+.galeria { display: flex; flex-wrap: wrap; gap: 14px; }
+.imagen { position: relative; width: 120px; }
+.imagen img { display: block; width: 120px; height: 120px; object-fit: cover; border-radius: 12px; border: 1px solid #b88b44; background: #fff6e6; }
+.imagenPrincipal { position: absolute; left: 6px; top: 6px; padding: 2px 8px; border-radius: 999px; background: #63240e; color: #f7dfb9; font: 11px Arial, sans-serif; }
+.quitarImagen { margin-top: 6px; }
+.subirImagen { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-family: Arial, sans-serif; font-size: 14px; color: #48200f; }
+.subirImagen input[type="file"] { max-width: 100%; font: 14px Arial, sans-serif; }
+
+.contacto { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0; border-top: 1px solid #b88b44; font-family: Arial, sans-serif; }
+.contacto:first-child { border-top: none; }
+.contactoDatos { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 14px; color: #291606; overflow-wrap: anywhere; }
+.contactoDatos small { color: #6b4a22; }

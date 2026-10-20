@@ -10,8 +10,11 @@ import { Producto } from "@/types/Producto";
 import { Tienda } from "@/types/Tienda";
 import { obtenerTiendas } from "@/services/tiendaService";
 import { obtenerProductos } from "@/services/productoService";
-import LogoutButton from "@/components/auth/LogoutButton";
-import { useRolSesion } from "@/lib/auth";
+import MenuUsuario from "@/components/auth/MenuUsuario";
+import Carrito from "@/components/carrito/Carrito";
+import BotonBuscar from "@/components/catalogo/BotonBuscar";
+import BotonInicio from "@/components/catalogo/BotonInicio";
+import { useHaySesion } from "@/lib/auth";
 
 const API_URL =
   (process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:8080").replace(/\/+$/, "");
@@ -19,7 +22,7 @@ const API_URL =
 const CANTIDAD_RECAP = 4;
 
 export default function TiendasPage() {
-  const rol = useRolSesion();
+  const haySesion = useHaySesion();
 
   const [tiendas, setTiendas] = useState<Tienda[]>([]);
   const [productosPorTienda, setProductosPorTienda] = useState<Record<number, Producto[]>>({});
@@ -83,18 +86,14 @@ export default function TiendasPage() {
   return (
     <main className={homeStyles.homeContainer}>
       <header className={homeStyles.homeHeader}>
+        <BotonInicio />
+
         <div className={homeStyles.logo}>
           <h1>•SABA•</h1>
           <p>Artesanías</p>
         </div>
 
-        <Link href="/home" className={styles.backButton}>
-          ← Volver al catálogo
-        </Link>
-
         <form className={homeStyles.searchBar} onSubmit={buscarTienda}>
-          <span className={homeStyles.searchIcon} aria-hidden="true">⌕</span>
-
           <input
             type="text"
             placeholder="Buscar tiendas..."
@@ -103,18 +102,18 @@ export default function TiendasPage() {
             suppressHydrationWarning
           />
 
-          <button type="submit" className={homeStyles.searchButton} suppressHydrationWarning>
-            Buscar
-          </button>
+          <BotonBuscar />
         </form>
 
-        {rol === undefined ? null : rol ? (
-          <LogoutButton className={homeStyles.logoutButton} />
+        {haySesion === undefined ? null : haySesion ? (
+          <MenuUsuario />
         ) : (
           <Link href="/login" className={homeStyles.logoutButton} style={{ marginLeft: "auto" }}>
             Iniciar sesión
           </Link>
         )}
+
+        <Carrito />
       </header>
 
       <div className={styles.content}>

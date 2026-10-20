@@ -12,6 +12,8 @@ import com.marketplace.marketplace_backend.modules.refreshtoken.RefreshToken;
 import com.marketplace.marketplace_backend.modules.refreshtoken.RefreshTokenService;
 import com.marketplace.marketplace_backend.modules.rol.Rol;
 import com.marketplace.marketplace_backend.modules.rol.RolRepository;
+import com.marketplace.marketplace_backend.modules.tiendausuario.TiendaUsuario;
+import com.marketplace.marketplace_backend.modules.tiendausuario.TiendaUsuarioRepository;
 import com.marketplace.marketplace_backend.modules.usuario.Usuario;
 import com.marketplace.marketplace_backend.modules.usuario.UsuarioRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -41,6 +43,7 @@ public class AuthServiceImpl implements AuthService {
     private final DireccionRepository direccionRepository;
     private final BarrioRepository barrioRepository;
     private final PasswordEncoder passwordEncoder;
+    private final TiendaUsuarioRepository tiendaUsuarioRepository;
 
     @Override
     @Transactional
@@ -96,11 +99,14 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public AuthResponseDto registrar(RegistroRequestDto request) {
-        if (usuarioRepository.existsByEmailIgnoreCase(request.getEmail())) {
+        String email = request.getEmail().trim();
+        String nombreUsuario = request.getUsuario().trim();
+
+        if (usuarioRepository.existsByEmailIgnoreCase(email)) {
             throw new IllegalStateException("Ya existe un usuario con ese email");
         }
 
-        if (usuarioRepository.existsByUsuarioIgnoreCase(request.getUsuario())) {
+        if (usuarioRepository.existsByUsuarioIgnoreCase(nombreUsuario)) {
             throw new IllegalStateException("Ya existe un usuario con ese nombre de usuario");
         }
 
@@ -132,8 +138,9 @@ public class AuthServiceImpl implements AuthService {
         usuario.setNombre(request.getNombre());
         usuario.setApellido(request.getApellido());
         usuario.setContrasenha(passwordEncoder.encode(request.getContrasenha()));
-        usuario.setEmail(request.getEmail());
-        usuario.setUsuario(request.getUsuario());
+        usuario.setEmail(email);
+        usuario.setUsuario(nombreUsuario);
+        usuario.setTelefono(normalizarTelefono(request.getTelefono()));
         usuario.setRol(rolCliente);
         usuario.setDireccion(direccionGuardada);
         usuario.setActivo(true);
@@ -152,7 +159,13 @@ public class AuthServiceImpl implements AuthService {
         refreshTokenService.deleteToken(refreshToken);
     }
 
+    // Convierte 0981123456 en 595981123456 (formato internacional sin +).
+    private static String normalizarTelefono(String telefono) {
+        return "595" + telefono.trim().substring(1);
+    }
+
     @Override
+    @Transactional(readOnly = true)
     public SesionActualResponseDto obtenerSesionActual() {
         String nombreUsuario = SecurityContextHolder.getContext().getAuthentication().getName();
 
@@ -164,6 +177,8 @@ public class AuthServiceImpl implements AuthService {
                 .filter(authority -> !authority.startsWith("ROLE_"))
                 .toList();
 
+        TiendaUsuario vinculo = tiendaUsuarioRepository.findFirstByUsuario_Id(usuarioEntity.getId()).orElse(null);
+
         return new SesionActualResponseDto(
                 usuarioEntity.getId(),
                 usuarioEntity.getUsuario(),
@@ -171,7 +186,10 @@ public class AuthServiceImpl implements AuthService {
                 usuarioEntity.getApellido(),
                 usuarioEntity.getEmail(),
                 usuarioEntity.getRol().getNombre(),
-                permisos
+                permisos,
+                vinculo == null ? null : vinculo.getTienda().getId(),
+                vinculo == null ? null : vinculo.getTienda().getNombre(),
+                vinculo == null ? null : vinculo.getTipo().name()
         );
     }
 }

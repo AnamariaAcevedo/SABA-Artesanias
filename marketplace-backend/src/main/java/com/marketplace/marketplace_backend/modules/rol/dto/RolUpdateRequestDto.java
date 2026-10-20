@@ -1,5 +1,6 @@
 package com.marketplace.marketplace_backend.modules.rol.dto;
 
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,6 +15,7 @@ import lombok.Setter;
 public class RolUpdateRequestDto {
 
     @Size(max = 50, message = "El nombre no puede tener más de 50 caracteres")
+    @Pattern(regexp = ".*\\S.*", message = "El nombre del rol no puede estar vacío")
     private String nombre;
 
     private Boolean activo;

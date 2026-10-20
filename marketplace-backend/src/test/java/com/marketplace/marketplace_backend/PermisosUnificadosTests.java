@@ -7,6 +7,8 @@ import com.marketplace.marketplace_backend.modules.barrio.*;
 import com.marketplace.marketplace_backend.modules.direccion.*;
 import com.marketplace.marketplace_backend.modules.categoria.*;
 import com.marketplace.marketplace_backend.modules.subcategoria.*;
+import com.marketplace.marketplace_backend.modules.solicitudvendedor.*;
+import com.marketplace.marketplace_backend.modules.solicitudvendedor.dto.RechazarSolicitudRequestDto;
 import com.marketplace.marketplace_backend.common.PagedResult;
 import org.junit.jupiter.api.*;
 import com.marketplace.marketplace_backend.modules.usuario.*;
@@ -69,13 +71,19 @@ class PermisosUnificadosTests {
             Arguments.of(CategoriaController.class, "delete", "DELETE_CATEGORIAS"),
             Arguments.of(SubcategoriaController.class, "create", "CREATE_CATEGORIAS"),
             Arguments.of(SubcategoriaController.class, "update", "UPDATE_CATEGORIAS"),
-            Arguments.of(SubcategoriaController.class, "delete", "DELETE_CATEGORIAS"));
+            Arguments.of(SubcategoriaController.class, "delete", "DELETE_CATEGORIAS"),
+            Arguments.of(SolicitudVendedorController.class, "aceptar", "UPDATE_SOLICITUDES_VENDEDOR"),
+            Arguments.of(SolicitudVendedorController.class, "rechazar", "UPDATE_SOLICITUDES_VENDEDOR"));
     }
     @ParameterizedTest @MethodSource("endpoints")
     void exigePermisoUnificado(Class<?> controller, String method, String authority) throws Exception {
         var target = context.getBean(controller);
         var endpoint = Arrays.stream(controller.getMethods()).filter(m -> m.getName().equals(method)).findFirst().orElseThrow();
-        var args = Arrays.stream(endpoint.getParameterTypes()).map(t -> t == Long.class ? 1L : null).toArray();
+        var args = Arrays.stream(endpoint.getParameterTypes()).map(t -> {
+            if (t == Long.class) return 1L;
+            if (t == RechazarSolicitudRequestDto.class) return new RechazarSolicitudRequestDto("Motivo de prueba");
+            return null;
+        }).toArray();
         login("SIN_PERMISO");
         var denied = assertThrows(InvocationTargetException.class, () -> endpoint.invoke(target, args));
         assertInstanceOf(AccessDeniedException.class, denied.getCause());
@@ -112,5 +120,7 @@ class PermisosUnificadosTests {
         @Bean CategoriaController categoriaController(CategoriaService service) { return new CategoriaController(service); }
         @Bean SubcategoriaService subcategoriaService() { return service(SubcategoriaService.class); }
         @Bean SubcategoriaController subcategoriaController(SubcategoriaService service) { return new SubcategoriaController(service); }
+        @Bean SolicitudVendedorService solicitudVendedorService() { return service(SolicitudVendedorService.class); }
+        @Bean SolicitudVendedorController solicitudVendedorController(SolicitudVendedorService service) { return new SolicitudVendedorController(service); }
     }
 }

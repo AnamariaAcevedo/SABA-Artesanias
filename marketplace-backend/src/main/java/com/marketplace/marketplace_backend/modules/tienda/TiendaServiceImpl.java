@@ -112,8 +112,30 @@ public class TiendaServiceImpl implements TiendaService {
                 tienda.getDescripcion(),
                 tienda.getDireccion().getId(),
                 tienda.getDireccion().getCalle(),
+                direccionCompleta(tienda.getDireccion()),
                 tienda.getCreatedAt(),
                 tienda.getUpdatedAt()
         );
+    }
+
+    private String direccionCompleta(Direccion direccion) {
+        var barrio = direccion.getBarrio();
+        var ciudad = barrio.getCiudad();
+
+        StringBuilder calleYNumero = new StringBuilder(direccion.getCalle());
+        if (direccion.getNombreEdificio() != null && !direccion.getNombreEdificio().isBlank()) {
+            calleYNumero.append(", ").append(direccion.getNombreEdificio());
+            if (direccion.getNroDepartamento() != null && !direccion.getNroDepartamento().isBlank()) {
+                calleYNumero.append(" ").append(direccion.getNroDepartamento());
+            }
+        } else if (direccion.getNroCasa() != null) {
+            calleYNumero.append(" ").append(direccion.getNroCasa());
+        }
+
+        return String.join(", ",
+                calleYNumero.toString(),
+                barrio.getNombre(),
+                ciudad.getNombre(),
+                ciudad.getDepartamento().getPais().getNombre());
     }
 }
