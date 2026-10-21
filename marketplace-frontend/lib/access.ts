@@ -48,6 +48,17 @@ export const ACCESO = {
     asignarSubcategorias: ["ASSIGN_SUBCATEGORIAS"],
 
     quitarSubcategorias: ["REVOKE_SUBCATEGORIAS"],
+
+    // Panel del vendedor. Listar productos y tiendas es público en el
+    // backend, por eso el acceso se define por los permisos de escritura.
+    crearProducto: ["CREATE_PRODUCTOS"],
+    editarProducto: ["UPDATE_PRODUCTOS"],
+    eliminarProducto: ["DELETE_PRODUCTOS"],
+
+    subirImagenes: ["CREATE_IMAGENES"],
+    eliminarImagenes: ["DELETE_IMAGENES"],
+
+    editarTienda: ["UPDATE_TIENDAS"],
 } satisfies Record<string, string[]>;
 
 export function cumplePermisos(
@@ -102,6 +113,49 @@ export function puedeAbrirRuta(
 
     if (ruta === "/admin/solicitudes-vendedor") {
         return cumplePermisos(permisos, ACCESO.verSolicitudesVendedor);
+    }
+
+    return false;
+}
+
+export function puedeEntrarAlPanelVendedor(
+    permisos: readonly string[]
+): boolean {
+    return (
+        cumplePermisos(permisos, ACCESO.crearProducto) ||
+        cumplePermisos(permisos, ACCESO.editarProducto) ||
+        cumplePermisos(permisos, ACCESO.editarTienda) ||
+        cumplePermisos(permisos, ACCESO.subirImagenes)
+    );
+}
+
+export function puedeAbrirRutaVendedor(
+    pathname: string,
+    permisos: readonly string[]
+): boolean {
+    const ruta = pathname.replace(/\/+$/, "") || "/";
+
+    if (ruta === "/vendedor" || ruta === "/vendedor/productos") {
+        return puedeEntrarAlPanelVendedor(permisos);
+    }
+
+    if (ruta === "/vendedor/productos/nuevo") {
+        return cumplePermisos(permisos, ACCESO.crearProducto);
+    }
+
+    // La edición también es donde se gestionan las imágenes del producto.
+    if (/^\/vendedor\/productos\/[^/]+\/editar$/.test(ruta)) {
+        return (
+            cumplePermisos(permisos, ACCESO.editarProducto) ||
+            cumplePermisos(permisos, ACCESO.subirImagenes)
+        );
+    }
+
+    if (
+        ruta === "/vendedor/tiendas" ||
+        /^\/vendedor\/tiendas\/[^/]+\/editar$/.test(ruta)
+    ) {
+        return cumplePermisos(permisos, ACCESO.editarTienda);
     }
 
     return false;

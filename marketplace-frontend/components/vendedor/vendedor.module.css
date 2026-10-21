@@ -1,0 +1,33 @@
+/* Complementa components/admin/admin.module.css (misma paleta) con lo
+   que solo usa el panel del vendedor: textareas, métricas e imágenes. */
+
+.textarea { min-height: 120px; resize: vertical; border: 1px solid #b88b44; border-radius: 18px; padding: 12px 16px; background: #f4ddba; color: #291606; font: 15px/1.5 Arial, sans-serif; }
+.textarea:focus-visible { outline: 3px solid #63240e; outline-offset: 3px; }
+
+.fieldLabel { font: 15px/1.2 Arial, sans-serif; color: #48200f; }
+.readonlyValue { min-height: 44px; display: flex; align-items: center; padding: 8px 16px; border: 1px dashed #b88b44; border-radius: 999px; font: 15px Arial, sans-serif; color: #48200f; }
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-top: 22px; }
+.stat { padding: 18px 22px; border: 1px solid #b88b44; border-radius: 16px; background: #fff6e6; }
+.statValue { display: block; font-size: 30px; line-height: 1.1; }
+.statLabel { display: block; margin-top: 4px; font: 14px Arial, sans-serif; color: #48200f; }
+
+.miTienda { margin-top: 22px; padding: 18px 22px; border: 1px solid #b88b44; border-radius: 16px; background: #fff6e6; }
+.miTiendaTitulo { margin: 0 0 10px; font-size: 20px; }
+.miTiendaItem { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.miTiendaNombre { display: block; font-size: 18px; }
+.miTiendaAcciones { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.quickLinks { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+
+.imagesCard { margin-top: 24px; }
+.imageGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px; margin: 18px 0; padding: 0; list-style: none; }
+.imageItem { display: flex; flex-direction: column; gap: 8px; padding: 10px; border: 1px solid #b88b44; border-radius: 16px; background: #fff6e6; }
+.imageItem img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 10px; background: #f4ddba; }
+.imageItem small { font: 12px Arial, sans-serif; color: #6b4a22; }
+.uploadRow { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+.fileInput { max-width: 100%; font: 14px Arial, sans-serif; color: #48200f; }
+.fileInput::file-selector-button { margin-right: 12px; padding: 8px 18px; border: 1px solid #63240e; border-radius: 999px; background: transparent; color: #63240e; font: 14px Arial, sans-serif; cursor: pointer; }
+.fileInput::file-selector-button:hover { background: rgba(99, 36, 14, 0.08); }
+.hint { margin: 6px 0 0; font: 13px Arial, sans-serif; color: #6b4a22; }
+.spaced { margin-top: 16px; }
