@@ -29,6 +29,8 @@ export interface ProductoPedido {
 
 export interface Pedido {
   id: number;
+  // Número correlativo dentro de la tienda (1, 2, 3...): es el que se muestra.
+  numero: number;
   idTienda: number;
   nombreTienda: string;
   idUsuario: number | null;

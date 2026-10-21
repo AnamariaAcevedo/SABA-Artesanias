@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import styles from "./home.module.css";
 
@@ -9,7 +10,7 @@ import { Producto } from "@/types/Producto";
 import { Categoria } from "@/types/Categoria";
 import { Subcategoria } from "@/types/Subcategoria";
 
-import { obtenerProductos } from "@/services/productoService";
+import { obtenerProductos, sugerirProductos } from "@/services/productoService";
 import {
   obtenerCategorias,
   obtenerSubcategoriasPorCategoria,
@@ -17,10 +18,12 @@ import {
 import MenuUsuario from "@/components/auth/MenuUsuario";
 import Carrito from "@/components/carrito/Carrito";
 import BotonBuscar from "@/components/catalogo/BotonBuscar";
+import BuscadorConSugerencias, { type Sugerencia } from "@/components/buscador/BuscadorConSugerencias";
 import ProductoCard from "@/components/catalogo/ProductoCard";
 import { useHaySesion } from "@/lib/auth";
 
 export default function HomePage() {
+  const router = useRouter();
   const haySesion = useHaySesion();
 
   const [productos, setProductos] = useState<Producto[]>([]);
@@ -107,6 +110,23 @@ async function cargarCategorias() {
       categoriaSeleccionada ?? undefined,
       subcategoriaSeleccionada ?? undefined
     );
+  }
+
+  async function sugerirCatalogo(texto: string): Promise<Sugerencia[]> {
+    const respuesta = await sugerirProductos(texto);
+    return respuesta.data.map((producto) => ({
+      clave: producto.id,
+      texto: producto.nombre,
+      detalle: `${producto.nombreTienda} · ${producto.precioFinal.toLocaleString("es-PY")} GS`,
+    }));
+  }
+
+  // Al vaciar el buscador se vuelven a mostrar todos los productos (con los filtros de categoría).
+  function cambiarBusqueda(valor: string) {
+    setBusqueda(valor);
+    if (valor.trim() === "" && busqueda.trim() !== "") {
+      cargarProductos(undefined, categoriaSeleccionada ?? undefined, subcategoriaSeleccionada ?? undefined);
+    }
   }
 
   async function asegurarSubcategorias(idCategoria: number) {
@@ -236,13 +256,14 @@ async function cargarCategorias() {
           className={styles.searchBar}
           onSubmit={buscarProducto}
         >
-          <input
-            type="text"
+          <BuscadorConSugerencias
+            claseContenedor={styles.searchField}
             placeholder="Buscar productos..."
-            value={busqueda}
-            onChange={(evento) =>
-              setBusqueda(evento.target.value)
-            }
+            aria-label="Buscar productos"
+            valor={busqueda}
+            alCambiar={cambiarBusqueda}
+            obtenerSugerencias={sugerirCatalogo}
+            alSeleccionar={(sugerencia) => router.push(`/productos/${sugerencia.clave}`)}
             suppressHydrationWarning
           />
 

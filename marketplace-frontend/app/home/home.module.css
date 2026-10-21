@@ -115,6 +115,18 @@
   box-shadow: inset 0 1px 3px rgba(99, 36, 14, 0.15);
 }
 
+/* Contenedor del campo con sugerencias (components/buscador): ocupa el ancho libre. */
+.searchField {
+  flex: 1;
+  min-width: 0;
+  align-self: stretch;
+  display: flex;
+}
+
+.searchField input {
+  width: 100%;
+}
+
 .searchBar input {
   flex: 1;
   min-width: 0;

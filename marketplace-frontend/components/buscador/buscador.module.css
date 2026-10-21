@@ -1,0 +1,13 @@
+/* Lista de sugerencias de los buscadores (misma paleta que el catálogo y el panel). */
+
+.contenedor { position: relative; min-width: 0; }
+
+.lista { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 60; min-width: 220px; max-height: 320px; margin: 0; padding: 6px; overflow-y: auto; list-style: none; background: #fff6e6; border: 1px solid #b88b44; border-radius: 12px; box-shadow: 0 8px 24px rgba(48, 32, 15, 0.18); font-family: Arial, sans-serif; text-align: left; }
+
+.opcion { display: flex; flex-direction: column; gap: 2px; padding: 8px 12px; border-radius: 8px; color: #291606; cursor: pointer; }
+.activa { background: #f4ddba; }
+
+.texto { overflow: hidden; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+.detalle { overflow: hidden; color: #6b4a22; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+
+.vacio { padding: 8px 12px; color: #6b4a22; font-size: 13px; }

@@ -100,7 +100,7 @@ export default function ConfirmarCompraPage() {
   // Cancela un pedido ya registrado (solo con sesión y mientras siga pendiente).
   async function cancelarRegistrado(pedido: Pedido) {
     if (cancelandoId !== null) return;
-    if (!window.confirm(`¿Querés cancelar el pedido #${pedido.id}?`)) return;
+    if (!window.confirm(`¿Querés cancelar el pedido N.º ${pedido.numero} de ${pedido.nombreTienda}?`)) return;
 
     setCancelandoId(pedido.id);
     setErrorCancelacion("");
@@ -195,7 +195,7 @@ export default function ConfirmarCompraPage() {
               {creados.map((pedido) => (
                 <li key={pedido.id} className={styles.pedidoCreado}>
                   <span>
-                    Pedido #{pedido.id} en {pedido.nombreTienda}: {formatearPrecio(pedido.total)}
+                    Pedido N.º {pedido.numero} en {pedido.nombreTienda}: {formatearPrecio(pedido.total)}
                     {pedido.estado === "CANCELADO" && <strong> · Cancelado</strong>}
                   </span>
                   {haySesion === true && pedido.estado === "PENDIENTE" && (

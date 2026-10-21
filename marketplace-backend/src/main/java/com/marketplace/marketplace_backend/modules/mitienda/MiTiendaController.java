@@ -117,15 +117,24 @@ public class MiTiendaController {
 
     @GetMapping("/pedidos")
     public ResponseEntity<StandardResponseDto<List<PedidoResponseDto>>> listarPedidos(
+            @RequestParam(required = false) Integer numero,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int perPage) {
         StandardResponseDto<List<PedidoResponseDto>> response = new StandardResponseDto<>();
-        var resultado = miTiendaService.listarPedidos(page, perPage);
+        var resultado = miTiendaService.listarPedidos(numero, page, perPage);
         response.setSuccess(true);
         response.setData(resultado.data());
         response.setErrors(null);
         response.setPagination(new Pagination(resultado.page(), resultado.perPage(), resultado.total()));
         return ResponseEntity.ok(response);
+    }
+
+    // Sugerencias del buscador de pedidos mientras se escribe el numero.
+    @GetMapping("/pedidos/sugerencias")
+    public ResponseEntity<StandardResponseDto<List<PedidoResponseDto>>> sugerirPedidos(
+            @RequestParam String numero,
+            @RequestParam(defaultValue = "6") int limite) {
+        return ok(miTiendaService.sugerirPedidos(numero, limite));
     }
 
     @GetMapping("/pedidos/{id}")

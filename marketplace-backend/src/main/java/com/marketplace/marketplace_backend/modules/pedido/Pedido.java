@@ -14,6 +14,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,6 +24,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"tienda_id", "numero"}))
 @Getter
 @Setter
 @AllArgsConstructor
@@ -34,6 +37,11 @@ public class Pedido extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    // Numero correlativo del pedido dentro de su tienda (1, 2, 3...). Es el que se muestra
+    // a la tienda y al cliente; el id es interno. Nullable solo para que ddl-auto=update pueda
+    // agregar la columna con pedidos existentes: scripts/numerar-pedidos.sql los completa.
+    private Integer numero;
 
     // Null cuando el pedido lo hizo un invitado sin cuenta.
     @ManyToOne(fetch = FetchType.LAZY)

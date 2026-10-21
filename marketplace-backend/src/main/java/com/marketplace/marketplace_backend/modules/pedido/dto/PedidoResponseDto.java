@@ -15,6 +15,8 @@ import java.util.List;
 // DTO de respuesta con los datos de un pedido, su entrega y sus lineas
 public class PedidoResponseDto {
     private Long id;
+    // Numero correlativo dentro de la tienda; es el que se muestra al usuario.
+    private Integer numero;
     private Long idTienda;
     private String nombreTienda;
     // Null si el pedido lo hizo un invitado sin cuenta.

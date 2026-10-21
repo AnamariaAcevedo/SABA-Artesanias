@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import homeStyles from "@/app/home/home.module.css";
 import styles from "./tiendas.module.css";
@@ -13,6 +14,7 @@ import { obtenerProductos } from "@/services/productoService";
 import MenuUsuario from "@/components/auth/MenuUsuario";
 import Carrito from "@/components/carrito/Carrito";
 import BotonBuscar from "@/components/catalogo/BotonBuscar";
+import BuscadorConSugerencias, { coincide } from "@/components/buscador/BuscadorConSugerencias";
 import BotonInicio from "@/components/catalogo/BotonInicio";
 import { useHaySesion } from "@/lib/auth";
 
@@ -22,6 +24,7 @@ const API_URL =
 const CANTIDAD_RECAP = 4;
 
 export default function TiendasPage() {
+  const router = useRouter();
   const haySesion = useHaySesion();
 
   const [tiendas, setTiendas] = useState<Tienda[]>([]);
@@ -29,6 +32,8 @@ export default function TiendasPage() {
   const [cargando, setCargando] = useState(true);
   const [mensaje, setMensaje] = useState("");
   const [busqueda, setBusqueda] = useState("");
+  // Filtro aplicado al listado: cambia con Enter o al vaciar el buscador.
+  const [busquedaAplicada, setBusquedaAplicada] = useState("");
 
   useEffect(() => {
     let cancelado = false;
@@ -74,13 +79,25 @@ export default function TiendasPage() {
   }, []);
 
   const tiendasFiltradas = useMemo(() => {
-    const texto = busqueda.trim().toLowerCase();
-    if (!texto) return tiendas;
-    return tiendas.filter((tienda) => tienda.nombre.toLowerCase().includes(texto));
-  }, [tiendas, busqueda]);
+    if (!busquedaAplicada.trim()) return tiendas;
+    return tiendas.filter((tienda) => coincide(tienda.nombre, busquedaAplicada));
+  }, [tiendas, busquedaAplicada]);
 
   function buscarTienda(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
+    setBusquedaAplicada(busqueda);
+  }
+
+  function cambiarBusqueda(valor: string) {
+    setBusqueda(valor);
+    if (valor.trim() === "") setBusquedaAplicada("");
+  }
+
+  // Las tiendas ya están cargadas: las sugerencias se calculan sin ir al servidor.
+  function sugerirTiendas(texto: string) {
+    return tiendas
+      .filter((tienda) => coincide(tienda.nombre, texto))
+      .map((tienda) => ({ clave: tienda.id, texto: tienda.nombre, detalle: tienda.direccionCompleta }));
   }
 
   return (
@@ -94,11 +111,14 @@ export default function TiendasPage() {
         </div>
 
         <form className={homeStyles.searchBar} onSubmit={buscarTienda}>
-          <input
-            type="text"
+          <BuscadorConSugerencias
+            claseContenedor={homeStyles.searchField}
             placeholder="Buscar tiendas..."
-            value={busqueda}
-            onChange={(evento) => setBusqueda(evento.target.value)}
+            aria-label="Buscar tiendas"
+            valor={busqueda}
+            alCambiar={cambiarBusqueda}
+            obtenerSugerencias={sugerirTiendas}
+            alSeleccionar={(sugerencia) => router.push(`/tiendas/${sugerencia.clave}`)}
             suppressHydrationWarning
           />
 
