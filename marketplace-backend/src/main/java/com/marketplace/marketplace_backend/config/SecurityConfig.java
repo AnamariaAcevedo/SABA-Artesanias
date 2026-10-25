@@ -56,7 +56,9 @@ public class SecurityConfig {
                         "/subcategorias", "/subcategorias/**",
                         "/imagenes", "/imagenes/**",
                         "/contactos", "/contactos/**",
-                        "/tipos-contacto", "/tipos-contacto/**"
+                        "/tipos-contacto", "/tipos-contacto/**",
+                        "/publicaciones", "/publicaciones/**",
+                        "/archivos-publicacion", "/archivos-publicacion/**"
                 ).permitAll()
                 .anyRequest().authenticated()
             )
