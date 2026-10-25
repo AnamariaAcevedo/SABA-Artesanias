@@ -1,6 +1,7 @@
 package com.marketplace.marketplace_backend.modules.categoria;
 
 import com.marketplace.marketplace_backend.common.PagedResult;
+import com.marketplace.marketplace_backend.modules.categoriasubcategoria.CategoriaSubcategoriaRepository;
 import com.marketplace.marketplace_backend.modules.categoria.dto.CategoriaCreateRequestDto;
 import com.marketplace.marketplace_backend.modules.categoria.dto.CategoriaFilterDto;
 import com.marketplace.marketplace_backend.modules.categoria.dto.CategoriaResponseDto;
@@ -22,6 +23,7 @@ import java.util.List;
 public class CategoriaServiceImpl implements CategoriaService {
 
     private final CategoriaRepository categoriaRepository;
+    private final CategoriaSubcategoriaRepository categoriaSubcategoriaRepository;
 
     @Override
     @Transactional
@@ -63,6 +65,10 @@ public class CategoriaServiceImpl implements CategoriaService {
     public void delete(Long id) {
         Categoria categoria = categoriaRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Categoría no encontrada"));
+
+        // Saca el vinculo con sus subcategorias; las subcategorias en si no se tocan
+        // (pueden seguir perteneciendo a otras categorias).
+        categoriaSubcategoriaRepository.deleteByCategoria_Id(id);
 
         categoria.setDeletedAt(LocalDateTime.now());
         categoriaRepository.save(categoria);

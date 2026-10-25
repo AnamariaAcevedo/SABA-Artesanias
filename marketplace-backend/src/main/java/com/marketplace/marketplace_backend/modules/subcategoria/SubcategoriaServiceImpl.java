@@ -1,6 +1,8 @@
 package com.marketplace.marketplace_backend.modules.subcategoria;
 
 import com.marketplace.marketplace_backend.common.PagedResult;
+import com.marketplace.marketplace_backend.modules.categoriasubcategoria.CategoriaSubcategoriaRepository;
+import com.marketplace.marketplace_backend.modules.productosubcategoria.ProductoSubcategoriaRepository;
 import com.marketplace.marketplace_backend.modules.subcategoria.dto.SubcategoriaCreateRequestDto;
 import com.marketplace.marketplace_backend.modules.subcategoria.dto.SubcategoriaFilterDto;
 import com.marketplace.marketplace_backend.modules.subcategoria.dto.SubcategoriaResponseDto;
@@ -22,6 +24,8 @@ import java.util.List;
 public class SubcategoriaServiceImpl implements SubcategoriaService {
 
     private final SubcategoriaRepository subcategoriaRepository;
+    private final ProductoSubcategoriaRepository productoSubcategoriaRepository;
+    private final CategoriaSubcategoriaRepository categoriaSubcategoriaRepository;
 
     @Override
     @Transactional
@@ -63,6 +67,11 @@ public class SubcategoriaServiceImpl implements SubcategoriaService {
     public void delete(Long id) {
         Subcategoria subcategoria = subcategoriaRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Subcategoría no encontrada"));
+
+        // Saca el vinculo de todos los productos y categorias que la tenian asignada, para no
+        // dejar relaciones huerfanas apuntando a una subcategoria eliminada.
+        productoSubcategoriaRepository.deleteBySubcategoria_Id(id);
+        categoriaSubcategoriaRepository.deleteBySubcategoria_Id(id);
 
         subcategoria.setDeletedAt(LocalDateTime.now());
         subcategoriaRepository.save(subcategoria);
