@@ -3,6 +3,7 @@ package com.marketplace.marketplace_backend.modules.cupon;
 import com.marketplace.marketplace_backend.common.PagedResult;
 import com.marketplace.marketplace_backend.modules.cupon.dto.CuponRequestDto;
 import com.marketplace.marketplace_backend.modules.cupon.dto.CuponResponseDto;
+import com.marketplace.marketplace_backend.modules.pedido.PedidoRepository;
 import com.marketplace.marketplace_backend.modules.tienda.Tienda;
 import com.marketplace.marketplace_backend.modules.tienda.TiendaRepository;
 import lombok.AllArgsConstructor;
@@ -24,6 +25,7 @@ public class CuponServiceImpl implements CuponService {
 
     private final CuponRepository cuponRepository;
     private final TiendaRepository tiendaRepository;
+    private final PedidoRepository pedidoRepository;
 
     @Override
     @Transactional
@@ -93,8 +95,7 @@ public class CuponServiceImpl implements CuponService {
                 cupon.getFechaFin(),
                 cupon.getTienda().getId(),
                 cupon.getTienda().getNombre(),
-                cupon.getPedido() != null,
-                cupon.getPedido() == null ? null : cupon.getPedido().getId()
+                pedidoRepository.countByCupon_Id(cupon.getId())
         );
     }
 }

@@ -10,8 +10,11 @@ import com.marketplace.marketplace_backend.modules.mitienda.dto.MiTiendaResponse
 import com.marketplace.marketplace_backend.modules.mitienda.dto.MiTiendaUpdateRequestDto;
 import com.marketplace.marketplace_backend.modules.cupon.dto.CuponRequestDto;
 import com.marketplace.marketplace_backend.modules.cupon.dto.CuponResponseDto;
+import com.marketplace.marketplace_backend.modules.archivopublicacion.dto.ArchivoPublicacionResponseDto;
 import com.marketplace.marketplace_backend.modules.pedido.dto.PedidoResponseDto;
 import com.marketplace.marketplace_backend.modules.producto.dto.ProductoResponseDto;
+import com.marketplace.marketplace_backend.modules.publicacion.dto.PublicacionRequestDto;
+import com.marketplace.marketplace_backend.modules.publicacion.dto.PublicacionResponseDto;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.MediaType;
@@ -188,6 +191,58 @@ public class MiTiendaController {
     @DeleteMapping("/cupones/{id}")
     public ResponseEntity<StandardResponseDto<Void>> eliminarCupon(@PathVariable Long id) {
         miTiendaService.eliminarCupon(id);
+        return ok(null);
+    }
+
+    @GetMapping("/publicaciones")
+    public ResponseEntity<StandardResponseDto<List<PublicacionResponseDto>>> listarPublicaciones(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int perPage) {
+        StandardResponseDto<List<PublicacionResponseDto>> response = new StandardResponseDto<>();
+        var resultado = miTiendaService.listarPublicaciones(page, perPage);
+        response.setSuccess(true);
+        response.setData(resultado.data());
+        response.setErrors(null);
+        response.setPagination(new Pagination(resultado.page(), resultado.perPage(), resultado.total()));
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/publicaciones/{id}")
+    public ResponseEntity<StandardResponseDto<PublicacionResponseDto>> obtenerPublicacion(@PathVariable Long id) {
+        return ok(miTiendaService.obtenerPublicacion(id));
+    }
+
+    @PostMapping("/publicaciones")
+    public ResponseEntity<StandardResponseDto<PublicacionResponseDto>> crearPublicacion(@Valid @RequestBody PublicacionRequestDto request) {
+        return ok(miTiendaService.crearPublicacion(request));
+    }
+
+    @PutMapping("/publicaciones/{id}")
+    public ResponseEntity<StandardResponseDto<PublicacionResponseDto>> actualizarPublicacion(@PathVariable Long id, @Valid @RequestBody PublicacionRequestDto request) {
+        return ok(miTiendaService.actualizarPublicacion(id, request));
+    }
+
+    @DeleteMapping("/publicaciones/{id}")
+    public ResponseEntity<StandardResponseDto<Void>> eliminarPublicacion(@PathVariable Long id) {
+        miTiendaService.eliminarPublicacion(id);
+        return ok(null);
+    }
+
+    @GetMapping("/publicaciones/{id}/archivos")
+    public ResponseEntity<StandardResponseDto<List<ArchivoPublicacionResponseDto>>> listarArchivosPublicacion(@PathVariable Long id) {
+        return ok(miTiendaService.listarArchivosPublicacion(id));
+    }
+
+    @PostMapping(value = "/publicaciones/{id}/archivos", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<StandardResponseDto<ArchivoPublicacionResponseDto>> subirArchivoPublicacion(
+            @PathVariable Long id,
+            @RequestParam("archivo") MultipartFile archivo) {
+        return ok(miTiendaService.subirArchivoPublicacion(id, archivo));
+    }
+
+    @DeleteMapping("/publicaciones/{id}/archivos/{idArchivo}")
+    public ResponseEntity<StandardResponseDto<Void>> eliminarArchivoPublicacion(@PathVariable Long id, @PathVariable Long idArchivo) {
+        miTiendaService.eliminarArchivoPublicacion(id, idArchivo);
         return ok(null);
     }
 
