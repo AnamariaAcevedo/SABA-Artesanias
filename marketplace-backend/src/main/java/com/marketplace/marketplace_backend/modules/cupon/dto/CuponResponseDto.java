@@ -21,7 +21,6 @@ public class CuponResponseDto {
     private LocalDate fechaFin;
     private Long idTienda;
     private String nombreTienda;
-    // true si ya se uso (tiene un pedido asociado)
-    private boolean usado;
-    private Long idPedido;
+    // Cantidad de pedidos distintos que ya usaron este cupon.
+    private long cantidadUsos;
 }

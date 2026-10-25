@@ -2,6 +2,7 @@ package com.marketplace.marketplace_backend.modules.pedido;
 
 import com.marketplace.marketplace_backend.common.BaseEntity;
 import com.marketplace.marketplace_backend.modules.barrio.Barrio;
+import com.marketplace.marketplace_backend.modules.cupon.Cupon;
 import com.marketplace.marketplace_backend.modules.tienda.Tienda;
 import com.marketplace.marketplace_backend.modules.usuario.Usuario;
 import jakarta.persistence.Column;
@@ -69,6 +70,11 @@ public class Pedido extends BaseEntity {
     private String direccion;
 
     private String referencia;
+
+    // Cupon aplicado en este pedido, si hubo. Un mismo cupon puede estar en muchos pedidos.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cupon_id")
+    private Cupon cupon;
 
     @Column(nullable = false)
     private Double total;
