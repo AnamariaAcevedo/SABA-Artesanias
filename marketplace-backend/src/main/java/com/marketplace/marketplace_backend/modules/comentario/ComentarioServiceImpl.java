@@ -73,20 +73,6 @@ public class ComentarioServiceImpl implements ComentarioService {
         comentarioRepository.save(comentario);
     }
 
-    @Override
-    @Transactional
-    public void eliminarDeTienda(Long idTienda, Long id) {
-        Comentario comentario = comentarioRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Comentario no encontrado"));
-
-        if (!comentario.getPublicacion().getTienda().getId().equals(idTienda)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Comentario no encontrado");
-        }
-
-        comentario.setDeletedAt(LocalDateTime.now());
-        comentarioRepository.save(comentario);
-    }
-
     private Usuario usuarioAutenticado() {
         String nombreUsuario = SecurityContextHolder.getContext().getAuthentication().getName();
         return usuarioRepository.findByUsuarioIgnoreCase(nombreUsuario)
