@@ -89,4 +89,8 @@ public interface MiTiendaService {
     ArchivoPublicacionResponseDto subirArchivoPublicacion(Long idPublicacion, MultipartFile archivo);
 
     void eliminarArchivoPublicacion(Long idPublicacion, Long idArchivo);
+
+    // Moderacion: el dueño/colaborador de la tienda puede borrar comentarios ajenos
+    // en sus propias publicaciones. Listarlos no hace falta aca: son publicos (ver ComentarioController).
+    void eliminarComentario(Long idPublicacion, Long idComentario);
 }
