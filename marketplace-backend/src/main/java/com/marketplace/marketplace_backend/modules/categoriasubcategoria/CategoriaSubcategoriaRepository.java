@@ -16,4 +16,10 @@ public interface CategoriaSubcategoriaRepository extends JpaRepository<Categoria
     Page<CategoriaSubcategoria> findByCategoria_Id(Long categoriaId, Pageable pageable);
 
     List<CategoriaSubcategoria> findByCategoria_Id(Long categoriaId);
+
+    long countBySubcategoria_Id(Long subcategoriaId);
+
+    void deleteByCategoria_Id(Long categoriaId);
+
+    void deleteBySubcategoria_Id(Long subcategoriaId);
 }

@@ -16,4 +16,8 @@ public interface ProductoSubcategoriaRepository extends JpaRepository<ProductoSu
     List<ProductoSubcategoria> findBySubcategoria_Id(Long subcategoriaId);
 
     List<ProductoSubcategoria> findBySubcategoria_IdIn(List<Long> idsSubcategoria);
+
+    long countBySubcategoria_Id(Long subcategoriaId);
+
+    void deleteBySubcategoria_Id(Long subcategoriaId);
 }
