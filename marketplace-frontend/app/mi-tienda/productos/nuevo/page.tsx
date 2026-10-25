@@ -7,7 +7,7 @@ import ProductoForm from "@/components/mi-tienda/ProductoForm";
 export default function NuevoProductoPage() {
   return (
     <div>
-      <Link href="/mi-tienda" className={styles.backLink}>
+      <Link href="/mi-tienda/productos" className={styles.backLink}>
         ← Volver a mis productos
       </Link>
       <h2 className={styles.pageTitle}>Nuevo producto</h2>

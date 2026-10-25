@@ -1,0 +1,12 @@
+/* Pantalla de inicio de "Mi tienda". Misma paleta que components/admin/admin.module.css. */
+
+.miTienda { margin-top: 22px; padding: 18px 22px; border: 1px solid #b88b44; border-radius: 16px; background: #fff6e6; }
+.miTiendaTitulo { margin: 0 0 10px; font-size: 20px; }
+.miTiendaNombre { display: block; font-size: 18px; }
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-top: 22px; }
+.stat { padding: 18px 22px; border: 1px solid #b88b44; border-radius: 16px; background: #fff6e6; }
+.statValue { display: block; font-size: 30px; line-height: 1.1; }
+.statLabel { display: block; margin-top: 4px; font: 14px Arial, sans-serif; color: #48200f; }
+
+.spaced { margin-top: 16px; }

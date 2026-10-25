@@ -4,12 +4,19 @@ import { Fragment, useEffect, useState, type FormEvent } from "react";
 import { apiFetch, apiFetchConPaginacion } from "@/lib/api";
 import styles from "@/components/admin/admin.module.css";
 import ConPermiso from "@/components/auth/ConPermiso";
-import { ACCESO } from "@/lib/access";
+import { useSesion } from "@/components/auth/SesionProvider";
+import { ACCESO, cumplePermisos } from "@/lib/access";
 import type { Categoria } from "@/types/Categoria";
 
 type SubcategoriaDeCategoria = {
   subcategoriaId: number;
   subcategoriaNombre: string;
+};
+
+// Forma en que /subcategorias devuelve cada subcategoría.
+type SubcategoriaGeneral = {
+  id: number;
+  nombre: string;
 };
 
 async function obtenerTodos<T>(ruta: string): Promise<T[]> {
@@ -43,13 +50,82 @@ function mensajeError(cause: unknown) {
     : "No pudimos completar la operación.";
 }
 
+// Las tablas se muestran de a pocos elementos; la paginación es local porque
+// la página ya carga todas las categorías y subcategorías.
+const POR_PAGINA = 5;
+
+function totalPaginas(cantidad: number) {
+  return Math.max(1, Math.ceil(cantidad / POR_PAGINA));
+}
+
+function Paginacion({
+  pagina,
+  cantidad,
+  singular,
+  plural,
+  onCambiar,
+}: {
+  pagina: number;
+  cantidad: number;
+  singular: string;
+  plural: string;
+  onCambiar: (pagina: number) => void;
+}) {
+  const total = totalPaginas(cantidad);
+
+  return (
+    <div className={styles.pagination}>
+      <span>
+        Página {pagina} de {total} · {cantidad}{" "}
+        {cantidad === 1 ? singular : plural}
+      </span>
+      <div className={styles.paginationButtons}>
+        <button
+          type="button"
+          className={styles.buttonGhost}
+          disabled={pagina <= 1}
+          onClick={() => onCambiar(pagina - 1)}
+        >
+          Anterior
+        </button>
+        <button
+          type="button"
+          className={styles.buttonGhost}
+          disabled={pagina >= total}
+          onClick={() => onCambiar(pagina + 1)}
+        >
+          Siguiente
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function CategoriasPage() {
+  const { sesion } = useSesion();
+  const permisos = sesion?.permisos ?? [];
+  const puedeRenombrar = cumplePermisos(permisos, ACCESO.editarCategorias);
+  const puedeAsociar = cumplePermisos(permisos, ACCESO.asignarSubcategorias);
+
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [categoriaSeleccionada, setCategoriaSeleccionada] =
     useState<Categoria | null>(null);
+  // La fila desplegada de la categoría seleccionada muestra sus subcategorías
+  // ("subcategorias") o el panel de edición con las asociaciones ("editar").
+  const [modoPanel, setModoPanel] = useState<"subcategorias" | "editar">(
+    "subcategorias"
+  );
+  const [subcategoriaAAsociar, setSubcategoriaAAsociar] = useState("");
+  const [asociando, setAsociando] = useState(false);
   const [subcategorias, setSubcategorias] = useState<
     SubcategoriaDeCategoria[]
   >([]);
+
+  const [todasSubcategorias, setTodasSubcategorias] = useState<
+    SubcategoriaGeneral[]
+  >([]);
+  const [paginaCategorias, setPaginaCategorias] = useState(1);
+  const [paginaSubcategorias, setPaginaSubcategorias] = useState(1);
 
   const [cargando, setCargando] = useState(true);
   const [cargandoSubcategorias, setCargandoSubcategorias] = useState(false);
@@ -57,14 +133,18 @@ export default function CategoriasPage() {
   const [aviso, setAviso] = useState("");
   const [revision, setRevision] = useState(0);
 
+  // "subcategoriaSuelta": subcategoría creada sin asociarla a una categoría.
   const [formularioActivo, setFormularioActivo] = useState<
-    "categoria" | "subcategoria" | null
+    "categoria" | "subcategoria" | "subcategoriaSuelta" | null
   >(null);
 
   const [nombreNuevaCategoria, setNombreNuevaCategoria] = useState("");
   const [nombreNuevaSubcategoria, setNombreNuevaSubcategoria] = useState("");
+  const [nombreSubcategoriaSuelta, setNombreSubcategoriaSuelta] = useState("");
   const [guardandoCategoria, setGuardandoCategoria] = useState(false);
   const [guardandoSubcategoria, setGuardandoSubcategoria] = useState(false);
+  const [guardandoSubcategoriaSuelta, setGuardandoSubcategoriaSuelta] =
+    useState(false);
 
   const [categoriaEnEdicion, setCategoriaEnEdicion] = useState<number | null>(
     null
@@ -82,9 +162,18 @@ export default function CategoriasPage() {
   useEffect(() => {
     let vigente = true;
 
-    obtenerTodos<Categoria>("/categorias")
-      .then((categoriasRecibidas) => {
-        if (vigente) setCategorias(categoriasRecibidas);
+    Promise.all([
+      obtenerTodos<Categoria>("/categorias"),
+      obtenerTodos<SubcategoriaGeneral>("/subcategorias"),
+    ])
+      .then(([categoriasRecibidas, subcategoriasRecibidas]) => {
+        if (!vigente) return;
+        setCategorias(categoriasRecibidas);
+        setTodasSubcategorias(
+          [...subcategoriasRecibidas].sort((a, b) =>
+            a.nombre.localeCompare(b.nombre, "es")
+          )
+        );
       })
       .catch((cause) => {
         if (vigente) setError(mensajeError(cause));
@@ -135,11 +224,97 @@ export default function CategoriasPage() {
     setAviso("");
     setFormularioActivo(null);
     cancelarEdiciones();
-    setSubcategorias([]);
-    setCargandoSubcategorias(categoriaSeleccionada?.id !== categoria.id);
-    setCategoriaSeleccionada((actual) =>
-      actual?.id === categoria.id ? null : categoria
+
+    const mismaCategoria = categoriaSeleccionada?.id === categoria.id;
+
+    if (mismaCategoria && modoPanel === "subcategorias") {
+      setCategoriaSeleccionada(null);
+      return;
+    }
+
+    setModoPanel("subcategorias");
+
+    if (!mismaCategoria) {
+      setSubcategorias([]);
+      setCargandoSubcategorias(true);
+      setCategoriaSeleccionada(categoria);
+    }
+  }
+
+  // Abre la edición: el nombre se edita en la fila y debajo se despliega el
+  // panel para asociar subcategorías existentes.
+  function abrirEdicionCategoria(categoria: Categoria) {
+    setError("");
+    setAviso("");
+    setFormularioActivo(null);
+    setSubcategoriaAAsociar("");
+    setSubcategoriaEnEdicion(null);
+    setNombreSubcategoriaEditada("");
+
+    if (puedeRenombrar) {
+      setCategoriaEnEdicion(categoria.id);
+      setNombreCategoriaEditada(categoria.nombre);
+    } else {
+      setCategoriaEnEdicion(null);
+      setNombreCategoriaEditada("");
+    }
+
+    setModoPanel("editar");
+
+    if (categoriaSeleccionada?.id !== categoria.id) {
+      setSubcategorias([]);
+      setCargandoSubcategorias(true);
+      setCategoriaSeleccionada(categoria);
+    }
+  }
+
+  function cerrarEdicionCategoria() {
+    cancelarEdiciones();
+    setSubcategoriaAAsociar("");
+    setCategoriaSeleccionada(null);
+  }
+
+  async function asociarSubcategoria(
+    event: FormEvent<HTMLFormElement>,
+    categoria: Categoria
+  ) {
+    event.preventDefault();
+
+    const subcategoria = todasSubcategorias.find(
+      (actual) => actual.id === Number(subcategoriaAAsociar)
     );
+
+    if (!subcategoria) {
+      setError("Seleccioná una subcategoría para asociar.");
+      return;
+    }
+
+    setAsociando(true);
+    setError("");
+    setAviso("");
+
+    try {
+      await apiFetch(`/categorias/${categoria.id}/subcategorias`, {
+        method: "POST",
+        body: JSON.stringify({ subcategoriaId: subcategoria.id }),
+      });
+
+      setSubcategorias((actuales) => [
+        ...actuales,
+        {
+          subcategoriaId: subcategoria.id,
+          subcategoriaNombre: subcategoria.nombre,
+        },
+      ]);
+      setSubcategoriaAAsociar("");
+      setAviso(
+        `Subcategoría "${subcategoria.nombre}" asociada a "${categoria.nombre}".`
+      );
+    } catch (cause) {
+      setError(mensajeError(cause));
+    } finally {
+      setAsociando(false);
+    }
   }
 
   function cancelarEdiciones() {
@@ -147,16 +322,6 @@ export default function CategoriasPage() {
     setNombreCategoriaEditada("");
     setSubcategoriaEnEdicion(null);
     setNombreSubcategoriaEditada("");
-  }
-
-  function comenzarEdicionCategoria(categoria: Categoria) {
-    setError("");
-    setAviso("");
-    setFormularioActivo(null);
-    setSubcategoriaEnEdicion(null);
-    setNombreSubcategoriaEditada("");
-    setCategoriaEnEdicion(categoria.id);
-    setNombreCategoriaEditada(categoria.nombre);
   }
 
   function comenzarEdicionSubcategoria(
@@ -251,6 +416,13 @@ export default function CategoriasPage() {
             : actual
         )
       );
+      setTodasSubcategorias((actuales) =>
+        actuales.map((actual) =>
+          actual.id === subcategoria.subcategoriaId
+            ? { ...actual, nombre }
+            : actual
+        )
+      );
       cancelarEdiciones();
       setAviso("Subcategoría actualizada correctamente.");
     } catch (cause) {
@@ -340,6 +512,48 @@ export default function CategoriasPage() {
     }
   }
 
+  // Crea la subcategoría sola; la asociación a una categoría se hace aparte.
+  async function crearSubcategoriaSuelta(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const nombre = nombreSubcategoriaSuelta.trim();
+
+    if (!nombre) {
+      setError("Escribí un nombre para la subcategoría.");
+      return;
+    }
+
+    setGuardandoSubcategoriaSuelta(true);
+    setError("");
+    setAviso("");
+
+    try {
+      await apiFetch("/subcategorias", {
+        method: "POST",
+        body: JSON.stringify({ nombre }),
+      });
+
+      setNombreSubcategoriaSuelta("");
+      setFormularioActivo(null);
+      setAviso(`Subcategoría "${nombre}" creada correctamente.`);
+      recargar();
+    } catch (cause) {
+      setError(mensajeError(cause));
+    } finally {
+      setGuardandoSubcategoriaSuelta(false);
+    }
+  }
+
+  function cambiarPaginaCategorias(pagina: number) {
+    // El panel de subcategorías abierto pertenece a la página anterior.
+    setCategoriaSeleccionada(null);
+    setFormularioActivo((actual) =>
+      actual === "subcategoria" ? null : actual
+    );
+    cancelarEdiciones();
+    setPaginaCategorias(pagina);
+  }
+
   async function eliminarCategoria(categoria: Categoria) {
     const confirmado = window.confirm(
       `¿Estás seguro de que deseás eliminar la categoría "${categoria.nombre}"?`
@@ -367,11 +581,13 @@ export default function CategoriasPage() {
     }
   }
 
-  async function eliminarSubcategoria(
+  // Quita la asociación con la categoría; la subcategoría sigue existiendo.
+  async function quitarSubcategoria(
+    categoria: Categoria,
     subcategoria: SubcategoriaDeCategoria
   ) {
     const confirmado = window.confirm(
-      `¿Estás seguro de que deseás eliminar la subcategoría "${subcategoria.subcategoriaNombre}"?`
+      `¿Querés quitar la subcategoría "${subcategoria.subcategoriaNombre}" de "${categoria.nombre}"? La subcategoría no se elimina.`
     );
 
     if (!confirmado) return;
@@ -380,16 +596,48 @@ export default function CategoriasPage() {
     setAviso("");
 
     try {
-      await apiFetch(`/subcategorias/${subcategoria.subcategoriaId}`, {
-        method: "DELETE",
-      });
+      await apiFetch(
+        `/categorias/${categoria.id}/subcategorias/${subcategoria.subcategoriaId}`,
+        { method: "DELETE" }
+      );
 
-      setAviso("Subcategoría eliminada correctamente.");
-      recargar();
+      setSubcategorias((actuales) =>
+        actuales.filter(
+          (actual) => actual.subcategoriaId !== subcategoria.subcategoriaId
+        )
+      );
+      setAviso(
+        `Subcategoría "${subcategoria.subcategoriaNombre}" quitada de "${categoria.nombre}".`
+      );
     } catch (cause) {
       setError(mensajeError(cause));
     }
   }
+
+  // Si al eliminar se vacía la última página, se muestra la anterior.
+  const paginaCategoriasActual = Math.min(
+    paginaCategorias,
+    totalPaginas(categorias.length)
+  );
+  const categoriasVisibles = categorias.slice(
+    (paginaCategoriasActual - 1) * POR_PAGINA,
+    paginaCategoriasActual * POR_PAGINA
+  );
+  const paginaSubcategoriasActual = Math.min(
+    paginaSubcategorias,
+    totalPaginas(todasSubcategorias.length)
+  );
+  const subcategoriasVisibles = todasSubcategorias.slice(
+    (paginaSubcategoriasActual - 1) * POR_PAGINA,
+    paginaSubcategoriasActual * POR_PAGINA
+  );
+  // Para asociar solo se ofrecen las que la categoría todavía no tiene.
+  const subcategoriasParaAsociar = todasSubcategorias.filter(
+    (subcategoria) =>
+      !subcategorias.some(
+        (asociada) => asociada.subcategoriaId === subcategoria.id
+      )
+  );
 
   return (
     <section className={styles.card}>
@@ -485,7 +733,7 @@ export default function CategoriasPage() {
             </thead>
 
             <tbody>
-              {categorias.map((categoria) => (
+              {categoriasVisibles.map((categoria) => (
                 <Fragment key={categoria.id}>
                 <tr>
                   <td>
@@ -527,7 +775,7 @@ export default function CategoriasPage() {
                           <button
                             type="button"
                             className={styles.inlineCancelButton}
-                            onClick={cancelarEdiciones}
+                            onClick={cerrarEdicionCategoria}
                             disabled={guardandoEdicion === "categoria"}
                           >
                             Cancelar
@@ -546,22 +794,30 @@ export default function CategoriasPage() {
                         className={styles.linkAction}
                         onClick={() => seleccionarCategoria(categoria)}
                         aria-expanded={
-                          categoriaSeleccionada?.id === categoria.id
+                          categoriaSeleccionada?.id === categoria.id &&
+                          modoPanel === "subcategorias"
                         }
                       >
-                        Gestionar subcategorías
+                        Ver subcategorías
                       </button>
 
-                      <ConPermiso permisos={ACCESO.editarCategorias}>
+                      {(puedeRenombrar || puedeAsociar) && (
                         <button
                           type="button"
                           className={styles.linkAction}
-                          onClick={() => comenzarEdicionCategoria(categoria)}
-                          disabled={categoriaEnEdicion === categoria.id}
+                          onClick={() => abrirEdicionCategoria(categoria)}
+                          aria-expanded={
+                            categoriaSeleccionada?.id === categoria.id &&
+                            modoPanel === "editar"
+                          }
+                          disabled={
+                            categoriaSeleccionada?.id === categoria.id &&
+                            modoPanel === "editar"
+                          }
                         >
-                          Editar
+                          Editar categoría
                         </button>
-                      </ConPermiso>
+                      )}
 
                       <ConPermiso permisos={ACCESO.eliminarCategorias}>
                         <button
@@ -579,6 +835,90 @@ export default function CategoriasPage() {
                 {categoriaSeleccionada?.id === categoria.id && (
                   <tr className="subcategory-expanded-row">
                     <td colSpan={2} className="subcategory-cell">
+                      {modoPanel === "editar" ? (
+                      <section
+                        className="subcategory-panel"
+                        aria-label={`Asociar subcategorías a ${categoria.nombre}`}
+                      >
+                        <div className="association-header">
+                          <div>
+                            <h3 className="association-title">
+                              Asociar subcategoría
+                            </h3>
+                            <p className="association-subtitle">
+                              a {categoria.nombre}
+                            </p>
+                          </div>
+
+                          <button
+                            type="button"
+                            className={styles.linkAction}
+                            onClick={cerrarEdicionCategoria}
+                          >
+                            ✕ Cerrar
+                          </button>
+                        </div>
+
+                        {puedeAsociar &&
+                          (cargandoSubcategorias ? (
+                            <p role="status" className="association-status">
+                              Cargando subcategorías…
+                            </p>
+                          ) : subcategoriasParaAsociar.length === 0 ? (
+                            <div className="subcategory-empty">
+                              Ya están asociadas todas las subcategorías
+                              disponibles.
+                            </div>
+                          ) : (
+                            <form
+                              className="association-form"
+                              onSubmit={(event) =>
+                                void asociarSubcategoria(event, categoria)
+                              }
+                            >
+                              <div
+                                className={`${styles.field} association-field`}
+                              >
+                                <label
+                                  htmlFor={`asociar-subcategoria-${categoria.id}`}
+                                >
+                                  Subcategoría
+                                </label>
+                                <select
+                                  id={`asociar-subcategoria-${categoria.id}`}
+                                  value={subcategoriaAAsociar}
+                                  onChange={(event) =>
+                                    setSubcategoriaAAsociar(event.target.value)
+                                  }
+                                  disabled={asociando}
+                                >
+                                  <option value="">
+                                    Seleccioná una subcategoría
+                                  </option>
+                                  {subcategoriasParaAsociar.map(
+                                    (subcategoria) => (
+                                      <option
+                                        key={subcategoria.id}
+                                        value={subcategoria.id}
+                                      >
+                                        {subcategoria.nombre}
+                                      </option>
+                                    )
+                                  )}
+                                </select>
+                              </div>
+
+                              <button
+                                type="submit"
+                                className={styles.buttonPrimary}
+                                disabled={!subcategoriaAAsociar || asociando}
+                              >
+                                {asociando ? "Asociando…" : "Asociar"}
+                              </button>
+                            </form>
+                          ))}
+                      </section>
+                      ) : (
                       <section
                         className="subcategory-panel"
                         aria-label={`Subcategorías de ${categoria.nombre}`}
@@ -756,18 +1096,19 @@ export default function CategoriasPage() {
                                           </button>
                                         </ConPermiso>
                                         <ConPermiso
-                                          permisos={ACCESO.eliminarCategorias}
+                                          permisos={ACCESO.quitarSubcategorias}
                                         >
                                           <button
                                             type="button"
                                             className={`${styles.linkAction} ${styles.linkActionDanger}`}
                                             onClick={() =>
-                                              void eliminarSubcategoria(
+                                              void quitarSubcategoria(
+                                                categoria,
                                                 subcategoria
                                               )
                                             }
                                           >
-                                            Eliminar
+                                            Quitar
                                           </button>
                                         </ConPermiso>
                                       </div>
@@ -786,6 +1127,7 @@ export default function CategoriasPage() {
                           </div>
                         )}
                       </section>
+                      )}
                     </td>
                   </tr>
                 )}
@@ -804,7 +1146,167 @@ export default function CategoriasPage() {
         </div>
       )}
 
+      {!cargando && categorias.length > 0 && (
+        <Paginacion
+          pagina={paginaCategoriasActual}
+          cantidad={categorias.length}
+          singular="categoría"
+          plural="categorías"
+          onCambiar={cambiarPaginaCategorias}
+        />
+      )}
+
+      <div className={`${styles.sectionHeader} standalone-header`}>
+        <h2 className={styles.pageTitle}>Subcategorías</h2>
+
+        <ConPermiso permisos={ACCESO.crearCategorias}>
+          <button
+            type="button"
+            className={styles.buttonPrimary}
+            onClick={() => {
+              setError("");
+              setAviso("");
+              cancelarEdiciones();
+              setFormularioActivo("subcategoriaSuelta");
+            }}
+          >
+            + Nueva subcategoría
+          </button>
+        </ConPermiso>
+      </div>
+
+      {formularioActivo === "subcategoriaSuelta" && (
+        <ConPermiso permisos={ACCESO.crearCategorias}>
+          <form onSubmit={crearSubcategoriaSuelta} className={styles.form}>
+            <h2 className={styles.pageTitle}>Nueva subcategoría</h2>
+
+            <div className={styles.field}>
+              <label htmlFor="nueva-subcategoria-suelta">
+                Nombre de la subcategoría
+              </label>
+
+              <input
+                id="nueva-subcategoria-suelta"
+                value={nombreSubcategoriaSuelta}
+                onChange={(event) =>
+                  setNombreSubcategoriaSuelta(event.target.value)
+                }
+                required
+                maxLength={100}
+                placeholder="Por ejemplo: Canastos"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className={styles.buttonPrimary}
+              disabled={guardandoSubcategoriaSuelta}
+            >
+              {guardandoSubcategoriaSuelta
+                ? "Guardando…"
+                : "Crear subcategoría"}
+            </button>
+
+            <button
+              type="button"
+              className={styles.buttonGhost}
+              disabled={guardandoSubcategoriaSuelta}
+              onClick={() => setFormularioActivo(null)}
+            >
+              Cancelar
+            </button>
+          </form>
+        </ConPermiso>
+      )}
+
+      {cargando && <p role="status">Cargando subcategorías…</p>}
+
+      {!cargando && (
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th scope="col">Nombre</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {subcategoriasVisibles.map((subcategoria) => (
+                <tr key={subcategoria.id}>
+                  <td>{subcategoria.nombre}</td>
+                </tr>
+              ))}
+
+              {todasSubcategorias.length === 0 && (
+                <tr>
+                  <td className={styles.emptyRow}>
+                    No hay subcategorías registradas.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {!cargando && todasSubcategorias.length > 0 && (
+        <Paginacion
+          pagina={paginaSubcategoriasActual}
+          cantidad={todasSubcategorias.length}
+          singular="subcategoría"
+          plural="subcategorías"
+          onCambiar={setPaginaSubcategorias}
+        />
+      )}
+
       <style jsx>{`
+        .standalone-header {
+          margin-top: 32px;
+        }
+
+        .association-header {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 16px;
+          margin-bottom: 14px;
+        }
+
+        .association-title {
+          margin: 0;
+          color: #48200f;
+          font-size: 18px;
+        }
+
+        .association-subtitle {
+          margin: 2px 0 0;
+          color: #6b4a22;
+          font: 13px/1.4 Arial, sans-serif;
+        }
+
+        .association-form {
+          display: flex;
+          align-items: flex-end;
+          flex-wrap: wrap;
+          gap: 12px;
+          padding: 16px 18px;
+          border: 1px solid rgba(184, 139, 68, 0.38);
+          border-radius: 14px;
+          background: rgba(255, 250, 241, 0.9);
+          box-shadow: 0 3px 12px rgba(99, 36, 14, 0.04);
+        }
+
+        .association-field {
+          flex: 1 1 260px;
+          max-width: 420px;
+        }
+
+        .association-status {
+          margin: 0;
+          color: #6b4a22;
+          font: 14px/1.5 Arial, sans-serif;
+        }
+
         .subcategory-expanded-row,
         .subcategory-expanded-row:hover {
           background: transparent;

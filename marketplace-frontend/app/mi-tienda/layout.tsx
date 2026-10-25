@@ -13,7 +13,8 @@ import { useSesion } from "@/components/auth/SesionProvider";
 // para el dueño; el colaborador gestiona productos, imágenes y pedidos. El
 // backend vuelve a verificar el vínculo en cada operación.
 const secciones = [
-  { href: "/mi-tienda", label: "Productos", soloDueno: false },
+  { href: "/mi-tienda", label: "Inicio", soloDueno: false },
+  { href: "/mi-tienda/productos", label: "Productos", soloDueno: false },
   { href: "/mi-tienda/pedidos", label: "Pedidos", soloDueno: false },
   { href: "/mi-tienda/datos", label: "Datos de la tienda", soloDueno: true },
 ];
@@ -71,9 +72,7 @@ export default function MiTiendaLayout({
   const esDueno = sesion.vinculoTienda === "PRINCIPAL";
   const visibles = secciones.filter((seccion) => esDueno || !seccion.soloDueno);
   const seccionActual = secciones.find((seccion) =>
-    seccion.href === "/mi-tienda"
-      ? pathname === "/mi-tienda" || pathname.startsWith("/mi-tienda/productos")
-      : pathname.startsWith(seccion.href),
+    seccion.href === "/mi-tienda" ? pathname === "/mi-tienda" : pathname.startsWith(seccion.href),
   );
   const autorizado = esDueno || !seccionActual?.soloDueno;
 
@@ -116,7 +115,7 @@ export default function MiTiendaLayout({
         ) : (
           <div className={styles.card}>
             <p role="alert">Esta sección es solo para el dueño de la tienda.</p>
-            <Link href="/mi-tienda">Volver a productos</Link>
+            <Link href="/mi-tienda/productos">Volver a productos</Link>
           </div>
         )}
       </main>
