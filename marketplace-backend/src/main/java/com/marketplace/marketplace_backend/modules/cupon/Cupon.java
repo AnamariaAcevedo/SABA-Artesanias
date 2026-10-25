@@ -1,7 +1,6 @@
 package com.marketplace.marketplace_backend.modules.cupon;
 
 import com.marketplace.marketplace_backend.common.BaseEntity;
-import com.marketplace.marketplace_backend.modules.pedido.Pedido;
 import com.marketplace.marketplace_backend.modules.tienda.Tienda;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -23,9 +22,10 @@ import java.time.LocalDate;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-// Cupon de descuento (% sobre el total del pedido) creado por una tienda. No esta atado a
-// ningun usuario: quien tenga el codigo o el QR lo puede usar, una sola vez en total. Queda
-// marcado como usado cuando pedido deja de ser null.
+// Cupon de descuento (% sobre el total del pedido) creado por una tienda. Lo puede usar
+// cualquiera que tenga el codigo o el QR, y distintos usuarios pueden usarlo cada uno una vez
+// (un mismo usuario registrado no puede repetirlo, ver PedidoServiceImpl.resolverCupon). Para
+// que deje de poder usarse, la tienda simplemente lo elimina (baja logica).
 public class Cupon extends BaseEntity {
 
     @Id
@@ -50,9 +50,4 @@ public class Cupon extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tienda_id", nullable = false)
     private Tienda tienda;
-
-    // Null mientras el cupon no se uso. Se completa con el pedido que lo redimio.
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "pedido_id")
-    private Pedido pedido;
 }

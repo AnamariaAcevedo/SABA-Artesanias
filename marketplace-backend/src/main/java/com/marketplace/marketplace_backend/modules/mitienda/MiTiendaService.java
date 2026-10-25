@@ -9,8 +9,11 @@ import com.marketplace.marketplace_backend.modules.mitienda.dto.MiContactoReques
 import com.marketplace.marketplace_backend.modules.mitienda.dto.MiProductoRequestDto;
 import com.marketplace.marketplace_backend.modules.mitienda.dto.MiTiendaResponseDto;
 import com.marketplace.marketplace_backend.modules.mitienda.dto.MiTiendaUpdateRequestDto;
+import com.marketplace.marketplace_backend.modules.archivopublicacion.dto.ArchivoPublicacionResponseDto;
 import com.marketplace.marketplace_backend.modules.pedido.dto.PedidoResponseDto;
 import com.marketplace.marketplace_backend.modules.producto.dto.ProductoResponseDto;
+import com.marketplace.marketplace_backend.modules.publicacion.dto.PublicacionRequestDto;
+import com.marketplace.marketplace_backend.modules.publicacion.dto.PublicacionResponseDto;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -68,4 +71,22 @@ public interface MiTiendaService {
     CuponResponseDto obtenerCupon(Long idCupon);
 
     void eliminarCupon(Long idCupon);
+
+    // ------------------------------------------------------------ Publicaciones
+
+    PagedResult<List<PublicacionResponseDto>> listarPublicaciones(int page, int perPage);
+
+    PublicacionResponseDto obtenerPublicacion(Long idPublicacion);
+
+    PublicacionResponseDto crearPublicacion(PublicacionRequestDto request);
+
+    PublicacionResponseDto actualizarPublicacion(Long idPublicacion, PublicacionRequestDto request);
+
+    void eliminarPublicacion(Long idPublicacion);
+
+    List<ArchivoPublicacionResponseDto> listarArchivosPublicacion(Long idPublicacion);
+
+    ArchivoPublicacionResponseDto subirArchivoPublicacion(Long idPublicacion, MultipartFile archivo);
+
+    void eliminarArchivoPublicacion(Long idPublicacion, Long idArchivo);
 }
