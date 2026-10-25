@@ -5,7 +5,7 @@ import { useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import styles from "@/components/auth/auth.module.css";
 import { apiFetch } from "@/lib/api";
-import { puedeEntrarAlPanel, puedeEntrarAlPanelVendedor } from "@/lib/access";
+import { puedeEntrarAlPanel } from "@/lib/access";
 
 type Props = {
   idPrefix?: string;
@@ -75,8 +75,6 @@ export default function LoginForm({ idPrefix = "", onSuccess, showSellerLink = t
 
           if (puedeEntrarAlPanel(sesion.permisos)) {
             destination = "/admin";
-          } else if (puedeEntrarAlPanelVendedor(sesion.permisos)) {
-            destination = "/vendedor";
           }
         } catch {
           // El proveedor de sesión mostrará el error de verificación.

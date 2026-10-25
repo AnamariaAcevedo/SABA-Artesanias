@@ -205,7 +205,7 @@ export default function ProductoForm({ modo, producto }: ProductoFormProps) {
           body: JSON.stringify(datos),
         });
       }
-      router.push("/mi-tienda");
+      router.push("/mi-tienda/productos");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "No pudimos guardar el producto.");
       enviandoRef.current = false;
@@ -351,7 +351,7 @@ export default function ProductoForm({ modo, producto }: ProductoFormProps) {
         )}
 
         <div className={styles.formActions}>
-          <button type="button" className={styles.buttonOutline} onClick={() => router.push("/mi-tienda")} disabled={enviando}>
+          <button type="button" className={styles.buttonOutline} onClick={() => router.push("/mi-tienda/productos")} disabled={enviando}>
             Cancelar
           </button>
           <button type="submit" disabled={ocupado} className={styles.buttonPrimary}>

@@ -13,7 +13,7 @@ export default function EditarProductoPage() {
 
   return (
     <div>
-      <Link href="/mi-tienda" className={styles.backLink}>
+      <Link href="/mi-tienda/productos" className={styles.backLink}>
         ← Volver a mis productos
       </Link>
       <h2 className={styles.pageTitle}>Editar producto</h2>
