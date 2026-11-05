@@ -1,5 +1,6 @@
+import { apiFetch } from "@/lib/api";
 import { ApiResponse } from "@/types/ApiResponse";
-import { Tienda } from "@/types/Tienda";
+import { DatosPagoTienda, Tienda } from "@/types/Tienda";
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:8080").replace(/\/+$/, "");
 
@@ -33,6 +34,11 @@ export async function obtenerTiendas(): Promise<
   }
 
   return respuesta.json();
+}
+
+// Null si la tienda todavía no cargó sus datos de cuenta.
+export function obtenerDatosPagoTienda(id: number): Promise<DatosPagoTienda | null> {
+  return apiFetch<DatosPagoTienda | null>(`/tiendas/${id}/datos-pago`);
 }
 
 export async function obtenerTiendaPorId(

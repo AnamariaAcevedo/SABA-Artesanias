@@ -3,6 +3,7 @@ package com.marketplace.marketplace_backend.modules.tienda;
 import java.util.List;
 
 import com.marketplace.marketplace_backend.common.PagedResult;
+import com.marketplace.marketplace_backend.modules.tienda.dto.DatosPagoTiendaResponseDto;
 import com.marketplace.marketplace_backend.modules.tienda.dto.TiendaCreateRequestDto;
 import com.marketplace.marketplace_backend.modules.tienda.dto.TiendaFilterDto;
 import com.marketplace.marketplace_backend.modules.tienda.dto.TiendaResponseDto;
@@ -15,6 +16,9 @@ public interface TiendaService {
     TiendaResponseDto update(Long id, TiendaUpdateRequestDto request);
 
     TiendaResponseDto get(Long id);
+
+    // Null si la tienda todavia no cargo sus datos de cuenta.
+    DatosPagoTiendaResponseDto obtenerDatosPago(Long id);
 
     void delete(Long id);
 

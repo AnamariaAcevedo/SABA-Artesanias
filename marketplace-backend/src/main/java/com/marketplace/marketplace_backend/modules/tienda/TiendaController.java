@@ -2,6 +2,7 @@ package com.marketplace.marketplace_backend.modules.tienda;
 
 import com.marketplace.marketplace_backend.common.Pagination;
 import com.marketplace.marketplace_backend.common.StandardResponseDto;
+import com.marketplace.marketplace_backend.modules.tienda.dto.DatosPagoTiendaResponseDto;
 import com.marketplace.marketplace_backend.modules.tienda.dto.TiendaCreateRequestDto;
 import com.marketplace.marketplace_backend.modules.tienda.dto.TiendaFilterDto;
 import com.marketplace.marketplace_backend.modules.tienda.dto.TiendaResponseDto;
@@ -49,6 +50,17 @@ public class TiendaController {
         StandardResponseDto<TiendaResponseDto> response = new StandardResponseDto<>();
         response.setSuccess(true);
         response.setData(tiendaService.get(id));
+        response.setErrors(null);
+        response.setPagination(null);
+        return ResponseEntity.ok(response);
+    }
+
+    // Publico: un invitado tambien necesita saber a donde transferir para poder comprar.
+    @GetMapping("/{id}/datos-pago")
+    public ResponseEntity<StandardResponseDto<DatosPagoTiendaResponseDto>> obtenerDatosPago(@PathVariable Long id) {
+        StandardResponseDto<DatosPagoTiendaResponseDto> response = new StandardResponseDto<>();
+        response.setSuccess(true);
+        response.setData(tiendaService.obtenerDatosPago(id));
         response.setErrors(null);
         response.setPagination(null);
         return ResponseEntity.ok(response);

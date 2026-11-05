@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -8,7 +8,10 @@ import homeStyles from "@/app/home/home.module.css";
 import styles from "./confirmar.module.css";
 
 import type { Pedido, PedidoCreateInput } from "@/types/pedido";
+import type { DatosPagoTienda } from "@/types/Tienda";
+import { obtenerDatosPagoTienda } from "@/services/tiendaService";
 import { obtenerProductoPorId } from "@/services/productoService";
+import { errorDeComprobante } from "@/lib/pedidos";
 import { cancelarPedidoPropio, crearPedido } from "@/services/pedidoService";
 import MenuUsuario from "@/components/auth/MenuUsuario";
 import UbicacionFields from "@/components/auth/UbicacionFields";
@@ -48,6 +51,11 @@ export default function ConfirmarCompraPage() {
   const [errorCancelacion, setErrorCancelacion] = useState("");
   // Tiendas cuyo pedido se canceló antes de confirmar (sus productos siguen en el carrito).
   const [excluidas, setExcluidas] = useState<number[]>([]);
+  // Comprobante elegido para cada tienda: cada una recibe su propio pago.
+  const [comprobantes, setComprobantes] = useState<Record<number, File>>({});
+  const [errorComprobante, setErrorComprobante] = useState("");
+  // Datos de cuenta por tienda: sin clave = cargando; null = no disponibles.
+  const [datosPago, setDatosPago] = useState<Record<number, DatosPagoTienda | null>>({});
 
   const idsProductos = items.map((item) => item.idProducto).join(",");
 
@@ -71,6 +79,25 @@ export default function ConfirmarCompraPage() {
     };
   }, [idsProductos]);
 
+  const idsTiendas = [...new Set(items.map((item) => item.idTienda))].join(",");
+
+  useEffect(() => {
+    let cancelado = false;
+    const ids = idsTiendas ? idsTiendas.split(",").map(Number) : [];
+
+    async function cargarDatosPago() {
+      const respuestas = await Promise.all(
+        ids.map(async (id) => [id, await obtenerDatosPagoTienda(id).catch(() => null)] as const),
+      );
+      if (!cancelado) setDatosPago(Object.fromEntries(respuestas));
+    }
+
+    void cargarDatosPago();
+    return () => {
+      cancelado = true;
+    };
+  }, [idsTiendas]);
+
   const verificando = verificados !== idsProductos;
   const usarCuenta = haySesion === true && entrega === "cuenta";
 
@@ -84,6 +111,11 @@ export default function ConfirmarCompraPage() {
   const incluidos = items.filter((item) => !excluidas.includes(item.idTienda));
   const totalIncluido = incluidos.reduce((suma, item) => suma + item.precioUnitario * item.cantidad, 0);
   const sinStockSuficiente = incluidos.filter((item) => item.cantidad > item.cantidadDisponible);
+  const tiendasIncluidas = Object.entries(porTienda)
+    .map(([idTienda, lineas]) => ({ idTienda: Number(idTienda), lineas }))
+    .filter(({ idTienda }) => !excluidas.includes(idTienda));
+  const cargandoDatosPago = tiendasIncluidas.some(({ idTienda }) => datosPago[idTienda] === undefined);
+  const haySinDatosPago = tiendasIncluidas.some(({ idTienda }) => datosPago[idTienda] === null);
 
   function cancelarPedidoTienda(idTienda: number) {
     setExcluidas((actuales) => [...actuales, idTienda]);
@@ -95,6 +127,19 @@ export default function ConfirmarCompraPage() {
 
   function cancelarCompra() {
     router.push("/home");
+  }
+
+  function elegirComprobante(idTienda: number, evento: ChangeEvent<HTMLInputElement>) {
+    const archivo = evento.target.files?.[0];
+    const invalido = archivo ? errorDeComprobante(archivo) : null;
+    if (invalido) evento.target.value = "";
+    setErrorComprobante(invalido ?? "");
+    setComprobantes((actuales) => {
+      const siguientes = { ...actuales };
+      if (archivo && !invalido) siguientes[idTienda] = archivo;
+      else delete siguientes[idTienda];
+      return siguientes;
+    });
   }
 
   // Cancela un pedido ya registrado (solo con sesión y mientras siga pendiente).
@@ -116,7 +161,13 @@ export default function ConfirmarCompraPage() {
 
   async function confirmar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
-    if (enviando || sinStockSuficiente.length > 0 || incluidos.length === 0) return;
+    if (enviando || sinStockSuficiente.length > 0 || incluidos.length === 0 || cargandoDatosPago || haySinDatosPago) return;
+
+    const sinComprobante = tiendasIncluidas.find(({ idTienda }) => !comprobantes[idTienda]);
+    if (sinComprobante) {
+      setError(`Adjuntá el comprobante de pago para ${sinComprobante.lineas[0].nombreTienda}.`);
+      return;
+    }
 
     const datos = new FormData(evento.currentTarget);
     const idBarrio = Number(datos.get("idBarrio")) || undefined;
@@ -146,11 +197,14 @@ export default function ConfirmarCompraPage() {
     try {
       for (const [idTienda, lineas] of Object.entries(porTienda)) {
         if (excluidas.includes(Number(idTienda))) continue;
-        const pedido = await crearPedido({
-          ...entregaBase,
-          idTienda: Number(idTienda),
-          items: lineas.map((linea) => ({ idProducto: linea.idProducto, cantidad: linea.cantidad })),
-        });
+        const pedido = await crearPedido(
+          {
+            ...entregaBase,
+            idTienda: Number(idTienda),
+            items: lineas.map((linea) => ({ idProducto: linea.idProducto, cantidad: linea.cantidad })),
+          },
+          comprobantes[Number(idTienda)],
+        );
         registrados.push(pedido);
         quitarVariosDelCarrito(lineas.map((linea) => linea.idProducto));
       }
@@ -231,7 +285,7 @@ export default function ConfirmarCompraPage() {
           </section>
         )}
 
-        {items.length === 0 && creados.length === 0 && (
+        {haySesion !== undefined && items.length === 0 && creados.length === 0 && (
           <p className={styles.mensaje}>
             Tu carrito está vacío. <Link href="/home">Volver al catálogo</Link>
           </p>
@@ -416,6 +470,71 @@ export default function ConfirmarCompraPage() {
                 </label>
               )}
 
+              {haySesion !== undefined && (
+                <fieldset className={styles.comprobantes}>
+                  <legend>Pago</legend>
+                  <p className={styles.nota}>
+                    Transferí el total a la cuenta de la tienda y adjuntá el comprobante. PNG, JPG o PDF de hasta 5 MB.
+                  </p>
+                  {tiendasIncluidas.map(({ idTienda, lineas }) => {
+                    const cuenta = datosPago[idTienda];
+                    return (
+                      <div key={idTienda} className={styles.pagoTienda}>
+                        <strong>{lineas[0].nombreTienda}</strong>
+                        {cuenta === undefined && <p className={styles.nota}>Cargando datos de cuenta…</p>}
+                        {cuenta === null && (
+                          <p className={styles.alerta}>
+                            Los datos de cuenta de esta tienda no están disponibles, así que por ahora no se le puede
+                            comprar. {tiendasIncluidas.length > 1 && "Podés cancelar este pedido y seguir con el resto."}
+                          </p>
+                        )}
+                        {cuenta && (
+                          <>
+                            <dl className={styles.cuenta}>
+                              <dt>A transferir</dt>
+                              <dd>
+                                <strong>
+                                  {formatearPrecio(lineas.reduce((suma, item) => suma + item.precioUnitario * item.cantidad, 0))}
+                                </strong>
+                              </dd>
+                              <dt>Banco</dt>
+                              <dd>{cuenta.banco}</dd>
+                              <dt>N.º de cuenta</dt>
+                              <dd>{cuenta.nroCuenta}</dd>
+                              <dt>Titular</dt>
+                              <dd>{cuenta.titularCuenta}</dd>
+                              <dt>Cédula o RUC</dt>
+                              <dd>{cuenta.documentoTitular}</dd>
+                              {cuenta.aliasCuenta && (
+                                <>
+                                  <dt>Alias</dt>
+                                  <dd>{cuenta.aliasCuenta}</dd>
+                                </>
+                              )}
+                            </dl>
+                            <label className={styles.comprobante}>
+                              Comprobante de pago
+                              <input
+                                type="file"
+                                required
+                                accept="image/png,image/jpeg,application/pdf"
+                                onChange={(evento) => elegirComprobante(idTienda, evento)}
+                                disabled={enviando}
+                              />
+                            </label>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {errorComprobante && (
+                    <p className={styles.alerta} role="alert">
+                      {errorComprobante}
+                    </p>
+                  )}
+                </fieldset>
+              )}
+
               {error && (
                 <p className={styles.alerta} role="alert">
                   {error}
@@ -430,7 +549,9 @@ export default function ConfirmarCompraPage() {
                   verificando ||
                   haySesion === undefined ||
                   incluidos.length === 0 ||
-                  sinStockSuficiente.length > 0
+                  sinStockSuficiente.length > 0 ||
+                  cargandoDatosPago ||
+                  haySinDatosPago
                 }
               >
                 {enviando ? "Registrando pedido…" : verificando ? "Verificando stock…" : "Confirmar pedido"}

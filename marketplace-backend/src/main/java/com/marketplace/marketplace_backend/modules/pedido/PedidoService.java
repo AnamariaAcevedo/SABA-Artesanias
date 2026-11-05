@@ -3,13 +3,14 @@ package com.marketplace.marketplace_backend.modules.pedido;
 import com.marketplace.marketplace_backend.common.PagedResult;
 import com.marketplace.marketplace_backend.modules.pedido.dto.PedidoCreateRequestDto;
 import com.marketplace.marketplace_backend.modules.pedido.dto.PedidoResponseDto;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 // Operaciones de negocio sobre pedidos: creacion (cliente o invitado), consulta y
 // cancelacion propias, gestion desde la tienda, y listado para administracion.
 public interface PedidoService {
-    PedidoResponseDto crear(PedidoCreateRequestDto request);
+    PedidoResponseDto crear(PedidoCreateRequestDto request, MultipartFile comprobante);
 
     PagedResult<List<PedidoResponseDto>> listarMios(int page, int perPage);
 
@@ -21,6 +22,8 @@ public interface PedidoService {
     PagedResult<List<PedidoResponseDto>> listarDeTienda(Long idTienda, Integer numero, int page, int perPage);
 
     PedidoResponseDto obtenerDeTienda(Long idTienda, Long id);
+
+    ComprobantePedido obtenerComprobanteDeTienda(Long idTienda, Long id);
 
     // Sugerencias para el buscador: pedidos cuyo numero empieza con prefijoNumero.
     List<PedidoResponseDto> sugerirDeTienda(Long idTienda, String prefijoNumero, int limite);

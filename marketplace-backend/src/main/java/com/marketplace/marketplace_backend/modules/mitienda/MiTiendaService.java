@@ -10,6 +10,7 @@ import com.marketplace.marketplace_backend.modules.mitienda.dto.MiProductoReques
 import com.marketplace.marketplace_backend.modules.mitienda.dto.MiTiendaResponseDto;
 import com.marketplace.marketplace_backend.modules.mitienda.dto.MiTiendaUpdateRequestDto;
 import com.marketplace.marketplace_backend.modules.archivopublicacion.dto.ArchivoPublicacionResponseDto;
+import com.marketplace.marketplace_backend.modules.pedido.ComprobantePedido;
 import com.marketplace.marketplace_backend.modules.pedido.dto.PedidoResponseDto;
 import com.marketplace.marketplace_backend.modules.producto.dto.ProductoResponseDto;
 import com.marketplace.marketplace_backend.modules.publicacion.dto.PublicacionRequestDto;
@@ -51,6 +52,8 @@ public interface MiTiendaService {
     PagedResult<List<PedidoResponseDto>> listarPedidos(Integer numero, int page, int perPage);
 
     PedidoResponseDto obtenerPedido(Long idPedido);
+
+    ComprobantePedido obtenerComprobantePedido(Long idPedido);
 
     List<PedidoResponseDto> sugerirPedidos(String prefijoNumero, int limite);
 

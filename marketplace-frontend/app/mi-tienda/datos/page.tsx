@@ -61,6 +61,11 @@ function DatosTiendaForm({ tienda, onGuardado }: { tienda: MiTienda; onGuardado:
     tienda.nombreEdificio ? tienda.nroDepartamento ?? "" : tienda.nroCasa != null ? String(tienda.nroCasa) : "",
   );
   const hayEdificio = nombreEdificio.trim().length > 0;
+  const [banco, setBanco] = useState(tienda.banco ?? "");
+  const [titularCuenta, setTitularCuenta] = useState(tienda.titularCuenta ?? "");
+  const [documentoTitular, setDocumentoTitular] = useState(tienda.documentoTitular ?? "");
+  const [nroCuenta, setNroCuenta] = useState(tienda.nroCuenta ?? "");
+  const [aliasCuenta, setAliasCuenta] = useState(tienda.aliasCuenta ?? "");
 
   const [cambiarUbicacion, setCambiarUbicacion] = useState(false);
   const [idBarrio, setIdBarrio] = useState<number | null>(null);
@@ -77,12 +82,25 @@ function DatosTiendaForm({ tienda, onGuardado }: { tienda: MiTienda; onGuardado:
 
     const numeroLimpio = numero.trim();
 
-    if (!nombre.trim() || !descripcion.trim() || !calle.trim() || !numeroLimpio) {
+    if (
+      !nombre.trim() ||
+      !descripcion.trim() ||
+      !calle.trim() ||
+      !numeroLimpio ||
+      !banco.trim() ||
+      !titularCuenta.trim() ||
+      !documentoTitular.trim() ||
+      !nroCuenta.trim()
+    ) {
       setError("Completá todos los campos obligatorios.");
       return;
     }
     if (!hayEdificio && (!/^\d+$/.test(numeroLimpio) || Number(numeroLimpio) > 2147483647)) {
       setError("El número de casa debe ser un número entero. Si corresponde a un local o departamento, completá el nombre del edificio.");
+      return;
+    }
+    if (!/^\d{1,9}$/.test(nroCuenta.trim())) {
+      setError("El número de cuenta debe tener solo dígitos, hasta 9.");
       return;
     }
     if (cambiarUbicacion && !idBarrio) {
@@ -98,6 +116,11 @@ function DatosTiendaForm({ tienda, onGuardado }: { tienda: MiTienda; onGuardado:
       nroCasa: hayEdificio ? null : Number(numeroLimpio),
       nroDepartamento: hayEdificio ? numeroLimpio : null,
       ...(cambiarUbicacion && idBarrio ? { idBarrio } : {}),
+      banco: banco.trim(),
+      titularCuenta: titularCuenta.trim(),
+      documentoTitular: documentoTitular.trim(),
+      nroCuenta: nroCuenta.trim().padStart(9, "0"),
+      aliasCuenta: aliasCuenta.trim() || null,
     };
 
     enviandoRef.current = true;
@@ -193,6 +216,50 @@ function DatosTiendaForm({ tienda, onGuardado }: { tienda: MiTienda; onGuardado:
         <div className={styles.field}>
           <label htmlFor="nombreEdificio">Edificio o centro comercial (opcional)</label>
           <input id="nombreEdificio" maxLength={100} value={nombreEdificio} onChange={(e) => setNombreEdificio(e.target.value)} />
+        </div>
+
+        <h3 className={styles.sectionSubtitle}>Datos de cuenta</h3>
+        <p className={miTiendaStyles.ayuda}>
+          Se muestran a tus clientes al comprar, para que sepan a dónde transferir y adjunten el comprobante.
+        </p>
+        {!tienda.banco && (
+          <p role="status" className={styles.notice}>
+            Tu tienda no puede recibir pedidos hasta que completes estos datos.
+          </p>
+        )}
+        <div className={styles.row}>
+          <div className={styles.field}>
+            <label htmlFor="banco">Banco o entidad</label>
+            <input id="banco" required maxLength={100} value={banco} onChange={(e) => setBanco(e.target.value)} />
+          </div>
+          <div className={styles.field}>
+            <label htmlFor="nroCuenta">Número de cuenta</label>
+            <input
+              id="nroCuenta"
+              required
+              inputMode="numeric"
+              maxLength={9}
+              value={nroCuenta}
+              onChange={(e) => setNroCuenta(e.target.value.replace(/\D/g, ""))}
+              onBlur={() => {
+                if (nroCuenta) setNroCuenta(nroCuenta.padStart(9, "0"));
+              }}
+            />
+          </div>
+        </div>
+        <div className={styles.row}>
+          <div className={styles.field}>
+            <label htmlFor="titularCuenta">Titular de la cuenta</label>
+            <input id="titularCuenta" required maxLength={150} value={titularCuenta} onChange={(e) => setTitularCuenta(e.target.value)} />
+          </div>
+          <div className={styles.field}>
+            <label htmlFor="documentoTitular">Cédula o RUC del titular</label>
+            <input id="documentoTitular" required maxLength={30} value={documentoTitular} onChange={(e) => setDocumentoTitular(e.target.value)} />
+          </div>
+        </div>
+        <div className={styles.field}>
+          <label htmlFor="aliasCuenta">Alias (opcional)</label>
+          <input id="aliasCuenta" maxLength={100} value={aliasCuenta} onChange={(e) => setAliasCuenta(e.target.value)} />
         </div>
 
         {error && (

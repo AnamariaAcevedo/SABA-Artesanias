@@ -1,4 +1,4 @@
-import { apiFetch, apiFetchConPaginacion } from "@/lib/api";
+import { apiFetch, apiFetchArchivo, apiFetchConPaginacion } from "@/lib/api";
 import type { Pedido } from "@/types/pedido";
 
 // Estados de un pedido (EstadoPedido del backend) y las transiciones que puede
@@ -55,6 +55,15 @@ export function etiquetaEstado(estado: string): string {
   return ETIQUETA_ESTADO[estado as EstadoPedido] ?? estado;
 }
 
+// Mismas reglas que el backend; allá el tipo se vuelve a verificar con el contenido del archivo.
+export function errorDeComprobante(archivo: File): string | null {
+  if (!["image/png", "image/jpeg", "application/pdf"].includes(archivo.type)) {
+    return `"${archivo.name}" no es PNG, JPG ni PDF.`;
+  }
+  if (archivo.size > 5 * 1024 * 1024) return `"${archivo.name}" supera los 5 MB.`;
+  return null;
+}
+
 export function formatearFechaHora(fechaIso: string | null): string {
   if (!fechaIso) return "—";
   return new Date(fechaIso).toLocaleString("es-PY", {
@@ -78,6 +87,10 @@ export function listarPedidosTienda(page: number, perPage: number, numero?: numb
 // Sugerencias del buscador: pedidos de la tienda cuyo número empieza con `prefijo`.
 export function sugerirPedidosTienda(prefijo: string): Promise<Pedido[]> {
   return apiFetch<Pedido[]>(`/mi-tienda/pedidos/sugerencias?numero=${encodeURIComponent(prefijo)}&limite=6`);
+}
+
+export function obtenerComprobanteTienda(id: number): Promise<Blob> {
+  return apiFetchArchivo(`/mi-tienda/pedidos/${id}/comprobante`);
 }
 
 export function aplicarAccionTienda(id: number, accion: AccionTienda): Promise<Pedido> {

@@ -8,3 +8,11 @@ export interface Tienda {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface DatosPagoTienda {
+  banco: string;
+  titularCuenta: string;
+  documentoTitular: string;
+  nroCuenta: string;
+  aliasCuenta: string | null;
+}
