@@ -7,6 +7,7 @@ import { ApiError, apiFetch, apiFetchConPaginacion } from "@/lib/api";
 import type { Pagination } from "@/types/api";
 import type { Usuario } from "@/types/usuario";
 import ConPermiso from "@/components/auth/ConPermiso";
+import { confirmar } from "@/components/dialogos/Dialogos";
 import { ACCESO } from "@/lib/access";
 import BuscadorConSugerencias, { type Sugerencia } from "@/components/buscador/BuscadorConSugerencias";
 
@@ -106,9 +107,13 @@ export default function UsuariosPage() {
   }
 
   async function eliminar(usuarioSeleccionado: Usuario) {
-    if (!window.confirm(`¿Eliminar al usuario "${usuarioSeleccionado.usuario}"? Esta acción no se puede deshacer.`)) {
-      return;
-    }
+    const confirmado = await confirmar({
+      titulo: "¿Eliminar este usuario?",
+      mensaje: `Vas a eliminar al usuario "${usuarioSeleccionado.usuario}". Esta acción no se puede deshacer.`,
+      textoConfirmar: "Eliminar usuario",
+      peligro: true,
+    });
+    if (!confirmado) return;
     setAccionEnCurso(usuarioSeleccionado.id);
     setError("");
     try {

@@ -11,6 +11,7 @@ import type { Pedido, PedidoCreateInput } from "@/types/pedido";
 import { obtenerProductoPorId } from "@/services/productoService";
 import { cancelarPedidoPropio, crearPedido } from "@/services/pedidoService";
 import MenuUsuario from "@/components/auth/MenuUsuario";
+import { confirmar as pedirConfirmacion } from "@/components/dialogos/Dialogos";
 import UbicacionFields from "@/components/auth/UbicacionFields";
 import BotonInicio from "@/components/catalogo/BotonInicio";
 import { useHaySesion } from "@/lib/auth";
@@ -100,7 +101,14 @@ export default function ConfirmarCompraPage() {
   // Cancela un pedido ya registrado (solo con sesión y mientras siga pendiente).
   async function cancelarRegistrado(pedido: Pedido) {
     if (cancelandoId !== null) return;
-    if (!window.confirm(`¿Querés cancelar el pedido N.º ${pedido.numero} de ${pedido.nombreTienda}?`)) return;
+    const confirmado = await pedirConfirmacion({
+      titulo: "¿Cancelar este pedido?",
+      mensaje: `Vas a cancelar el pedido N.º ${pedido.numero} de ${pedido.nombreTienda}.`,
+      textoConfirmar: "Cancelar pedido",
+      textoCancelar: "Volver",
+      peligro: true,
+    });
+    if (!confirmado) return;
 
     setCancelandoId(pedido.id);
     setErrorCancelacion("");

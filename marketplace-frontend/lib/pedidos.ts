@@ -19,18 +19,38 @@ export const ORDEN_ESTADOS: EstadoPedido[] = ["PENDIENTE", "CONFIRMADO", "ENVIAD
 
 export type AccionTienda = "confirmar" | "enviar" | "entregar" | "cancelar";
 
-export const ACCIONES_TIENDA: Record<AccionTienda, { etiqueta: string; enCurso: string; pregunta: string }> = {
+// `pregunta` y `detalle` arman el popup de confirmación; `botonConfirmar` es
+// el texto de su botón principal.
+export const ACCIONES_TIENDA: Record<
+  AccionTienda,
+  { etiqueta: string; enCurso: string; pregunta: string; detalle?: string; botonConfirmar: string; peligro?: boolean }
+> = {
   confirmar: {
     etiqueta: "Confirmar",
     enCurso: "Confirmando…",
-    pregunta: "¿Confirmar el pedido N.º {numero}? Se va a descontar el stock de sus productos.",
+    pregunta: "¿Confirmar el pedido N.º {numero}?",
+    detalle: "Se va a descontar el stock de sus productos.",
+    botonConfirmar: "Confirmar pedido",
   },
-  enviar: { etiqueta: "Marcar enviado", enCurso: "Guardando…", pregunta: "¿Marcar el pedido N.º {numero} como enviado?" },
-  entregar: { etiqueta: "Marcar entregado", enCurso: "Guardando…", pregunta: "¿Marcar el pedido N.º {numero} como entregado?" },
+  enviar: {
+    etiqueta: "Marcar enviado",
+    enCurso: "Guardando…",
+    pregunta: "¿Marcar el pedido N.º {numero} como enviado?",
+    botonConfirmar: "Marcar enviado",
+  },
+  entregar: {
+    etiqueta: "Marcar entregado",
+    enCurso: "Guardando…",
+    pregunta: "¿Marcar el pedido N.º {numero} como entregado?",
+    botonConfirmar: "Marcar entregado",
+  },
   cancelar: {
     etiqueta: "Cancelar",
     enCurso: "Cancelando…",
-    pregunta: "¿Cancelar el pedido N.º {numero}? Si ya estaba confirmado, se devuelve el stock.",
+    pregunta: "¿Cancelar el pedido N.º {numero}?",
+    detalle: "Si ya estaba confirmado, se devuelve el stock.",
+    botonConfirmar: "Cancelar pedido",
+    peligro: true,
   },
 };
 

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import styles from "@/components/admin/admin.module.css";
 import miTiendaStyles from "@/components/mi-tienda/miTienda.module.css";
+import { confirmar } from "@/components/dialogos/Dialogos";
 import { ApiError, apiFetch, apiFetchConPaginacion } from "@/lib/api";
 import type { Contacto, MiContactoInput, TipoContacto } from "@/types/miTienda";
 
@@ -40,7 +41,13 @@ export default function ContactosTienda() {
   }, []);
 
   async function eliminar(contacto: Contacto) {
-    if (!window.confirm(`¿Eliminar el contacto de ${contacto.nombreTipoContacto} (${contacto.usuario})?`)) return;
+    const confirmado = await confirmar({
+      titulo: "¿Eliminar este contacto?",
+      mensaje: `Se va a eliminar el contacto de ${contacto.nombreTipoContacto} (${contacto.usuario}).`,
+      textoConfirmar: "Eliminar contacto",
+      peligro: true,
+    });
+    if (!confirmado) return;
     setEliminando(contacto.id);
     setError("");
     try {

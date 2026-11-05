@@ -9,6 +9,7 @@ import {
   quitarDelCarrito,
   useCarrito,
 } from "@/lib/carrito";
+import { confirmar } from "@/components/dialogos/Dialogos";
 import styles from "./carrito.module.css";
 
 const API_URL =
@@ -38,8 +39,14 @@ export default function Carrito() {
     return () => document.removeEventListener("pointerdown", cerrarFuera);
   }, [abierto]);
 
-  function limpiar() {
-    if (!window.confirm("¿Querés quitar todos los productos del carrito?")) return;
+  async function limpiar() {
+    const confirmado = await confirmar({
+      titulo: "¿Vaciar el carrito?",
+      mensaje: "Se van a quitar todos los productos que agregaste.",
+      textoConfirmar: "Vaciar carrito",
+      peligro: true,
+    });
+    if (!confirmado) return;
     limpiarCarrito();
   }
 
