@@ -284,7 +284,7 @@ export default function AdministracionGeneralPage() {
 
   function detalle(entidad: Entidad): string {
     switch (config?.id) {
-      case "productos": return `${entidad.nombreTienda ?? "Sin tienda"} · Gs. ${(entidad.precio ?? 0).toLocaleString("es-PY")} · Stock: ${entidad.cantidadDisponible ?? 0}`;
+      case "productos": return `Gs. ${(entidad.precio ?? 0).toLocaleString("es-PY")} · Stock: ${entidad.cantidadDisponible ?? 0}`;
       case "tiendas": return entidad.direccionCompleta ?? "Sin dirección";
       case "contactos": return `${entidad.nombreTipoContacto ?? "Sin tipo"} · ${entidad.nombreTienda ?? "Sin tienda"}`;
       default: return `ID ${entidad.id}`;
@@ -298,6 +298,7 @@ export default function AdministracionGeneralPage() {
   const puedeEliminar = permisos.has(config.permisoEliminar);
   const totalPaginas = Math.max(1, Math.ceil(total / 10));
   const direccionRequerida = config.id === "tiendas" && direcciones.length === 0;
+  const muestraTienda = config.id === "productos";
 
   return (
     <div className={styles.card}>
@@ -366,13 +367,14 @@ export default function AdministracionGeneralPage() {
 
           <div className={styles.tableWrap}>
             <table className={styles.table}>
-              <thead><tr><th>Registro</th><th>Detalle</th><th>Acciones</th></tr></thead>
+              <thead><tr><th>Registro</th>{muestraTienda && <th>Tienda</th>}<th>Detalle</th><th>Acciones</th></tr></thead>
               <tbody>
-                {cargando && <tr><td colSpan={3} className={styles.emptyRow}>Cargando…</td></tr>}
-                {!cargando && elementos.length === 0 && <tr><td colSpan={3} className={styles.emptyRow}>No hay registros.</td></tr>}
+                {cargando && <tr><td colSpan={muestraTienda ? 4 : 3} className={styles.emptyRow}>Cargando…</td></tr>}
+                {!cargando && elementos.length === 0 && <tr><td colSpan={muestraTienda ? 4 : 3} className={styles.emptyRow}>No hay registros.</td></tr>}
                 {!cargando && elementos.map((entidad) => (
                   <tr key={entidad.id}>
                     <td><strong>{entidad.nombre ?? entidad.usuario ?? `Registro ${entidad.id}`}</strong>{entidad.descripcion && <small className={styles.tableDescription}>{entidad.descripcion}</small>}</td>
+                    {muestraTienda && <td>{entidad.nombreTienda ?? "Sin tienda asignada"}</td>}
                     <td>{detalle(entidad)}{entidad.enlace && <small className={styles.tableDescription}>{entidad.enlace}</small>}</td>
                     <td><div className={styles.rowActions}>
                       {puedeEditar && !(config.id === "tiendas" && direccionRequerida) && <button type="button" className={styles.linkAction} onClick={() => editar(entidad)}>Editar</button>}
