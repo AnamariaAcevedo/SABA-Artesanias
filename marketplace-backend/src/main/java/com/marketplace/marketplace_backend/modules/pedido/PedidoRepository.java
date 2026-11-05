@@ -30,4 +30,8 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     Optional<Pedido> findByIdAndTienda_Id(Long id, Long idTienda);
 
     Page<Pedido> findAllByOrderByIdDesc(Pageable pageable);
+
+    boolean existsByUsuario_IdAndCupon_Id(Long idUsuario, Long idCupon);
+
+    long countByCupon_Id(Long idCupon);
 }

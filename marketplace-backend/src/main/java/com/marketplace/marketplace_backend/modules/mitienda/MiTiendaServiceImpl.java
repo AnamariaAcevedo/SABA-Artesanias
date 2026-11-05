@@ -1,6 +1,10 @@
 package com.marketplace.marketplace_backend.modules.mitienda;
 
 import com.marketplace.marketplace_backend.common.PagedResult;
+import com.marketplace.marketplace_backend.modules.archivopublicacion.ArchivoPublicacion;
+import com.marketplace.marketplace_backend.modules.archivopublicacion.ArchivoPublicacionRepository;
+import com.marketplace.marketplace_backend.modules.archivopublicacion.ArchivoPublicacionService;
+import com.marketplace.marketplace_backend.modules.archivopublicacion.dto.ArchivoPublicacionResponseDto;
 import com.marketplace.marketplace_backend.modules.barrio.Barrio;
 import com.marketplace.marketplace_backend.modules.barrio.BarrioRepository;
 import com.marketplace.marketplace_backend.modules.contacto.Contacto;
@@ -31,6 +35,11 @@ import com.marketplace.marketplace_backend.modules.producto.dto.ProductoCreateRe
 import com.marketplace.marketplace_backend.modules.producto.dto.ProductoFilterDto;
 import com.marketplace.marketplace_backend.modules.producto.dto.ProductoResponseDto;
 import com.marketplace.marketplace_backend.modules.producto.dto.ProductoUpdateRequestDto;
+import com.marketplace.marketplace_backend.modules.publicacion.Publicacion;
+import com.marketplace.marketplace_backend.modules.publicacion.PublicacionRepository;
+import com.marketplace.marketplace_backend.modules.publicacion.PublicacionService;
+import com.marketplace.marketplace_backend.modules.publicacion.dto.PublicacionRequestDto;
+import com.marketplace.marketplace_backend.modules.publicacion.dto.PublicacionResponseDto;
 import com.marketplace.marketplace_backend.modules.productosubcategoria.ProductoSubcategoria;
 import com.marketplace.marketplace_backend.modules.productosubcategoria.ProductoSubcategoriaRepository;
 import com.marketplace.marketplace_backend.modules.productosubcategoria.ProductoSubcategoriaService;
@@ -85,6 +94,10 @@ public class MiTiendaServiceImpl implements MiTiendaService {
     private final TipoContactoRepository tipoContactoRepository;
     private final PedidoService pedidoService;
     private final CuponService cuponService;
+    private final PublicacionService publicacionService;
+    private final PublicacionRepository publicacionRepository;
+    private final ArchivoPublicacionRepository archivoPublicacionRepository;
+    private final ArchivoPublicacionService archivoPublicacionService;
 
     // ---------------------------------------------------------------- Tienda
 
@@ -386,6 +399,77 @@ public class MiTiendaServiceImpl implements MiTiendaService {
     @Transactional
     public void eliminarCupon(Long idCupon) {
         cuponService.eliminarDeTienda(tiendaDelDueno().getId(), idCupon);
+    }
+
+    // --------------------------------------------------------- Publicaciones
+
+    @Override
+    public PagedResult<List<PublicacionResponseDto>> listarPublicaciones(int page, int perPage) {
+        return publicacionService.listarDeTienda(vinculoActual().getTienda().getId(), page, perPage);
+    }
+
+    @Override
+    public PublicacionResponseDto obtenerPublicacion(Long idPublicacion) {
+        return publicacionService.obtenerDeTienda(vinculoActual().getTienda().getId(), idPublicacion);
+    }
+
+    @Override
+    @Transactional
+    public PublicacionResponseDto crearPublicacion(PublicacionRequestDto request) {
+        return publicacionService.crear(vinculoActual().getTienda().getId(), request);
+    }
+
+    @Override
+    @Transactional
+    public PublicacionResponseDto actualizarPublicacion(Long idPublicacion, PublicacionRequestDto request) {
+        return publicacionService.actualizar(vinculoActual().getTienda().getId(), idPublicacion, request);
+    }
+
+    @Override
+    @Transactional
+    public void eliminarPublicacion(Long idPublicacion) {
+        publicacionService.eliminarDeTienda(vinculoActual().getTienda().getId(), idPublicacion);
+    }
+
+    @Override
+    public List<ArchivoPublicacionResponseDto> listarArchivosPublicacion(Long idPublicacion) {
+        publicacionDeMiTienda(idPublicacion);
+        return archivoPublicacionService.listByPublicacion(idPublicacion);
+    }
+
+    @Override
+    @Transactional
+    public ArchivoPublicacionResponseDto subirArchivoPublicacion(Long idPublicacion, MultipartFile archivo) {
+        publicacionDeMiTienda(idPublicacion);
+
+        if (archivo == null || archivo.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El archivo no puede estar vacío");
+        }
+
+        if (!TIPOS_IMAGEN_PERMITIDOS.contains(archivo.getContentType())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Solo se permiten imágenes PNG o JPG");
+        }
+
+        return archivoPublicacionService.create(idPublicacion, archivo);
+    }
+
+    @Override
+    @Transactional
+    public void eliminarArchivoPublicacion(Long idPublicacion, Long idArchivo) {
+        publicacionDeMiTienda(idPublicacion);
+
+        ArchivoPublicacion archivo = archivoPublicacionRepository.findById(idArchivo)
+                .filter(encontrado -> encontrado.getPublicacion().getId().equals(idPublicacion))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Archivo no encontrado"));
+
+        archivoPublicacionService.delete(archivo.getId());
+    }
+
+    private Publicacion publicacionDeMiTienda(Long idPublicacion) {
+        Long idTienda = vinculoActual().getTienda().getId();
+        return publicacionRepository.findById(idPublicacion)
+                .filter(publicacion -> publicacion.getTienda().getId().equals(idTienda))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Publicación no encontrada"));
     }
 
     // ------------------------------------------------------- Verificaciones

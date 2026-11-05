@@ -111,7 +111,7 @@ public class PedidoServiceImpl implements PedidoService {
             total += subtotal;
         }
 
-        Cupon cupon = resolverCupon(request.getCodigoCupon(), tienda);
+        Cupon cupon = resolverCupon(request.getCodigoCupon(), tienda, usuario);
         if (cupon != null) {
             total -= total * cupon.getPorcentaje() / 100;
         }
@@ -127,6 +127,7 @@ public class PedidoServiceImpl implements PedidoService {
         pedido.setBarrio(entrega.barrio);
         pedido.setDireccion(entrega.direccion);
         pedido.setReferencia(request.getReferencia() == null || request.getReferencia().isBlank() ? null : request.getReferencia().trim());
+        pedido.setCupon(cupon);
         pedido.setTotal(total);
         pedido.setFechaPedido(LocalDateTime.now());
         pedido.setEstado(EstadoPedido.PENDIENTE);
@@ -134,11 +135,6 @@ public class PedidoServiceImpl implements PedidoService {
 
         lineas.forEach(linea -> linea.setPedido(guardado));
         productoPedidoRepository.saveAll(lineas);
-
-        if (cupon != null) {
-            cupon.setPedido(guardado);
-            cuponRepository.save(cupon);
-        }
 
         if (usuario == null) {
             enviarCorreoConfirmacion(guardado, lineas);
@@ -329,9 +325,12 @@ public class PedidoServiceImpl implements PedidoService {
         return producto.getPrecio() * (1 - descuento / 100);
     }
 
-    // Null si no vino codigo. Si vino, valida que exista, sea de la misma tienda, este vigente
-    // y no se haya usado todavia; si no cumple algo, tira error en vez de ignorarlo en silencio.
-    private Cupon resolverCupon(String codigoCupon, Tienda tienda) {
+    // Null si no vino codigo. Si vino, valida que exista (y no este eliminado - la tienda
+    // "desactiva" un cupon simplemente borrandolo), sea de la misma tienda, este vigente y que
+    // este usuario no lo haya usado antes; si no cumple algo, tira error en vez de ignorarlo.
+    // A un invitado no se le puede exigir "una vez por persona": no tiene cuenta persistente
+    // entre compras, asi que ese chequeo solo aplica a usuarios registrados.
+    private Cupon resolverCupon(String codigoCupon, Tienda tienda, Usuario usuario) {
         if (codigoCupon == null || codigoCupon.isBlank()) {
             return null;
         }
@@ -342,12 +341,12 @@ public class PedidoServiceImpl implements PedidoService {
         if (!cupon.getTienda().getId().equals(tienda.getId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Este cupón no es válido para esta tienda");
         }
-        if (cupon.getPedido() != null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Este cupón ya fue usado");
-        }
         LocalDate hoy = LocalDate.now();
         if (hoy.isBefore(cupon.getFechaInicio()) || hoy.isAfter(cupon.getFechaFin())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Este cupón no está vigente");
+        }
+        if (usuario != null && pedidoRepository.existsByUsuario_IdAndCupon_Id(usuario.getId(), cupon.getId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ya usaste este cupón");
         }
 
         return cupon;
