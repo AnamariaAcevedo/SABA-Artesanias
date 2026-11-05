@@ -14,13 +14,17 @@ header.header { align-items: center; }
 .textarea:focus-visible { outline: 3px solid #63240e; outline-offset: 3px; }
 .ayuda { font: 13px/1.4 Arial, sans-serif; color: #6b4a22; padding-left: 4px; }
 
-.grupoSubcategorias { border: 1px solid #b88b44; border-radius: 16px; padding: 14px 18px; margin: 0; font-family: Arial, sans-serif; }
+.grupoSubcategorias { display: flex; flex-direction: column; gap: 14px; border: 1px solid #b88b44; border-radius: 16px; padding: 14px 18px; margin: 0; font-family: Arial, sans-serif; }
 .grupoSubcategorias legend { padding: 0 6px; font-size: 15px; color: #48200f; }
-.listaCategorias { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px 24px; }
-.categoria { display: flex; flex-direction: column; gap: 6px; }
-.categoria strong { font-size: 14px; color: #291606; font-weight: 600; }
+.listaSubcategorias { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px 24px; }
 .opcionSubcategoria { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #48200f; cursor: pointer; }
 .opcionSubcategoria input { width: 18px; height: 18px; accent-color: #63240e; }
+.subcategoriasElegidas { display: flex; flex-direction: column; gap: 8px; }
+.subcategoriasElegidas strong { font-size: 14px; color: #291606; font-weight: 600; }
+.etiquetas { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.etiqueta { display: inline-flex; align-items: center; gap: 4px; padding: 2px 4px 2px 12px; border: 1px solid #b88b44; border-radius: 999px; background: #f4ddba; font-size: 14px; color: #48200f; }
+.etiqueta button { width: 28px; height: 28px; border: none; border-radius: 50%; background: transparent; color: #63240e; font-size: 18px; line-height: 1; cursor: pointer; }
+.etiqueta button:hover { background: rgba(99, 36, 14, 0.12); }
 
 .galeria { display: flex; flex-wrap: wrap; gap: 14px; }
 .imagen { position: relative; width: 120px; }

@@ -55,6 +55,7 @@ export default function ProductoForm({ modo, producto }: ProductoFormProps) {
 
   const [categorias, setCategorias] = useState<CategoriaConSubcategorias[]>([]);
   const [cargandoCategorias, setCargandoCategorias] = useState(true);
+  const [idCategoriaElegida, setIdCategoriaElegida] = useState("");
 
   // Crear: imágenes elegidas que se suben después de crear el producto.
   const [imagenesNuevas, setImagenesNuevas] = useState<File[]>([]);
@@ -215,6 +216,16 @@ export default function ProductoForm({ modo, producto }: ProductoFormProps) {
 
   const ocupado = enviando || procesandoImagen;
 
+  const grupoElegido = categorias.find((grupo) => grupo.categoria.id === Number(idCategoriaElegida));
+
+  // Los nombres del producto cubren las subcategorías que ya no están asociadas a
+  // ninguna categoría: siguen asignadas y se tienen que poder ver y quitar.
+  const nombresSubcategorias = new Map<number, string>();
+  producto?.idsSubcategorias.forEach((id, indice) => nombresSubcategorias.set(id, producto.nombresSubcategorias[indice]));
+  categorias.forEach(({ subcategorias }) =>
+    subcategorias.forEach((subcategoria) => nombresSubcategorias.set(subcategoria.subcategoriaId, subcategoria.subcategoriaNombre)),
+  );
+
   return (
     <div className={`${styles.card} ${styles.formCard}`}>
       <form onSubmit={enviar} className={styles.form} aria-busy={ocupado}>
@@ -277,25 +288,61 @@ export default function ProductoForm({ modo, producto }: ProductoFormProps) {
         </div>
 
         <fieldset className={miTiendaStyles.grupoSubcategorias}>
-          <legend>Subcategorías</legend>
+          <legend>Categorías y subcategorías</legend>
           {cargandoCategorias && <p role="status">Cargando categorías…</p>}
           {!cargandoCategorias && categorias.length === 0 && <p>No hay categorías disponibles.</p>}
-          <div className={miTiendaStyles.listaCategorias}>
-            {categorias.map(({ categoria, subcategorias }) => (
-              <div key={categoria.id} className={miTiendaStyles.categoria}>
-                <strong>{categoria.nombre}</strong>
-                {subcategorias.map((subcategoria) => (
-                  <label key={subcategoria.subcategoriaId} className={miTiendaStyles.opcionSubcategoria}>
-                    <input
-                      type="checkbox"
-                      checked={idsSubcategorias.has(subcategoria.subcategoriaId)}
-                      onChange={() => alternarSubcategoria(subcategoria.subcategoriaId)}
-                    />
-                    {subcategoria.subcategoriaNombre}
-                  </label>
+          {categorias.length > 0 && (
+            <div className={styles.field}>
+              <label htmlFor="categoria">Categoría</label>
+              <select id="categoria" value={idCategoriaElegida} onChange={(e) => setIdCategoriaElegida(e.target.value)}>
+                <option value="">Seleccioná una categoría</option>
+                {categorias.map(({ categoria }) => (
+                  <option key={categoria.id} value={categoria.id}>
+                    {categoria.nombre}
+                  </option>
                 ))}
-              </div>
-            ))}
+              </select>
+            </div>
+          )}
+
+          {grupoElegido && (
+            <div className={miTiendaStyles.listaSubcategorias}>
+              {grupoElegido.subcategorias.map((subcategoria) => (
+                <label key={subcategoria.subcategoriaId} className={miTiendaStyles.opcionSubcategoria}>
+                  <input
+                    type="checkbox"
+                    checked={idsSubcategorias.has(subcategoria.subcategoriaId)}
+                    onChange={() => alternarSubcategoria(subcategoria.subcategoriaId)}
+                  />
+                  {subcategoria.subcategoriaNombre}
+                </label>
+              ))}
+            </div>
+          )}
+
+          <div className={miTiendaStyles.subcategoriasElegidas}>
+            <strong>Subcategorías del producto</strong>
+            {idsSubcategorias.size === 0 ? (
+              <p className={miTiendaStyles.ayuda}>Todavía no elegiste ninguna.</p>
+            ) : (
+              <ul className={miTiendaStyles.etiquetas}>
+                {[...idsSubcategorias].map((id) => (
+                  <li key={id} className={miTiendaStyles.etiqueta}>
+                    {nombresSubcategorias.get(id)}
+                    <button
+                      type="button"
+                      aria-label={`Quitar ${nombresSubcategorias.get(id)}`}
+                      onClick={() => alternarSubcategoria(id)}
+                    >
+                      ×
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p className={miTiendaStyles.ayuda}>
+              Si una subcategoría pertenece a varias categorías, el producto aparece en todas ellas.
+            </p>
           </div>
         </fieldset>
 
