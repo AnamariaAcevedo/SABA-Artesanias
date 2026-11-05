@@ -11,6 +11,7 @@ import {
 } from "react";
 import { usePathname } from "next/navigation";
 import { apiFetch, ApiError } from "@/lib/api";
+import { fijarDuenoCarrito } from "@/lib/carrito";
 
 type Sesion = {
     id: number;
@@ -56,6 +57,7 @@ export default function SesionProvider({
             const token = localStorage.getItem("accessToken");
 
             if (!token) {
+                fijarDuenoCarrito(null);
                 setSesion(null);
                 return;
             }
@@ -70,6 +72,7 @@ export default function SesionProvider({
                 return;
             }
 
+            fijarDuenoCarrito(datos.id);
             setSesion(datos);
         } catch (cause) {
             if (numero !== solicitud.current) return;
@@ -83,6 +86,7 @@ export default function SesionProvider({
                 } catch {
                     // El estado de sesión igualmente se limpia aunque Storage no esté disponible.
                 }
+                fijarDuenoCarrito(null);
                 setError(cause.message);
             } else {
                 setError(
