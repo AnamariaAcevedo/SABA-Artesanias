@@ -45,6 +45,13 @@ export const ACCESO = {
 
     gestionarSolicitudesVendedor: ["UPDATE_SOLICITUDES_VENDEDOR"],
 
+    administracionGeneral: [
+        "LIST_PRODUCTOS", "CREATE_PRODUCTOS", "UPDATE_PRODUCTOS", "DELETE_PRODUCTOS",
+        "LIST_TIENDAS", "CREATE_TIENDAS", "UPDATE_TIENDAS", "DELETE_TIENDAS",
+        "LIST_CONTACTOS", "CREATE_CONTACTOS", "UPDATE_CONTACTOS", "DELETE_CONTACTOS",
+        "LIST_TIPOS_CONTACTO", "CREATE_TIPOS_CONTACTO", "UPDATE_TIPOS_CONTACTO", "DELETE_TIPOS_CONTACTO",
+    ],
+
     asignarSubcategorias: ["ASSIGN_SUBCATEGORIAS"],
 
     quitarSubcategorias: ["REVOKE_SUBCATEGORIAS"],
@@ -66,8 +73,13 @@ export function puedeEntrarAlPanel(
         cumplePermisos(permisos, ACCESO.verUsuarios) ||
         cumplePermisos(permisos, ACCESO.verRoles) ||
         cumplePermisos(permisos, ACCESO.verCategorias) ||
-        cumplePermisos(permisos, ACCESO.verSolicitudesVendedor)
+        cumplePermisos(permisos, ACCESO.verSolicitudesVendedor) ||
+        puedeGestionarAdministracionGeneral(permisos)
     );
+}
+
+export function puedeGestionarAdministracionGeneral(permisos: readonly string[]): boolean {
+    return ACCESO.administracionGeneral.some((permiso) => permisos.includes(permiso));
 }
 
 export function puedeAbrirRuta(
@@ -102,6 +114,10 @@ export function puedeAbrirRuta(
 
     if (ruta === "/admin/solicitudes-vendedor") {
         return cumplePermisos(permisos, ACCESO.verSolicitudesVendedor);
+    }
+
+    if (ruta === "/admin/general") {
+        return puedeGestionarAdministracionGeneral(permisos);
     }
 
     return false;
