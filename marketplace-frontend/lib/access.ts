@@ -55,6 +55,13 @@ export const ACCESO = {
     asignarSubcategorias: ["ASSIGN_SUBCATEGORIAS"],
 
     quitarSubcategorias: ["REVOKE_SUBCATEGORIAS"],
+
+    // Países, departamentos, ciudades y barrios: el backend los protege con
+    // los permisos de DIRECCIONES.
+    verUbicaciones: ["LIST_DIRECCIONES"],
+    crearUbicaciones: ["CREATE_DIRECCIONES"],
+    editarUbicaciones: ["UPDATE_DIRECCIONES"],
+    eliminarUbicaciones: ["DELETE_DIRECCIONES"],
 } satisfies Record<string, string[]>;
 
 export function cumplePermisos(
@@ -74,7 +81,8 @@ export function puedeEntrarAlPanel(
         cumplePermisos(permisos, ACCESO.verRoles) ||
         cumplePermisos(permisos, ACCESO.verCategorias) ||
         cumplePermisos(permisos, ACCESO.verSolicitudesVendedor) ||
-        puedeGestionarAdministracionGeneral(permisos)
+        puedeGestionarAdministracionGeneral(permisos) ||
+        cumplePermisos(permisos, ACCESO.verUbicaciones)
     );
 }
 
@@ -118,6 +126,10 @@ export function puedeAbrirRuta(
 
     if (ruta === "/admin/general") {
         return puedeGestionarAdministracionGeneral(permisos);
+    }
+
+    if (ruta === "/admin/ubicaciones") {
+        return cumplePermisos(permisos, ACCESO.verUbicaciones);
     }
 
     return false;

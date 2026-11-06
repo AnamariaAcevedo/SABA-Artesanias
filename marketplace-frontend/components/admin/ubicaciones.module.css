@@ -1,0 +1,17 @@
+/* Complementa components/admin/admin.module.css con lo propio de /admin/ubicaciones. */
+
+.pestanas { display: flex; flex-wrap: wrap; gap: 6px; width: fit-content; max-width: 100%; margin-bottom: 20px; padding: 5px; border: 1px solid #b88b44; border-radius: 999px; background: rgba(255, 246, 230, .6); }
+.pestana { padding: 8px 20px; border: none; border-radius: 999px; background: transparent; color: #63240e; font: 15px Georgia, "Times New Roman", serif; cursor: pointer; transition: background .15s ease; }
+.pestana:hover { background: rgba(99, 36, 14, .08); }
+.pestanaActiva, .pestanaActiva:hover { background: #63240e; color: #f7dfb9; }
+
+.alta { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin-bottom: 20px; padding: 16px 18px; border: 1px dashed #b88b44; border-radius: 16px; background: rgba(255, 246, 230, .5); }
+.altaCampo { flex: 1 1 260px; }
+.altaAyuda { margin: 0 0 20px; padding: 14px 18px; border: 1px dashed #b88b44; border-radius: 16px; color: #6b4a22; font: 14px/1.5 Arial, sans-serif; }
+
+.padre { color: #6b4a22; }
+
+@media (max-width: 640px) {
+  .pestanas { width: 100%; border-radius: 18px; }
+  .pestana { flex: 1 1 auto; }
+}

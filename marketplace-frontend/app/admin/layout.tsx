@@ -42,6 +42,11 @@ const secciones = [
     permisos: ACCESO.administracionGeneral,
     algunPermiso: true,
   },
+  {
+    href: "/admin/ubicaciones",
+    label: "Ubicaciones",
+    permisos: ACCESO.verUbicaciones,
+  },
 ];
 
 export default function AdminLayout({
