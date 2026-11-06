@@ -11,6 +11,8 @@
 
 .total { white-space: nowrap; font-weight: 600; }
 
+.linkMapa { display: inline-block; margin-top: 4px; color: #285a1f; font-size: 13px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+
 /* Visor del comprobante de pago en la gestión de pedidos. */
 .comprobante { width: min(760px, 92vw); max-height: 92vh; border: 1px solid #b88b44; border-radius: 16px; padding: 20px; background: #fff6e6; color: #291606; font-family: Arial, sans-serif; }
 .comprobante::backdrop { background: rgba(41, 22, 6, .55); }

@@ -17,7 +17,9 @@ import MenuUsuario from "@/components/auth/MenuUsuario";
 import { confirmar as pedirConfirmacion } from "@/components/dialogos/Dialogos";
 import UbicacionFields from "@/components/auth/UbicacionFields";
 import BotonInicio from "@/components/catalogo/BotonInicio";
+import SelectorPuntoEntrega from "@/components/mapa/SelectorPuntoEntrega";
 import { useHaySesion } from "@/lib/auth";
+import { LARGO_MAXIMO_REFERENCIA, armarReferencia, type Punto } from "@/lib/mapa";
 import {
   cambiarCantidadCarrito,
   formatearPrecio,
@@ -57,6 +59,8 @@ export default function ConfirmarCompraPage() {
   const [errorComprobante, setErrorComprobante] = useState("");
   // Datos de cuenta por tienda: sin clave = cargando; null = no disponibles.
   const [datosPago, setDatosPago] = useState<Record<number, DatosPagoTienda | null>>({});
+  // Punto exacto de entrega marcado en el mapa (opcional).
+  const [punto, setPunto] = useState<Punto | null>(null);
 
   const idsProductos = items.map((item) => item.idProducto).join(",");
 
@@ -186,7 +190,7 @@ export default function ConfirmarCompraPage() {
     }
 
     const entregaBase: Omit<PedidoCreateInput, "idTienda" | "items"> = {
-      referencia: texto(datos, "referencia") || undefined,
+      referencia: armarReferencia(texto(datos, "referencia"), punto),
     };
     if (!usarCuenta) {
       entregaBase.idBarrio = idBarrio;
@@ -472,10 +476,17 @@ export default function ConfirmarCompraPage() {
               )}
 
               {haySesion !== undefined && (
-                <label className={styles.campo}>
-                  Referencia (opcional)
-                  <input name="referencia" placeholder="Ej.: portón negro, frente a la plaza" />
-                </label>
+                <>
+                  <SelectorPuntoEntrega punto={punto} alCambiar={setPunto} />
+                  <label className={styles.campo}>
+                    Referencia (opcional)
+                    <input
+                      name="referencia"
+                      maxLength={LARGO_MAXIMO_REFERENCIA}
+                      placeholder="Ej.: portón negro, frente a la plaza"
+                    />
+                  </label>
+                </>
               )}
 
               {haySesion !== undefined && (

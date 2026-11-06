@@ -5,6 +5,7 @@ import styles from "@/components/admin/admin.module.css";
 import pedidosStyles from "@/components/pedidos/pedidos.module.css";
 import ComprobanteDialog from "@/components/pedidos/ComprobanteDialog";
 import EstadoPedidoBadge from "@/components/pedidos/EstadoPedidoBadge";
+import ReferenciaEntrega from "@/components/pedidos/ReferenciaEntrega";
 import { confirmar } from "@/components/dialogos/Dialogos";
 import { ApiError } from "@/lib/api";
 import { formatearPrecio } from "@/lib/carrito";
@@ -202,9 +203,7 @@ export default function PedidosTiendaPage() {
                     <td>
                       {pedido.direccion}
                       <span className={pedidosStyles.secundario}>{pedido.nombreBarrio}</span>
-                      {pedido.referencia && (
-                        <span className={pedidosStyles.secundario}>Ref.: {pedido.referencia}</span>
-                      )}
+                      <ReferenciaEntrega referencia={pedido.referencia} />
                     </td>
                     <td>
                       <ul className={pedidosStyles.items}>
