@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import styles from "@/components/admin/admin.module.css";
 import ConPermiso from "@/components/auth/ConPermiso";
+import { confirmar } from "@/components/dialogos/Dialogos";
 import { ACCESO } from "@/lib/access";
 import { ApiError, apiFetch, apiFetchConPaginacion } from "@/lib/api";
 import type { Pagination } from "@/types/api";
@@ -76,7 +77,12 @@ export default function SolicitudesVendedorPage() {
   }, [cargar]);
 
   async function aceptar(solicitud: Solicitud) {
-    if (!window.confirm(`¿Aprobar la tienda "${solicitud.nombreTienda}"? Se creará la tienda y el usuario pasará a ser vendedor.`)) return;
+    const confirmado = await confirmar({
+      titulo: "¿Aprobar esta tienda?",
+      mensaje: `Se creará la tienda "${solicitud.nombreTienda}" y el usuario pasará a ser vendedor.`,
+      textoConfirmar: "Aprobar tienda",
+    });
+    if (!confirmado) return;
     setAccionEnCurso(solicitud.id);
     setError("");
     setAviso("");

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import styles from "@/components/admin/admin.module.css";
 import EstadoPedidoBadge from "@/components/pedidos/EstadoPedidoBadge";
+import { confirmar } from "@/components/dialogos/Dialogos";
 import { ApiError } from "@/lib/api";
 import { formatearPrecio } from "@/lib/carrito";
 import {
@@ -53,7 +54,14 @@ export default function HistorialPedidos({ onVolver }: { onVolver?: () => void }
 
   async function cancelar(pedido: Pedido) {
     if (cancelando !== null) return;
-    if (!window.confirm(`¿Querés cancelar el pedido N.º ${pedido.numero} de ${pedido.nombreTienda}?`)) return;
+    const confirmado = await confirmar({
+      titulo: "¿Cancelar este pedido?",
+      mensaje: `Vas a cancelar el pedido N.º ${pedido.numero} de ${pedido.nombreTienda}.`,
+      textoConfirmar: "Cancelar pedido",
+      textoCancelar: "Volver",
+      peligro: true,
+    });
+    if (!confirmado) return;
 
     setCancelando(pedido.id);
     setError("");

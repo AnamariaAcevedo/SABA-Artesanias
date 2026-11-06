@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import styles from "@/components/admin/admin.module.css";
 import miTiendaStyles from "@/components/mi-tienda/miTienda.module.css";
+import { avisar, confirmar } from "@/components/dialogos/Dialogos";
 import { ApiError, apiFetch } from "@/lib/api";
 import { obtenerCategorias, obtenerSubcategoriasPorCategoria } from "@/services/categoriaService";
 import type { Categoria } from "@/types/Categoria";
@@ -146,7 +147,14 @@ export default function ProductoForm({ modo, producto }: ProductoFormProps) {
   }
 
   async function quitarImagen(imagen: ImagenProducto) {
-    if (!producto || !window.confirm("¿Quitar esta imagen del producto?")) return;
+    if (!producto) return;
+    const confirmado = await confirmar({
+      titulo: "¿Quitar esta imagen?",
+      mensaje: "La imagen se va a quitar del producto.",
+      textoConfirmar: "Quitar imagen",
+      peligro: true,
+    });
+    if (!confirmado) return;
     setProcesandoImagen(true);
     setErrorImagenes("");
     try {
@@ -196,7 +204,11 @@ export default function ProductoForm({ modo, producto }: ProductoFormProps) {
           for (const archivo of imagenesNuevas) await subirImagen(creado.id, archivo);
         } catch {
           // El producto ya existe: se abre su edición para reintentar las imágenes.
-          window.alert("El producto se creó, pero no pudimos subir todas las imágenes. Podés volver a intentarlo desde la edición.");
+          await avisar({
+            titulo: "Producto creado",
+            mensaje: "El producto se creó, pero no pudimos subir todas las imágenes. Podés volver a intentarlo desde la edición.",
+            textoBoton: "Ir a la edición",
+          });
           router.push(`/mi-tienda/productos/${creado.id}/editar`);
           return;
         }

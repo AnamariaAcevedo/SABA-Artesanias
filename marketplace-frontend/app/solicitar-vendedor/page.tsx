@@ -6,6 +6,7 @@ import AuthShell from "@/components/auth/AuthShell";
 import LoginForm from "@/components/auth/LoginForm";
 import { useSesion } from "@/components/auth/SesionProvider";
 import UbicacionFields from "@/components/auth/UbicacionFields";
+import { confirmar } from "@/components/dialogos/Dialogos";
 import styles from "@/components/auth/auth.module.css";
 import { ApiError, apiFetch } from "@/lib/api";
 
@@ -76,7 +77,13 @@ export default function SolicitarVendedorPage() {
 
   async function eliminarSolicitud() {
     if (!solicitud || !puedeEliminar) return;
-    if (!window.confirm(`¿Eliminar la solicitud de "${solicitud.nombreTienda}"? Podrás completar una nueva solicitud después.`)) return;
+    const confirmado = await confirmar({
+      titulo: "¿Eliminar la solicitud?",
+      mensaje: `Se va a eliminar la solicitud de "${solicitud.nombreTienda}". Podrás completar una nueva solicitud después.`,
+      textoConfirmar: "Eliminar solicitud",
+      peligro: true,
+    });
+    if (!confirmado) return;
 
     setEliminando(true);
     setError("");

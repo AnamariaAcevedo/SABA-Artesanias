@@ -4,6 +4,7 @@ import { Fragment, useEffect, useState, type FormEvent } from "react";
 import { apiFetch, apiFetchConPaginacion } from "@/lib/api";
 import styles from "@/components/admin/admin.module.css";
 import ConPermiso from "@/components/auth/ConPermiso";
+import { confirmar } from "@/components/dialogos/Dialogos";
 import { useSesion } from "@/components/auth/SesionProvider";
 import { ACCESO, cumplePermisos } from "@/lib/access";
 import type { Categoria } from "@/types/Categoria";
@@ -555,9 +556,12 @@ export default function CategoriasPage() {
   }
 
   async function eliminarCategoria(categoria: Categoria) {
-    const confirmado = window.confirm(
-      `¿Estás seguro de que deseás eliminar la categoría "${categoria.nombre}"?`
-    );
+    const confirmado = await confirmar({
+      titulo: "¿Eliminar esta categoría?",
+      mensaje: `Vas a eliminar la categoría "${categoria.nombre}".`,
+      textoConfirmar: "Eliminar categoría",
+      peligro: true,
+    });
 
     if (!confirmado) return;
 
@@ -586,9 +590,11 @@ export default function CategoriasPage() {
     categoria: Categoria,
     subcategoria: SubcategoriaDeCategoria
   ) {
-    const confirmado = window.confirm(
-      `¿Querés quitar la subcategoría "${subcategoria.subcategoriaNombre}" de "${categoria.nombre}"? La subcategoría no se elimina.`
-    );
+    const confirmado = await confirmar({
+      titulo: "¿Quitar esta subcategoría?",
+      mensaje: `Se va a quitar "${subcategoria.subcategoriaNombre}" de "${categoria.nombre}". La subcategoría no se elimina.`,
+      textoConfirmar: "Quitar subcategoría",
+    });
 
     if (!confirmado) return;
 

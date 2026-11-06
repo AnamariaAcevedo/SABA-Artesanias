@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import AvatarUsuario from "@/components/auth/AvatarUsuario";
 import { useSesion } from "@/components/auth/SesionProvider";
+import { avisar, confirmar } from "@/components/dialogos/Dialogos";
 import { cerrarSesion } from "@/lib/logout";
 import styles from "./menuUsuario.module.css";
 
@@ -41,7 +42,12 @@ export default function MenuUsuario({ enPanel = false }: Props) {
 
     async function salir() {
         if (ocupado.current) return;
-        if (!window.confirm("¿Querés cerrar sesión?")) return;
+        const quiereSalir = await confirmar({
+            titulo: "¿Cerrar sesión?",
+            mensaje: "Vas a tener que volver a iniciar sesión para usar tu cuenta.",
+            textoConfirmar: "Cerrar sesión",
+        });
+        if (!quiereSalir) return;
 
         ocupado.current = true;
         setCerrando(true);
@@ -51,9 +57,10 @@ export default function MenuUsuario({ enPanel = false }: Props) {
             const confirmado = await cerrarSesion();
 
             if (!confirmado) {
-                window.alert(
-                    "Se cerró la sesión en este navegador, pero no pudimos confirmar el cierre en el servidor."
-                );
+                await avisar({
+                    titulo: "Sesión cerrada",
+                    mensaje: "Se cerró la sesión en este navegador, pero no pudimos confirmar el cierre en el servidor.",
+                });
             }
             window.location.replace("/");
         } catch (cause) {
