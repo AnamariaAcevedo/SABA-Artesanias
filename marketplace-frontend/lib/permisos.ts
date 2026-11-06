@@ -23,7 +23,7 @@ const modulos: Modulo[] = [
     { id: "permisos", nombre: "Permisos", recursos: ["PERMISOS"] },
     { id: "contactos", nombre: "Contactos", recursos: ["CONTACTOS"] },
     { id: "tipos-contacto", nombre: "Tipos de contacto", recursos: ["TIPOS_CONTACTO"] },
-    { id: "ubicacion", nombre: "Ubicación", recursos: ["DIRECCIONES"] },
+    { id: "ubicacion", nombre: "Ubicaciones (países, departamentos, ciudades y barrios)", recursos: ["DIRECCIONES"] },
     { id: "solicitudes-vendedor", nombre: "Solicitudes de vendedor", recursos: ["SOLICITUDES_VENDEDOR"] },
 ];
 
