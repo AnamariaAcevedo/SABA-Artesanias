@@ -25,6 +25,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -69,15 +71,17 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public AuthResponseDto generateRefreshToken(String refreshToken, String accessToken) {
+        if (!jwtUtil.isSignedByUs(refreshToken)
+                || !jwtUtil.isSignedByUs(accessToken)
+                || !refreshTokenService.validateRefreshToken(refreshToken)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token inválido");
+        }
+
         String usuarioDesdeAccess = jwtUtil.extractUsuario(accessToken);
         String usuarioDesdeRefresh = jwtUtil.extractUsuario(refreshToken);
 
-        if (!refreshTokenService.validateRefreshToken(refreshToken) || !jwtUtil.isSignedByUs(accessToken)) {
-            throw new IllegalArgumentException("Refresh token inválido");
-        }
-
         if (!usuarioDesdeAccess.equals(usuarioDesdeRefresh)) {
-            throw new IllegalArgumentException("El token no corresponde al usuario");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "El token no corresponde al usuario");
         }
 
         refreshTokenService.deleteToken(refreshToken);

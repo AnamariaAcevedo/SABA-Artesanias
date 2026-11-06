@@ -30,6 +30,14 @@ function obtenerToken(): string | null {
   }
 }
 
+function obtenerRefreshToken(): string | null {
+  try {
+    return localStorage.getItem("refreshToken");
+  } catch {
+    return null;
+  }
+}
+
 function limpiarSesionLocal() {
   try {
     localStorage.removeItem("accessToken");
@@ -40,22 +48,80 @@ function limpiarSesionLocal() {
   }
 }
 
-async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<StandardResponse<T>> {
+type TokensRenovados = {
+  accessToken: string;
+  refreshToken: string;
+};
+
+let renovacionEnCurso: Promise<string> | null = null;
+
+async function renovarAccessToken(accessTokenVencido: string): Promise<string> {
+  const accessTokenActual = obtenerToken();
+  if (accessTokenActual && accessTokenActual !== accessTokenVencido) return accessTokenActual;
+
+  if (!renovacionEnCurso) {
+    renovacionEnCurso = (async () => {
+      const refreshToken = obtenerRefreshToken();
+      if (!refreshToken) throw new ApiError("Tu sesión venció. Iniciá sesión nuevamente.", 401);
+
+      const response = await fetch(`${getApiUrl()}/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accessToken: accessTokenVencido, refreshToken }),
+        signal: AbortSignal.timeout(15000),
+      });
+      const resultado = (await response.json().catch(() => null)) as StandardResponse<TokensRenovados> | null;
+      const tokens = resultado?.data;
+
+      if (!response.ok || resultado?.success !== true || !tokens?.accessToken || !tokens.refreshToken) {
+        const mensajes = resultado?.errors?.filter((mensaje): mensaje is string => typeof mensaje === "string") ?? [];
+        const status = response.status >= 400 && response.status < 500 ? 401 : response.status;
+        throw new ApiError(
+          mensajes.join(" ") || (status === 401
+            ? "Tu sesión venció. Iniciá sesión nuevamente."
+            : "No pudimos renovar tu sesión. Intentá nuevamente."),
+          status,
+        );
+      }
+
+      localStorage.setItem("accessToken", tokens.accessToken);
+      localStorage.setItem("refreshToken", tokens.refreshToken);
+      return tokens.accessToken;
+    })().finally(() => {
+      renovacionEnCurso = null;
+    });
+  }
+
+  return renovacionEnCurso;
+}
+
+async function enviar(path: string, init: RequestInit, token: string | null): Promise<Response> {
   const headers = new Headers(init.headers);
-  // Con FormData (subida de archivos) el navegador arma el Content-Type con su boundary.
   if (!(init.body instanceof FormData)) headers.set("Content-Type", "application/json");
-  const token = obtenerToken();
   if (token) headers.set("Authorization", `Bearer ${token}`);
 
+  return fetch(`${getApiUrl()}${path}`, {
+    ...init,
+    headers,
+    signal: AbortSignal.timeout(15000),
+  });
+}
+
+async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<StandardResponse<T>> {
+  const tokenUsado = obtenerToken();
   let response: Response;
   try {
-    response = await fetch(`${getApiUrl()}${path}`, {
-      ...init,
-      headers,
-      signal: AbortSignal.timeout(15000),
-    });
+    response = await enviar(path, init, tokenUsado);
+
+    if (response.status === 401 && tokenUsado && obtenerRefreshToken() && path !== "/refresh") {
+      const tokenRenovado = await renovarAccessToken(tokenUsado);
+      response = await enviar(path, init, tokenRenovado);
+    }
   } catch (cause) {
-    if (cause instanceof ApiError) throw cause;
+    if (cause instanceof ApiError) {
+      if (cause.status === 401) limpiarSesionLocal();
+      throw cause;
+    }
     throw new ApiError("No pudimos conectar con el servidor. Intentá nuevamente.", 0);
   }
 
