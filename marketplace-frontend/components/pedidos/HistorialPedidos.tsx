@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import styles from "@/components/admin/admin.module.css";
 import EstadoPedidoBadge from "@/components/pedidos/EstadoPedidoBadge";
+import ReferenciaEntrega from "@/components/pedidos/ReferenciaEntrega";
 import { confirmar } from "@/components/dialogos/Dialogos";
 import { ApiError } from "@/lib/api";
 import { formatearPrecio } from "@/lib/carrito";
@@ -142,7 +143,7 @@ export default function HistorialPedidos({ onVolver }: { onVolver?: () => void }
                   </ul>
                   <div>
                     Entrega en {pedido.direccion}, {pedido.nombreBarrio}
-                    {pedido.referencia && <span className={pedidosStyles.secundario}>Ref.: {pedido.referencia}</span>}
+                    <ReferenciaEntrega referencia={pedido.referencia} />
                     <span className={pedidosStyles.secundario}>
                       Realizado el {formatearFechaHora(pedido.fechaPedido)}
                     </span>
