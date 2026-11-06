@@ -45,5 +45,6 @@ export interface Pedido {
   estado: string;
   fechaPedido: string;
   fechaEntrega: string | null;
+  tieneComprobante: boolean;
   items: ProductoPedido[];
 }

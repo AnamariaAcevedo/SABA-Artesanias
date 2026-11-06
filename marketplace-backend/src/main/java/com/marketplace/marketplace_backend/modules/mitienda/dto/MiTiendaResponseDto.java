@@ -29,4 +29,9 @@ public class MiTiendaResponseDto {
     private String nombreDepartamento;
     private Long idPais;
     private String nombrePais;
+    private String banco;
+    private String titularCuenta;
+    private String documentoTitular;
+    private String nroCuenta;
+    private String aliasCuenta;
 }

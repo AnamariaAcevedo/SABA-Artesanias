@@ -3,6 +3,7 @@ package com.marketplace.marketplace_backend.modules.tienda;
 import com.marketplace.marketplace_backend.common.PagedResult;
 import com.marketplace.marketplace_backend.modules.direccion.Direccion;
 import com.marketplace.marketplace_backend.modules.direccion.DireccionRepository;
+import com.marketplace.marketplace_backend.modules.tienda.dto.DatosPagoTiendaResponseDto;
 import com.marketplace.marketplace_backend.modules.tienda.dto.TiendaCreateRequestDto;
 import com.marketplace.marketplace_backend.modules.tienda.dto.TiendaFilterDto;
 import com.marketplace.marketplace_backend.modules.tienda.dto.TiendaResponseDto;
@@ -103,6 +104,25 @@ public class TiendaServiceImpl implements TiendaService {
                 .toList();
 
         return new PagedResult<>(data, page, perPage, (int) result.getTotalElements());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public DatosPagoTiendaResponseDto obtenerDatosPago(Long id) {
+        Tienda tienda = tiendaRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Tienda no encontrada"));
+
+        if (!tienda.tieneDatosDePago()) {
+            return null;
+        }
+
+        return new DatosPagoTiendaResponseDto(
+                tienda.getBanco(),
+                tienda.getTitularCuenta(),
+                tienda.getDocumentoTitular(),
+                tienda.getNroCuenta(),
+                tienda.getAliasCuenta()
+        );
     }
 
     private TiendaResponseDto toResponse(Tienda tienda) {

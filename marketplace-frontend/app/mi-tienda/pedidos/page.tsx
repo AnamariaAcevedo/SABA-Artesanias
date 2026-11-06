@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import styles from "@/components/admin/admin.module.css";
 import pedidosStyles from "@/components/pedidos/pedidos.module.css";
+import ComprobanteDialog from "@/components/pedidos/ComprobanteDialog";
 import EstadoPedidoBadge from "@/components/pedidos/EstadoPedidoBadge";
 import { confirmar } from "@/components/dialogos/Dialogos";
 import { ApiError } from "@/lib/api";
@@ -33,6 +34,7 @@ export default function PedidosTiendaPage() {
   // `numero` es lo que se escribe; `numeroBuscado` el filtro aplicado al buscar.
   const [numero, setNumero] = useState("");
   const [numeroBuscado, setNumeroBuscado] = useState<number | undefined>(undefined);
+  const [pedidoConComprobante, setPedidoConComprobante] = useState<Pedido | null>(null);
 
   const perPage = 10;
 
@@ -89,7 +91,7 @@ export default function PedidosTiendaPage() {
     setNumeroBuscado(Number(sugerencia.clave));
   }
 
-  async function aplicar(pedido: Pedido, accion: AccionTienda) {
+  async function aplicar(pedido: Pedido, accion: AccionTienda, alTerminar?: () => void) {
     if (procesando !== null) return;
     const { pregunta, detalle, botonConfirmar, peligro } = ACCIONES_TIENDA[accion];
     const confirmado = await confirmar({
@@ -110,6 +112,7 @@ export default function PedidosTiendaPage() {
       setError(cause instanceof ApiError ? cause.message : "No pudimos actualizar el pedido.");
     } finally {
       setProcesando(null);
+      alTerminar?.();
     }
   }
 
@@ -159,6 +162,7 @@ export default function PedidosTiendaPage() {
               <th>Entrega</th>
               <th>Productos</th>
               <th>Total</th>
+              <th>Comprobante</th>
               <th>Estado</th>
               <th>Acciones</th>
             </tr>
@@ -166,14 +170,14 @@ export default function PedidosTiendaPage() {
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={7} className={styles.emptyRow}>
+                <td colSpan={8} className={styles.emptyRow}>
                   Cargando pedidos…
                 </td>
               </tr>
             )}
             {!loading && pedidos.length === 0 && (
               <tr>
-                <td colSpan={7} className={styles.emptyRow}>
+                <td colSpan={8} className={styles.emptyRow}>
                   {numeroBuscado !== undefined
                     ? `No hay ningún pedido con el número ${numeroBuscado}.`
                     : "Todavía no recibiste pedidos."}
@@ -212,6 +216,19 @@ export default function PedidosTiendaPage() {
                       </ul>
                     </td>
                     <td className={pedidosStyles.total}>{formatearPrecio(pedido.total)}</td>
+                    <td>
+                      {pedido.tieneComprobante ? (
+                        <button
+                          type="button"
+                          className={styles.linkAction}
+                          onClick={() => setPedidoConComprobante(pedido)}
+                        >
+                          Ver comprobante
+                        </button>
+                      ) : (
+                        <span className={pedidosStyles.secundario}>Sin comprobante</span>
+                      )}
+                    </td>
                     <td>
                       <EstadoPedidoBadge estado={pedido.estado} />
                       {pedido.fechaEntrega && (
@@ -275,6 +292,17 @@ export default function PedidosTiendaPage() {
           </button>
         </div>
       </div>
+
+      {pedidoConComprobante && (
+        <ComprobanteDialog
+          key={pedidoConComprobante.id}
+          pedido={pedidoConComprobante}
+          procesando={procesando?.id === pedidoConComprobante.id ? procesando.accion : null}
+          // Se cierra al terminar para que un error quede a la vista en la página.
+          onAccion={(accion) => void aplicar(pedidoConComprobante, accion, () => setPedidoConComprobante(null))}
+          onCerrar={() => setPedidoConComprobante(null)}
+        />
+      )}
     </div>
   );
 }

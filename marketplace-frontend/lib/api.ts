@@ -48,6 +48,9 @@ function limpiarSesionLocal() {
   }
 }
 
+<<<<<<< HEAD
+async function enviar(path: string, init: RequestInit): Promise<Response> {
+=======
 type TokensRenovados = {
   accessToken: string;
   refreshToken: string;
@@ -96,10 +99,20 @@ async function renovarAccessToken(accessTokenVencido: string): Promise<string> {
 }
 
 async function enviar(path: string, init: RequestInit, token: string | null): Promise<Response> {
+>>>>>>> origin/develop
   const headers = new Headers(init.headers);
   if (!(init.body instanceof FormData)) headers.set("Content-Type", "application/json");
   if (token) headers.set("Authorization", `Bearer ${token}`);
 
+<<<<<<< HEAD
+  try {
+    return await fetch(`${getApiUrl()}${path}`, {
+      ...init,
+      headers,
+      // Quien sube un archivo pasa su propio plazo: 15 s no alcanzan con una conexión lenta.
+      signal: init.signal ?? AbortSignal.timeout(15000),
+    });
+=======
   return fetch(`${getApiUrl()}${path}`, {
     ...init,
     headers,
@@ -117,6 +130,7 @@ async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<Stan
       const tokenRenovado = await renovarAccessToken(tokenUsado);
       response = await enviar(path, init, tokenRenovado);
     }
+>>>>>>> origin/develop
   } catch (cause) {
     if (cause instanceof ApiError) {
       if (cause.status === 401) limpiarSesionLocal();
@@ -124,38 +138,49 @@ async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<Stan
     }
     throw new ApiError("No pudimos conectar con el servidor. Intentá nuevamente.", 0);
   }
+}
 
+function errorDeRespuesta(status: number, errores: StandardResponse<unknown>["errors"] | undefined): ApiError {
+  const mensajes = errores?.filter((mensaje): mensaje is string => typeof mensaje === "string") ?? [];
+
+  if (status === 401) {
+    limpiarSesionLocal();
+    return new ApiError(mensajes.join(" ") || "Tu sesión venció o ya no es válida. Iniciá sesión nuevamente.", status);
+  }
+  if (status === 403) {
+    return new ApiError(mensajes.join(" ") || "No tenés permiso para realizar esta acción.", status);
+  }
+  if (status === 404) {
+    return new ApiError(mensajes.join(" ") || "No encontramos el recurso solicitado.", status);
+  }
+  if (status === 429) {
+    return new ApiError(mensajes.join(" ") || "Demasiados intentos. Esperá un momento e intentá nuevamente.", status);
+  }
+  return new ApiError(
+    mensajes.join(" ") || "No pudimos completar la operación. Intentá nuevamente en unos momentos.",
+    status,
+  );
+}
+
+async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<StandardResponse<T>> {
+  const response = await enviar(path, init);
   const resultado = (await response.json().catch(() => null)) as StandardResponse<T> | null;
 
-  const mensajes = resultado?.errors?.filter((mensaje): mensaje is string => typeof mensaje === "string") ?? [];
-
-  if (response.status === 401) {
-    limpiarSesionLocal();
-    throw new ApiError(
-      mensajes.join(" ") || "Tu sesión venció o ya no es válida. Iniciá sesión nuevamente.",
-      response.status,
-    );
-  }
-  if (response.status === 403) {
-    throw new ApiError(mensajes.join(" ") || "No tenés permiso para realizar esta acción.", response.status);
-  }
-  if (response.status === 404) {
-    throw new ApiError(mensajes.join(" ") || "No encontramos el recurso solicitado.", response.status);
-  }
-  if (response.status === 429) {
-    throw new ApiError(
-      mensajes.join(" ") || "Demasiados intentos. Esperá un momento e intentá nuevamente.",
-      response.status,
-    );
-  }
   if (!response.ok || resultado?.success !== true) {
-    throw new ApiError(
-      mensajes.join(" ") || "No pudimos completar la operación. Intentá nuevamente en unos momentos.",
-      response.status,
-    );
+    throw errorDeRespuesta(response.status, resultado?.errors);
   }
 
   return resultado;
+}
+
+// Para endpoints que devuelven un archivo privado: un <img src> o un enlace directo
+// no enviarían el token de sesión.
+export async function apiFetchArchivo(path: string): Promise<Blob> {
+  const response = await enviar(path, {});
+  if (response.ok) return response.blob();
+
+  const resultado = (await response.json().catch(() => null)) as StandardResponse<unknown> | null;
+  throw errorDeRespuesta(response.status, resultado?.errors);
 }
 
 // Para endpoints que devuelven un único recurso o nada (create/update/get/delete).

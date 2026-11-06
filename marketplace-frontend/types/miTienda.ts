@@ -21,6 +21,12 @@ export interface MiTienda {
   nombreDepartamento: string;
   idPais: number;
   nombrePais: string;
+  // Null hasta que el dueño cargue los datos de cuenta de la tienda.
+  banco: string | null;
+  titularCuenta: string | null;
+  documentoTitular: string | null;
+  nroCuenta: string | null;
+  aliasCuenta: string | null;
 }
 
 export interface MiTiendaUpdateInput {
@@ -31,6 +37,11 @@ export interface MiTiendaUpdateInput {
   nroCasa: number | null;
   nroDepartamento: string | null;
   idBarrio?: number;
+  banco: string;
+  titularCuenta: string;
+  documentoTitular: string;
+  nroCuenta: string;
+  aliasCuenta: string | null;
 }
 
 export interface MiProductoInput {

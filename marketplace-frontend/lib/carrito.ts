@@ -4,9 +4,10 @@ import { useSyncExternalStore } from "react";
 import type { Producto } from "@/types/Producto";
 
 // Carrito de compras del navegador. Se guarda en localStorage para que sobreviva
-// a recargas y se comparte entre pestañas (evento "storage"). Cada línea guarda
-// una copia del producto al momento de agregarlo; el stock y el precio se
-// vuelven a consultar al confirmar la compra.
+// a recargas y se comparte entre pestañas (evento "storage"). Cada usuario tiene
+// el suyo y los invitados comparten uno aparte, que pasa a la cuenta al iniciar
+// sesión. Cada línea guarda una copia del producto al momento de agregarlo; el
+// stock y el precio se vuelven a consultar al confirmar la compra.
 
 export interface ItemCarrito {
   idProducto: number;
@@ -19,38 +20,90 @@ export interface ItemCarrito {
   idImagenPrincipal: number | null;
 }
 
-const CLAVE = "carrito";
+const CLAVE_INVITADO = "carrito";
 const VACIO: ItemCarrito[] = [];
 
+// Usuario dueño del carrito: su id, null si es invitado, o undefined mientras no se sepa.
+// Sin saberlo no se toca Storage, para no mostrar ni pisar el carrito de otra cuenta.
+let dueno: number | null | undefined = undefined;
 let cache: ItemCarrito[] | null = null;
 const oyentes = new Set<() => void>();
 
+function claveDe(usuario: number | null): string {
+  return usuario === null ? CLAVE_INVITADO : `carrito:${usuario}`;
+}
+
+function leerGuardado(clave: string): ItemCarrito[] {
+  try {
+    const guardado = JSON.parse(localStorage.getItem(clave) ?? "[]");
+    return Array.isArray(guardado) ? guardado : [];
+  } catch {
+    return [];
+  }
+}
+
 function leer(): ItemCarrito[] {
   if (cache) return cache;
-  try {
-    const guardado = JSON.parse(localStorage.getItem(CLAVE) ?? "[]");
-    cache = Array.isArray(guardado) ? guardado : [];
-  } catch {
-    cache = [];
-  }
+  if (dueno === undefined) return VACIO;
+  cache = leerGuardado(claveDe(dueno));
   return cache;
 }
 
 function guardar(items: ItemCarrito[]) {
   cache = items;
-  try {
-    localStorage.setItem(CLAVE, JSON.stringify(items));
-  } catch {
-    // Sin Storage el carrito igualmente funciona mientras la pestaña siga abierta.
+  if (dueno !== undefined) {
+    try {
+      localStorage.setItem(claveDe(dueno), JSON.stringify(items));
+    } catch {
+      // Sin Storage el carrito igualmente funciona mientras la pestaña siga abierta.
+    }
   }
   oyentes.forEach((oyente) => oyente());
+}
+
+// Suma las líneas de `extras` a `base`, sin superar el stock de cada producto.
+function combinar(base: ItemCarrito[], extras: ItemCarrito[]): ItemCarrito[] {
+  return extras.reduce((resultado, extra) => {
+    const existente = resultado.find((item) => item.idProducto === extra.idProducto);
+    if (!existente) return [...resultado, extra];
+    const cantidad = Math.min(existente.cantidad + extra.cantidad, extra.cantidadDisponible);
+    return resultado.map((item) => (item === existente ? { ...extra, cantidad } : item));
+  }, base);
+}
+
+// La sesión avisa quién es el usuario actual (null = invitado). Lo que se armó sin
+// sesión pasa a la cuenta: si no, se perdería al iniciar sesión durante la compra.
+export function fijarDuenoCarrito(usuario: number | null) {
+  if (usuario === dueno) return;
+
+  const pendientes = dueno === undefined ? (cache ?? VACIO) : VACIO;
+  dueno = usuario;
+  cache = null;
+
+  const delInvitado = usuario === null ? VACIO : leerGuardado(CLAVE_INVITADO);
+  const traidos = combinar(delInvitado, pendientes);
+
+  if (traidos.length > 0) {
+    guardar(combinar(leer(), traidos));
+  } else {
+    oyentes.forEach((oyente) => oyente());
+  }
+
+  if (delInvitado.length > 0) {
+    try {
+      localStorage.removeItem(CLAVE_INVITADO);
+    } catch {
+      // Sin Storage no quedó nada guardado que limpiar.
+    }
+  }
 }
 
 function suscribir(oyente: () => void) {
   oyentes.add(oyente);
 
   function alCambiarStorage(event: StorageEvent) {
-    if (event.key === CLAVE || event.key === null) {
+    if (dueno === undefined) return;
+    if (event.key === claveDe(dueno) || event.key === null) {
       cache = null;
       oyente();
     }

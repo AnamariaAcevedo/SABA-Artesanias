@@ -36,4 +36,26 @@ public class Tienda extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "direccion_id", nullable = false)
     private Direccion direccion;
+
+    // Datos de cuenta a los que el cliente transfiere el pago. Son nullable porque las tiendas
+    // nacen sin ellos: los carga el dueño y, hasta entonces, la tienda no puede recibir pedidos.
+    @Column(length = 100)
+    private String banco;
+
+    @Column(name = "titular_cuenta", length = 150)
+    private String titularCuenta;
+
+    @Column(name = "documento_titular", length = 30)
+    private String documentoTitular;
+
+    @Column(name = "nro_cuenta", length = 50)
+    private String nroCuenta;
+
+    @Column(name = "alias_cuenta", length = 100)
+    private String aliasCuenta;
+
+    // El alias es opcional, por eso no cuenta.
+    public boolean tieneDatosDePago() {
+        return banco != null && titularCuenta != null && documentoTitular != null && nroCuenta != null;
+    }
 }

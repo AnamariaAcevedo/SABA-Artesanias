@@ -26,6 +26,7 @@ import com.marketplace.marketplace_backend.modules.mitienda.dto.MiContactoReques
 import com.marketplace.marketplace_backend.modules.mitienda.dto.MiProductoRequestDto;
 import com.marketplace.marketplace_backend.modules.mitienda.dto.MiTiendaResponseDto;
 import com.marketplace.marketplace_backend.modules.mitienda.dto.MiTiendaUpdateRequestDto;
+import com.marketplace.marketplace_backend.modules.pedido.ComprobantePedido;
 import com.marketplace.marketplace_backend.modules.pedido.PedidoService;
 import com.marketplace.marketplace_backend.modules.pedido.dto.PedidoResponseDto;
 import com.marketplace.marketplace_backend.modules.producto.Producto;
@@ -76,6 +77,7 @@ import java.util.Set;
 public class MiTiendaServiceImpl implements MiTiendaService {
 
     private static final Set<String> TIPOS_IMAGEN_PERMITIDOS = Set.of("image/png", "image/jpeg");
+    private static final int DIGITOS_NRO_CUENTA = 9;
 
     private final UsuarioRepository usuarioRepository;
     private final TiendaUsuarioRepository tiendaUsuarioRepository;
@@ -144,8 +146,18 @@ public class MiTiendaServiceImpl implements MiTiendaService {
         tienda.setDireccion(direccionRepository.save(direccion));
         tienda.setNombre(request.getNombre().trim());
         tienda.setDescripcion(request.getDescripcion().trim());
+        tienda.setBanco(request.getBanco().trim());
+        tienda.setTitularCuenta(request.getTitularCuenta().trim());
+        tienda.setDocumentoTitular(request.getDocumentoTitular().trim());
+        tienda.setNroCuenta(completarNroCuenta(request.getNroCuenta()));
+        tienda.setAliasCuenta(request.getAliasCuenta() == null || request.getAliasCuenta().isBlank() ? null : request.getAliasCuenta().trim());
 
         return toResponse(tiendaRepository.save(tienda), TipoVinculoTienda.PRINCIPAL);
+    }
+
+    // El numero de cuenta local tiene 9 digitos: si es mas corto, se completa con ceros a la izquierda.
+    static String completarNroCuenta(String nroCuenta) {
+        return "0".repeat(DIGITOS_NRO_CUENTA - nroCuenta.length()) + nroCuenta;
     }
 
     // ------------------------------------------------------------- Productos
@@ -354,6 +366,11 @@ public class MiTiendaServiceImpl implements MiTiendaService {
     }
 
     @Override
+    public ComprobantePedido obtenerComprobantePedido(Long idPedido) {
+        return pedidoService.obtenerComprobanteDeTienda(vinculoActual().getTienda().getId(), idPedido);
+    }
+
+    @Override
     @Transactional
     public PedidoResponseDto confirmarPedido(Long idPedido) {
         return pedidoService.confirmar(vinculoActual().getTienda().getId(), idPedido);
@@ -528,7 +545,12 @@ public class MiTiendaServiceImpl implements MiTiendaService {
                 departamento.getId(),
                 departamento.getNombre(),
                 pais.getId(),
-                pais.getNombre()
+                pais.getNombre(),
+                tienda.getBanco(),
+                tienda.getTitularCuenta(),
+                tienda.getDocumentoTitular(),
+                tienda.getNroCuenta(),
+                tienda.getAliasCuenta()
         );
     }
 }

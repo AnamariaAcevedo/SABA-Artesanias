@@ -29,8 +29,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -45,8 +48,11 @@ import java.util.List;
 // CONFIRMADO. Cancelar solo esta permitido desde PENDIENTE o CONFIRMADO.
 public class PedidoServiceImpl implements PedidoService {
 
+    private static final long TAMANO_MAXIMO_COMPROBANTE = 5 * 1024 * 1024;
+
     private final PedidoRepository pedidoRepository;
     private final ProductoPedidoRepository productoPedidoRepository;
+    private final ComprobantePedidoRepository comprobantePedidoRepository;
     private final UsuarioRepository usuarioRepository;
     private final TiendaRepository tiendaRepository;
     private final ProductoRepository productoRepository;
@@ -58,6 +64,7 @@ public class PedidoServiceImpl implements PedidoService {
     public PedidoServiceImpl(
             PedidoRepository pedidoRepository,
             ProductoPedidoRepository productoPedidoRepository,
+            ComprobantePedidoRepository comprobantePedidoRepository,
             UsuarioRepository usuarioRepository,
             TiendaRepository tiendaRepository,
             ProductoRepository productoRepository,
@@ -67,6 +74,7 @@ public class PedidoServiceImpl implements PedidoService {
             @Value("${spring.mail.username}") String remitente) {
         this.pedidoRepository = pedidoRepository;
         this.productoPedidoRepository = productoPedidoRepository;
+        this.comprobantePedidoRepository = comprobantePedidoRepository;
         this.usuarioRepository = usuarioRepository;
         this.tiendaRepository = tiendaRepository;
         this.productoRepository = productoRepository;
@@ -78,11 +86,19 @@ public class PedidoServiceImpl implements PedidoService {
 
     @Override
     @Transactional
-    public PedidoResponseDto crear(PedidoCreateRequestDto request) {
+    public PedidoResponseDto crear(PedidoCreateRequestDto request, MultipartFile comprobante) {
+        // Se valida antes de tocar nada: un archivo invalido no debe dejar un pedido a medias.
+        ComprobantePedido comprobantePedido = leerComprobante(comprobante);
+
         Usuario usuario = usuarioAutenticadoOpcional();
 
         Tienda tienda = tiendaRepository.findByIdParaActualizar(request.getIdTienda())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tienda no encontrada"));
+
+        if (!tienda.tieneDatosDePago()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    tienda.getNombre() + " todavía no cargó sus datos de cuenta, por lo que no puede recibir pedidos");
+        }
 
         DatosEntrega entrega = resolverDatosEntrega(usuario, request);
 
@@ -135,6 +151,9 @@ public class PedidoServiceImpl implements PedidoService {
 
         lineas.forEach(linea -> linea.setPedido(guardado));
         productoPedidoRepository.saveAll(lineas);
+
+        comprobantePedido.setPedido(guardado);
+        comprobantePedidoRepository.save(comprobantePedido);
 
         if (usuario == null) {
             enviarCorreoConfirmacion(guardado, lineas);
@@ -200,6 +219,14 @@ public class PedidoServiceImpl implements PedidoService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public ComprobantePedido obtenerComprobanteDeTienda(Long idTienda, Long id) {
+        Pedido pedido = buscarDeTienda(idTienda, id);
+        return comprobantePedidoRepository.findByPedido_Id(pedido.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Este pedido no tiene comprobante"));
+    }
+
+    @Override
     @Transactional
     public PedidoResponseDto confirmar(Long idTienda, Long id) {
         Pedido pedido = buscarDeTienda(idTienda, id);
@@ -260,6 +287,48 @@ public class PedidoServiceImpl implements PedidoService {
     // ------------------------------------------------------------- Privados
 
     private record DatosEntrega(String nombreReceptor, String telefonoReceptor, String emailReceptor, Barrio barrio, String direccion) {}
+
+    private static ComprobantePedido leerComprobante(MultipartFile archivo) {
+        if (archivo == null || archivo.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El comprobante de pago es obligatorio");
+        }
+        if (archivo.getSize() > TAMANO_MAXIMO_COMPROBANTE) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El comprobante no puede superar los 5 MB");
+        }
+
+        byte[] contenido;
+        try {
+            contenido = archivo.getBytes();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+
+        ComprobantePedido comprobante = new ComprobantePedido();
+        comprobante.setArchivo(contenido);
+        comprobante.setContentType(tipoDeComprobante(contenido));
+        return comprobante;
+    }
+
+    // El tipo sale del contenido y no de lo que declara el cliente: lo puede subir cualquiera
+    // sin sesion y despues lo abre el vendedor en su navegador.
+    private static String tipoDeComprobante(byte[] contenido) {
+        if (empiezaCon(contenido, 0x89, 'P', 'N', 'G')) return "image/png";
+        if (empiezaCon(contenido, 0xFF, 0xD8, 0xFF)) return "image/jpeg";
+        if (empiezaCon(contenido, '%', 'P', 'D', 'F', '-')) return "application/pdf";
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El comprobante debe ser una imagen PNG o JPG, o un PDF");
+    }
+
+    private static boolean empiezaCon(byte[] contenido, int... firma) {
+        if (contenido.length < firma.length) {
+            return false;
+        }
+        for (int i = 0; i < firma.length; i++) {
+            if ((contenido[i] & 0xFF) != firma[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     private DatosEntrega resolverDatosEntrega(Usuario usuario, PedidoCreateRequestDto request) {
         if (usuario != null) {
@@ -481,6 +550,7 @@ public class PedidoServiceImpl implements PedidoService {
                 pedido.getEstado().name(),
                 pedido.getFechaPedido(),
                 pedido.getFechaEntrega(),
+                comprobantePedidoRepository.existsByPedido_Id(pedido.getId()),
                 items
         );
     }

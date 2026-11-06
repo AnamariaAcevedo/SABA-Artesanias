@@ -11,6 +11,7 @@ import com.marketplace.marketplace_backend.modules.mitienda.dto.MiTiendaUpdateRe
 import com.marketplace.marketplace_backend.modules.cupon.dto.CuponRequestDto;
 import com.marketplace.marketplace_backend.modules.cupon.dto.CuponResponseDto;
 import com.marketplace.marketplace_backend.modules.archivopublicacion.dto.ArchivoPublicacionResponseDto;
+import com.marketplace.marketplace_backend.modules.pedido.ComprobantePedido;
 import com.marketplace.marketplace_backend.modules.pedido.dto.PedidoResponseDto;
 import com.marketplace.marketplace_backend.modules.producto.dto.ProductoResponseDto;
 import com.marketplace.marketplace_backend.modules.publicacion.dto.PublicacionRequestDto;
@@ -143,6 +144,15 @@ public class MiTiendaController {
     @GetMapping("/pedidos/{id}")
     public ResponseEntity<StandardResponseDto<PedidoResponseDto>> obtenerPedido(@PathVariable Long id) {
         return ok(miTiendaService.obtenerPedido(id));
+    }
+
+    // Devuelve el binario del comprobante; el frontend lo pide con el token de sesion.
+    @GetMapping("/pedidos/{id}/comprobante")
+    public ResponseEntity<byte[]> obtenerComprobantePedido(@PathVariable Long id) {
+        ComprobantePedido comprobante = miTiendaService.obtenerComprobantePedido(id);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(comprobante.getContentType()))
+                .body(comprobante.getArchivo());
     }
 
     @PutMapping("/pedidos/{id}/confirmar")

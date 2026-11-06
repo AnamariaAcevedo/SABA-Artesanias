@@ -32,5 +32,6 @@ public class PedidoResponseDto {
     private String estado;
     private LocalDateTime fechaPedido;
     private LocalDateTime fechaEntrega;
+    private boolean tieneComprobante;
     private List<ProductoPedidoResponseDto> items;
 }
