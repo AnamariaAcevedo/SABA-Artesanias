@@ -9,6 +9,7 @@ import { useSesion } from "@/components/auth/SesionProvider";
 import {
   ACCESO,
   cumplePermisos,
+  puedeGestionarAdministracionGeneral,
   puedeAbrirRuta,
   puedeEntrarAlPanel,
 } from "@/lib/access";
@@ -34,6 +35,12 @@ const secciones = [
     href: "/admin/solicitudes-vendedor",
     label: "Solicitudes de vendedor",
     permisos: ACCESO.verSolicitudesVendedor,
+  },
+  {
+    href: "/admin/general",
+    label: "Administración general",
+    permisos: ACCESO.administracionGeneral,
+    algunPermiso: true,
   },
 ];
 
@@ -106,7 +113,9 @@ export default function AdminLayout({
   }
 
   const visibles = secciones.filter((seccion) =>
-      cumplePermisos(sesion.permisos, seccion.permisos)
+      "algunPermiso" in seccion && seccion.algunPermiso
+          ? puedeGestionarAdministracionGeneral(sesion.permisos)
+          : cumplePermisos(sesion.permisos, seccion.permisos)
   );
 
   const autorizado = puedeAbrirRuta(

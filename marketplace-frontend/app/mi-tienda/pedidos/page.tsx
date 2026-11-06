@@ -5,6 +5,7 @@ import styles from "@/components/admin/admin.module.css";
 import pedidosStyles from "@/components/pedidos/pedidos.module.css";
 import ComprobanteDialog from "@/components/pedidos/ComprobanteDialog";
 import EstadoPedidoBadge from "@/components/pedidos/EstadoPedidoBadge";
+import { confirmar } from "@/components/dialogos/Dialogos";
 import { ApiError } from "@/lib/api";
 import { formatearPrecio } from "@/lib/carrito";
 import {
@@ -92,7 +93,15 @@ export default function PedidosTiendaPage() {
 
   async function aplicar(pedido: Pedido, accion: AccionTienda, alTerminar?: () => void) {
     if (procesando !== null) return;
-    if (!window.confirm(ACCIONES_TIENDA[accion].pregunta.replace("{numero}", String(pedido.numero)))) return;
+    const { pregunta, detalle, botonConfirmar, peligro } = ACCIONES_TIENDA[accion];
+    const confirmado = await confirmar({
+      titulo: pregunta.replace("{numero}", String(pedido.numero)),
+      mensaje: detalle,
+      textoConfirmar: botonConfirmar,
+      textoCancelar: "Volver",
+      peligro,
+    });
+    if (!confirmado) return;
 
     setProcesando({ id: pedido.id, accion });
     setError("");

@@ -9,6 +9,7 @@ import AvatarUsuario from "@/components/auth/AvatarUsuario";
 import MenuUsuario from "@/components/auth/MenuUsuario";
 import BotonInicio from "@/components/catalogo/BotonInicio";
 import HistorialPedidos from "@/components/pedidos/HistorialPedidos";
+import { confirmar } from "@/components/dialogos/Dialogos";
 import { useSesion } from "@/components/auth/SesionProvider";
 import { ApiError, apiFetch } from "@/lib/api";
 import { puedeEntrarAlPanel } from "@/lib/access";
@@ -419,7 +420,14 @@ function PerfilForm({ perfil, onCancelar, onGuardado }: PerfilFormProps) {
       setError("Completá la ubicación hasta seleccionar un barrio.");
       return;
     }
-    if (cambiaUsuario && !window.confirm("Después de cambiar tu nombre de usuario vas a tener que esperar 30 días para volver a cambiarlo. ¿Continuar?")) {
+    if (
+      cambiaUsuario &&
+      !(await confirmar({
+        titulo: "¿Cambiar tu nombre de usuario?",
+        mensaje: "Después de cambiarlo vas a tener que esperar 30 días para volver a cambiarlo.",
+        textoConfirmar: "Sí, cambiarlo",
+      }))
+    ) {
       return;
     }
 

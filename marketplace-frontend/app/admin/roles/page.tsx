@@ -5,6 +5,7 @@ import { apiFetch, apiFetchConPaginacion } from "@/lib/api";
 import BuscadorConSugerencias, { coincide } from "@/components/buscador/BuscadorConSugerencias";
 import styles from "@/components/admin/admin.module.css";
 import ConPermiso from "@/components/auth/ConPermiso";
+import { confirmar } from "@/components/dialogos/Dialogos";
 import { ACCESO } from "@/lib/access";
 import { esPermisoObsoleto, type Permiso } from "@/lib/permisos";
 import { resolverModulos } from "@/lib/capacidades";
@@ -317,9 +318,12 @@ function EditorRol({
             return;
         }
 
-        if (!window.confirm(
-            "¿Guardar este rol y sus permisos? Los cambios afectan a sus usuarios asignados."
-        )) return;
+        const confirmado = await confirmar({
+            titulo: "¿Guardar este rol?",
+            mensaje: "Los cambios en el rol y sus permisos afectan a sus usuarios asignados.",
+            textoConfirmar: "Guardar rol",
+        });
+        if (!confirmado) return;
 
         ocupado.current = true;
         setGuardando(true);

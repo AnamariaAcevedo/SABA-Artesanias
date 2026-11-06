@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import styles from "@/components/admin/admin.module.css";
 import miTiendaStyles from "@/components/mi-tienda/miTienda.module.css";
+import { confirmar } from "@/components/dialogos/Dialogos";
 import { ApiError, apiFetch, apiFetchConPaginacion } from "@/lib/api";
 import type { Pagination } from "@/types/api";
 import type { Producto } from "@/types/Producto";
@@ -79,9 +80,13 @@ export default function MisProductosPage() {
   }
 
   async function eliminar(producto: Producto) {
-    if (!window.confirm(`¿Eliminar el producto "${producto.nombre}"? Esta acción no se puede deshacer.`)) {
-      return;
-    }
+    const confirmado = await confirmar({
+      titulo: "¿Eliminar este producto?",
+      mensaje: `Vas a eliminar "${producto.nombre}". Esta acción no se puede deshacer.`,
+      textoConfirmar: "Eliminar producto",
+      peligro: true,
+    });
+    if (!confirmado) return;
     setEliminando(producto.id);
     setError("");
     try {
