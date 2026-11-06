@@ -48,9 +48,6 @@ function limpiarSesionLocal() {
   }
 }
 
-<<<<<<< HEAD
-async function enviar(path: string, init: RequestInit): Promise<Response> {
-=======
 type TokensRenovados = {
   accessToken: string;
   refreshToken: string;
@@ -99,38 +96,30 @@ async function renovarAccessToken(accessTokenVencido: string): Promise<string> {
 }
 
 async function enviar(path: string, init: RequestInit, token: string | null): Promise<Response> {
->>>>>>> origin/develop
   const headers = new Headers(init.headers);
   if (!(init.body instanceof FormData)) headers.set("Content-Type", "application/json");
   if (token) headers.set("Authorization", `Bearer ${token}`);
 
-<<<<<<< HEAD
-  try {
-    return await fetch(`${getApiUrl()}${path}`, {
-      ...init,
-      headers,
-      // Quien sube un archivo pasa su propio plazo: 15 s no alcanzan con una conexión lenta.
-      signal: init.signal ?? AbortSignal.timeout(15000),
-    });
-=======
   return fetch(`${getApiUrl()}${path}`, {
     ...init,
     headers,
-    signal: AbortSignal.timeout(15000),
+    // Quien sube un archivo pasa su propio plazo: 15 s no alcanzan con una conexión lenta.
+    signal: init.signal ?? AbortSignal.timeout(15000),
   });
 }
 
-async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<StandardResponse<T>> {
+// Envía el pedido y, si el token venció, lo renueva y reintenta una vez.
+async function enviarConRenovacion(path: string, init: RequestInit): Promise<Response> {
   const tokenUsado = obtenerToken();
-  let response: Response;
   try {
-    response = await enviar(path, init, tokenUsado);
+    const response = await enviar(path, init, tokenUsado);
 
     if (response.status === 401 && tokenUsado && obtenerRefreshToken() && path !== "/refresh") {
       const tokenRenovado = await renovarAccessToken(tokenUsado);
-      response = await enviar(path, init, tokenRenovado);
+      return await enviar(path, init, tokenRenovado);
     }
->>>>>>> origin/develop
+
+    return response;
   } catch (cause) {
     if (cause instanceof ApiError) {
       if (cause.status === 401) limpiarSesionLocal();
@@ -163,7 +152,7 @@ function errorDeRespuesta(status: number, errores: StandardResponse<unknown>["er
 }
 
 async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<StandardResponse<T>> {
-  const response = await enviar(path, init);
+  const response = await enviarConRenovacion(path, init);
   const resultado = (await response.json().catch(() => null)) as StandardResponse<T> | null;
 
   if (!response.ok || resultado?.success !== true) {
@@ -176,7 +165,7 @@ async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<Stan
 // Para endpoints que devuelven un archivo privado: un <img src> o un enlace directo
 // no enviarían el token de sesión.
 export async function apiFetchArchivo(path: string): Promise<Blob> {
-  const response = await enviar(path, {});
+  const response = await enviarConRenovacion(path, {});
   if (response.ok) return response.blob();
 
   const resultado = (await response.json().catch(() => null)) as StandardResponse<unknown> | null;
