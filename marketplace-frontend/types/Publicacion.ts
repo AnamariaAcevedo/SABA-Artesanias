@@ -7,6 +7,10 @@ export interface Publicacion {
   contenido: string;
   idTienda: number;
   nombreTienda: string;
+  cantidadReacciones: number;
+  cantidadComentarios: number;
+  // Si el usuario de la sesión ya reaccionó; siempre false para invitados.
+  reaccionada: boolean;
   idsArchivos: number[];
   // Null solo en publicaciones anteriores a que existiera el vencimiento.
   fechaExpiracion: string | null;
@@ -23,4 +27,12 @@ export interface PublicacionInput {
 
 export interface ArchivoPublicacion {
   id: number;
+}
+
+export interface ComentarioPublicacion {
+  id: number;
+  contenido: string;
+  idUsuario: number;
+  nombreUsuario: string;
+  createdAt: string;
 }

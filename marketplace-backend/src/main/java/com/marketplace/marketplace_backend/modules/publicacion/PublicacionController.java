@@ -46,6 +46,12 @@ public class PublicacionController {
         return ok(reaccionService.crear(id));
     }
 
+    @DeleteMapping("/{id}/reacciones")
+    @PreAuthorize("hasAuthority('DELETE_REACCIONES')")
+    public ResponseEntity<StandardResponseDto<Long>> quitarReaccion(@PathVariable Long id) {
+        return ok(reaccionService.quitar(id));
+    }
+
     private <T> ResponseEntity<StandardResponseDto<T>> ok(T data) {
         StandardResponseDto<T> response = new StandardResponseDto<>();
         response.setSuccess(true);

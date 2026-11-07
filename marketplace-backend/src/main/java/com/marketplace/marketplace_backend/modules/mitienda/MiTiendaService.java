@@ -92,4 +92,6 @@ public interface MiTiendaService {
     ArchivoPublicacionResponseDto subirArchivoPublicacion(Long idPublicacion, MultipartFile archivo);
 
     void eliminarArchivoPublicacion(Long idPublicacion, Long idArchivo);
+
+    void eliminarComentarioPublicacion(Long idPublicacion, Long idComentario);
 }
