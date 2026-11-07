@@ -1,0 +1,128 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(41, 22, 6, 0.55);
+}
+
+.dialogo {
+  width: 100%;
+  max-width: 420px;
+  padding: 24px 26px 26px;
+  background: #fff6e6;
+  border-radius: 20px;
+  color: #63240e;
+}
+
+.cabecera {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.cabecera h3 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 20px;
+  font-weight: normal;
+}
+
+.cerrar {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #63240e;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.campo input {
+  height: 44px;
+  padding: 0 16px;
+  border: 1px solid #b88b44;
+  border-radius: 28px;
+  background: #fff;
+  color: #291606;
+  font: 15px Arial, sans-serif;
+  text-transform: uppercase;
+}
+
+.campo input:focus-visible {
+  outline: 3px solid #63240e;
+  outline-offset: 1px;
+}
+
+.aplicado {
+  padding: 10px 14px;
+  margin-top: 10px;
+  background: rgba(99, 36, 14, 0.1);
+  border-radius: 14px;
+  font-size: 14px;
+}
+
+.alerta {
+  margin-top: 10px;
+  color: #a3261b;
+  font-size: 13px;
+}
+
+.acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.botonPrincipal {
+  height: 40px;
+  padding: 0 22px;
+  border: none;
+  border-radius: 999px;
+  background: #63240e;
+  color: #f7dfb9;
+  font: 14px Arial, sans-serif;
+  cursor: pointer;
+}
+
+.botonPrincipal:hover:not(:disabled) {
+  background: #7a3216;
+}
+
+.botonPrincipal:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.botonSecundario {
+  height: 40px;
+  padding: 0 22px;
+  border: 1px solid #63240e;
+  border-radius: 999px;
+  background: transparent;
+  color: #63240e;
+  font: 14px Arial, sans-serif;
+  cursor: pointer;
+}
+
+.botonSecundario:hover:not(:disabled) {
+  background: rgba(99, 36, 14, 0.08);
+}
+
+.botonSecundario:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
