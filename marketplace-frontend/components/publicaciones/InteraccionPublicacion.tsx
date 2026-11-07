@@ -26,8 +26,8 @@ function mensajeDeError(cause: unknown, porDefecto: string): string {
 
 // "Me gusta" y comentarios de una publicación. Cada acción se ofrece según los
 // permisos del rol del usuario, los mismos que exige el backend; un invitado
-// puede leer los comentarios y se lo invita a iniciar sesión. La tienda que
-// publicó, por su vínculo y no por rol, puede borrar cualquier comentario.
+// puede leer los comentarios y se lo invita a iniciar sesión. Quien gestiona la
+// tienda que publicó puede borrar cualquier comentario, si su rol tiene el permiso.
 export default function InteraccionPublicacion({ publicacion }: { publicacion: Publicacion }) {
   const idCampo = useId();
   const haySesion = useHaySesion();
@@ -51,7 +51,7 @@ export default function InteraccionPublicacion({ publicacion }: { publicacion: P
   const puedeAlternarReaccion = permisos.includes(reaccionada ? "DELETE_REACCIONES" : "CREATE_REACCIONES");
   const puedeComentar = permisos.includes("CREATE_COMENTARIOS");
   const puedeEliminarPropios = permisos.includes("DELETE_COMENTARIOS");
-  const esMiTienda = sesion?.idTienda === publicacion.idTienda;
+  const puedeModerar = sesion?.idTienda === publicacion.idTienda && permisos.includes("DELETE_COMENTARIOS_TIENDA");
 
   async function alternarReaccion() {
     setReaccionando(true);
@@ -121,7 +121,7 @@ export default function InteraccionPublicacion({ publicacion }: { publicacion: P
     setEliminando(comentario.id);
     setError("");
     try {
-      await (esMiTienda ? moderarComentario(publicacion.id, comentario.id) : eliminarComentario(comentario.id));
+      await (puedeModerar ? moderarComentario(publicacion.id, comentario.id) : eliminarComentario(comentario.id));
       setComentarios((actuales) => actuales?.filter((otro) => otro.id !== comentario.id) ?? null);
       setCantidadComentarios((actual) => Math.max(0, actual - 1));
     } catch (cause) {
@@ -199,7 +199,7 @@ export default function InteraccionPublicacion({ publicacion }: { publicacion: P
                   <div className={styles.comentarioCabecera}>
                     <strong>{comentario.nombreUsuario}</strong>
                     <time dateTime={comentario.createdAt}>{formatearFechaHora(comentario.createdAt)}</time>
-                    {(esMiTienda || (comentario.idUsuario === sesion?.id && puedeEliminarPropios)) && (
+                    {(puedeModerar || (comentario.idUsuario === sesion?.id && puedeEliminarPropios)) && (
                       <button
                         type="button"
                         className={styles.eliminarComentario}

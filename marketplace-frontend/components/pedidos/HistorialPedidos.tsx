@@ -5,7 +5,9 @@ import { useCallback, useEffect, useState } from "react";
 import styles from "@/components/admin/admin.module.css";
 import EstadoPedidoBadge from "@/components/pedidos/EstadoPedidoBadge";
 import ReferenciaEntrega from "@/components/pedidos/ReferenciaEntrega";
+import ConPermiso from "@/components/auth/ConPermiso";
 import { confirmar } from "@/components/dialogos/Dialogos";
+import { ACCESO } from "@/lib/access";
 import { ApiError } from "@/lib/api";
 import { formatearPrecio } from "@/lib/carrito";
 import {
@@ -160,14 +162,16 @@ export default function HistorialPedidos({ onVolver }: { onVolver?: () => void }
                     Total: <strong>{formatearPrecio(pedido.total)}</strong>
                   </span>
                   {puedeCancelarCliente(pedido.estado) && (
-                    <button
-                      type="button"
-                      className={`${styles.linkAction} ${styles.linkActionDanger}`}
-                      onClick={() => cancelar(pedido)}
-                      disabled={cancelando !== null}
-                    >
-                      {cancelando === pedido.id ? "Cancelando…" : "Cancelar pedido"}
-                    </button>
+                    <ConPermiso permisos={ACCESO.cancelarMisCompras}>
+                      <button
+                        type="button"
+                        className={`${styles.linkAction} ${styles.linkActionDanger}`}
+                        onClick={() => cancelar(pedido)}
+                        disabled={cancelando !== null}
+                      >
+                        {cancelando === pedido.id ? "Cancelando…" : "Cancelar pedido"}
+                      </button>
+                    </ConPermiso>
                   )}
                 </div>
               </li>

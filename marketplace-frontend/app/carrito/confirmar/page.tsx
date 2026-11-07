@@ -18,6 +18,8 @@ import { confirmar as pedirConfirmacion } from "@/components/dialogos/Dialogos";
 import UbicacionFields from "@/components/auth/UbicacionFields";
 import BotonInicio from "@/components/catalogo/BotonInicio";
 import SelectorPuntoEntrega from "@/components/mapa/SelectorPuntoEntrega";
+import { useSesion } from "@/components/auth/SesionProvider";
+import { ACCESO, cumplePermisos } from "@/lib/access";
 import { useHaySesion } from "@/lib/auth";
 import { LARGO_MAXIMO_REFERENCIA, armarReferencia, type Punto } from "@/lib/mapa";
 import {
@@ -42,7 +44,12 @@ function texto(datos: FormData, campo: string): string {
 export default function ConfirmarCompraPage() {
   const router = useRouter();
   const haySesion = useHaySesion();
+  const { sesion } = useSesion();
   const { items } = useCarrito();
+
+  // Sin sesión compra como invitado; con sesión depende del rol.
+  const puedeComprar = !sesion || cumplePermisos(sesion.permisos, ACCESO.comprar);
+  const puedeCancelar = sesion !== null && cumplePermisos(sesion.permisos, ACCESO.cancelarMisCompras);
 
   // Lista de productos (ids) cuyo stock ya se consultó en el servidor.
   const [verificados, setVerificados] = useState<string | null>(null);
@@ -173,7 +180,7 @@ export default function ConfirmarCompraPage() {
 
   async function confirmar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
-    if (enviando || sinStockSuficiente.length > 0 || incluidos.length === 0 || cargandoDatosPago || haySinDatosPago) return;
+    if (!puedeComprar || enviando || sinStockSuficiente.length > 0 || incluidos.length === 0 || cargandoDatosPago || haySinDatosPago) return;
 
     const sinComprobante = tiendasIncluidas.find(({ idTienda }) => !comprobantes[idTienda]);
     if (sinComprobante) {
@@ -264,7 +271,7 @@ export default function ConfirmarCompraPage() {
                     Pedido N.º {pedido.numero} en {pedido.nombreTienda}: {formatearPrecio(pedido.total)}
                     {pedido.estado === "CANCELADO" && <strong> · Cancelado</strong>}
                   </span>
-                  {haySesion === true && pedido.estado === "PENDIENTE" && (
+                  {puedeCancelar && pedido.estado === "PENDIENTE" && (
                     <button
                       type="button"
                       className={styles.botonSecundario}
@@ -564,6 +571,7 @@ export default function ConfirmarCompraPage() {
                 type="submit"
                 className={styles.botonPrincipal}
                 disabled={
+                  !puedeComprar ||
                   enviando ||
                   verificando ||
                   haySesion === undefined ||
@@ -588,6 +596,7 @@ export default function ConfirmarCompraPage() {
                   Hay productos sin stock suficiente. Quitalos del carrito para poder confirmar.
                 </p>
               )}
+              {!puedeComprar && <p className={styles.alerta}>Tu rol no tiene permiso para realizar compras.</p>}
             </form>
           </div>
         )}

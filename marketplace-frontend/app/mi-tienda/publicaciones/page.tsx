@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import styles from "@/components/admin/admin.module.css";
+import ConPermiso from "@/components/auth/ConPermiso";
 import { confirmar } from "@/components/dialogos/Dialogos";
+import { ACCESO } from "@/lib/access";
 import miTiendaStyles from "@/components/mi-tienda/miTienda.module.css";
 import { ApiError } from "@/lib/api";
 import { formatearFechaHora } from "@/lib/pedidos";
@@ -73,9 +75,11 @@ export default function MisPublicacionesPage() {
     <div className={styles.card}>
       <div className={styles.sectionHeader}>
         <h2 className={styles.title}>Mis publicaciones</h2>
-        <Link href="/mi-tienda/publicaciones/nuevo" className={styles.buttonPrimary}>
-          + Nueva publicación
-        </Link>
+        <ConPermiso permisos={ACCESO.crearMisPublicaciones}>
+          <Link href="/mi-tienda/publicaciones/nuevo" className={styles.buttonPrimary}>
+            + Nueva publicación
+          </Link>
+        </ConPermiso>
       </div>
 
       {error && (
@@ -142,17 +146,21 @@ export default function MisPublicacionesPage() {
                   </td>
                   <td>
                     <div className={styles.rowActions}>
-                      <Link href={`/mi-tienda/publicaciones/${publicacion.id}/editar`} className={styles.linkAction}>
-                        Editar
-                      </Link>
-                      <button
-                        type="button"
-                        disabled={eliminando !== null}
-                        onClick={() => void eliminar(publicacion)}
-                        className={`${styles.linkAction} ${styles.linkActionDanger}`}
-                      >
-                        {eliminando === publicacion.id ? "Eliminando…" : "Eliminar"}
-                      </button>
+                      <ConPermiso permisos={ACCESO.editarMisPublicaciones}>
+                        <Link href={`/mi-tienda/publicaciones/${publicacion.id}/editar`} className={styles.linkAction}>
+                          Editar
+                        </Link>
+                      </ConPermiso>
+                      <ConPermiso permisos={ACCESO.eliminarMisPublicaciones}>
+                        <button
+                          type="button"
+                          disabled={eliminando !== null}
+                          onClick={() => void eliminar(publicacion)}
+                          className={`${styles.linkAction} ${styles.linkActionDanger}`}
+                        >
+                          {eliminando === publicacion.id ? "Eliminando…" : "Eliminar"}
+                        </button>
+                      </ConPermiso>
                     </div>
                   </td>
                 </tr>

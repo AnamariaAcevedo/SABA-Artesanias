@@ -6,15 +6,23 @@ import UbicacionSelects from "@/components/admin/usuarios/UbicacionSelects";
 import ContactosTienda from "@/components/mi-tienda/ContactosTienda";
 import miTiendaStyles from "@/components/mi-tienda/miTienda.module.css";
 import perfilStyles from "@/app/perfil/perfil.module.css";
+import { useSesion } from "@/components/auth/SesionProvider";
+import { ACCESO, cumplePermisos } from "@/lib/access";
 import { ApiError, apiFetch } from "@/lib/api";
 import { ubicacionTienda, type MiTienda, type MiTiendaUpdateInput } from "@/types/miTienda";
 
 export default function DatosTiendaPage() {
+  const { sesion } = useSesion();
+  const permisos = sesion?.permisos ?? [];
+  const veTienda = cumplePermisos(permisos, ACCESO.verMiTienda);
+  const puedeEditar = cumplePermisos(permisos, ACCESO.editarMiTienda);
+
   const [tienda, setTienda] = useState<MiTienda | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(veTienda);
   const [error, setError] = useState("");
 
   useEffect(() => {
+    if (!veTienda) return;
     let cancelado = false;
     async function cargarTienda() {
       try {
@@ -30,7 +38,7 @@ export default function DatosTiendaPage() {
     return () => {
       cancelado = true;
     };
-  }, []);
+  }, [veTienda]);
 
   if (loading) return <p className={styles.notice}>Cargando datos de la tienda…</p>;
   if (error) {
@@ -40,12 +48,20 @@ export default function DatosTiendaPage() {
       </p>
     );
   }
-  if (!tienda) return null;
 
   return (
     <div className={miTiendaStyles.secciones}>
-      <DatosTiendaForm tienda={tienda} onGuardado={setTienda} />
-      <ContactosTienda />
+      {tienda && puedeEditar && <DatosTiendaForm tienda={tienda} onGuardado={setTienda} />}
+      {tienda && !puedeEditar && (
+        <div className={styles.card}>
+          <h2 className={styles.pageTitle}>{tienda.nombre}</h2>
+          <p>{tienda.descripcion}</p>
+          <p className={miTiendaStyles.ayuda}>
+            {tienda.calle} · {ubicacionTienda(tienda)}
+          </p>
+        </div>
+      )}
+      {cumplePermisos(permisos, ACCESO.verMisContactos) && <ContactosTienda />}
     </div>
   );
 }

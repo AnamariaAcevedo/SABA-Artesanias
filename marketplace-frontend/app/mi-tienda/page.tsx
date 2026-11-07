@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import styles from "@/components/admin/admin.module.css";
 import resumenStyles from "@/components/mi-tienda/resumenTienda.module.css";
 import { useSesion } from "@/components/auth/SesionProvider";
+import { ACCESO, cumplePermisos } from "@/lib/access";
 import { ApiError, apiFetchConPaginacion } from "@/lib/api";
 import type { Producto } from "@/types/Producto";
 
@@ -18,8 +19,10 @@ export default function MiTiendaInicioPage() {
   const { sesion } = useSesion();
   const [resumen, setResumen] = useState<Resumen | null>(null);
   const [error, setError] = useState("");
+  const veProductos = cumplePermisos(sesion?.permisos ?? [], ACCESO.verMisProductos);
 
   useEffect(() => {
+    if (!veProductos) return;
     let cancelado = false;
     async function cargarResumen() {
       try {
@@ -38,7 +41,7 @@ export default function MiTiendaInicioPage() {
     return () => {
       cancelado = true;
     };
-  }, []);
+  }, [veProductos]);
 
   const valor = (numero: number | undefined) => (numero === undefined ? "…" : numero.toLocaleString("es-PY"));
 
@@ -62,7 +65,7 @@ export default function MiTiendaInicioPage() {
         <p role="alert" className={`${styles.error} ${resumenStyles.spaced}`}>
           {error}
         </p>
-      ) : (
+      ) : !veProductos ? null : (
         <div className={resumenStyles.stats} aria-busy={!resumen}>
           <div className={resumenStyles.stat}>
             <span className={resumenStyles.statValue}>{valor(resumen?.productos)}</span>

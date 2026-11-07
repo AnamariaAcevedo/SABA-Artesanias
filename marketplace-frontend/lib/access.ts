@@ -47,6 +47,30 @@ export const ACCESO = {
 
     verPedidos: ["LIST_PEDIDOS"],
 
+    // Datos propios: actúan sobre la tienda del usuario o sobre sus compras. Los
+    // de arriba son de administración y actúan sobre los datos de todas las tiendas.
+    verMiTienda: ["LIST_MI_TIENDA"],
+    editarMiTienda: ["UPDATE_MI_TIENDA"],
+    verMisProductos: ["LIST_MIS_PRODUCTOS"],
+    crearMisProductos: ["CREATE_MIS_PRODUCTOS"],
+    editarMisProductos: ["UPDATE_MIS_PRODUCTOS"],
+    eliminarMisProductos: ["DELETE_MIS_PRODUCTOS"],
+    verMisContactos: ["LIST_MIS_CONTACTOS"],
+    crearMisContactos: ["CREATE_MIS_CONTACTOS"],
+    editarMisContactos: ["UPDATE_MIS_CONTACTOS"],
+    eliminarMisContactos: ["DELETE_MIS_CONTACTOS"],
+    verPedidosTienda: ["LIST_PEDIDOS_TIENDA"],
+    gestionarPedidosTienda: ["UPDATE_PEDIDOS_TIENDA"],
+    verMisPublicaciones: ["LIST_MIS_PUBLICACIONES"],
+    crearMisPublicaciones: ["CREATE_MIS_PUBLICACIONES"],
+    editarMisPublicaciones: ["UPDATE_MIS_PUBLICACIONES"],
+    eliminarMisPublicaciones: ["DELETE_MIS_PUBLICACIONES"],
+    moderarComentarios: ["DELETE_COMENTARIOS_TIENDA"],
+    comprar: ["CREATE_MIS_COMPRAS"],
+    verMisCompras: ["LIST_MIS_COMPRAS"],
+    cancelarMisCompras: ["UPDATE_MIS_COMPRAS"],
+    verMiSolicitud: ["LIST_MI_SOLICITUD"],
+
     administracionGeneral: [
         "LIST_PRODUCTOS", "CREATE_PRODUCTOS", "UPDATE_PRODUCTOS", "DELETE_PRODUCTOS",
         "LIST_TIENDAS", "CREATE_TIENDAS", "UPDATE_TIENDAS", "DELETE_TIENDAS",

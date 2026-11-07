@@ -73,8 +73,8 @@ import java.util.Set;
 // Implementación de la gestión de la propia tienda. La tienda se obtiene siempre
 // del vinculo del usuario autenticado (tienda_usuario), nunca de un id recibido,
 // y cada producto, imagen o contacto se verifica contra esa tienda antes de
-// delegar en los servicios existentes. El dueño (PRINCIPAL) gestiona todo; el
-// colaborador (SECUNDARIO) solo productos e imagenes.
+// delegar en los servicios existentes. Que puede hacer cada usuario lo deciden los
+// permisos de su rol, en MiTiendaController; aca solo importa a que tienda pertenece.
 public class MiTiendaServiceImpl implements MiTiendaService {
 
     private static final Set<String> TIPOS_IMAGEN_PERMITIDOS = Set.of("image/png", "image/jpeg");
@@ -115,7 +115,8 @@ public class MiTiendaServiceImpl implements MiTiendaService {
     @Override
     @Transactional
     public MiTiendaResponseDto actualizarTienda(MiTiendaUpdateRequestDto request) {
-        Tienda tienda = tiendaDelDueno();
+        TiendaUsuario vinculo = vinculoActual();
+        Tienda tienda = vinculo.getTienda();
 
         boolean hayEdificio = request.getNombreEdificio() != null && !request.getNombreEdificio().isBlank();
 
@@ -154,7 +155,7 @@ public class MiTiendaServiceImpl implements MiTiendaService {
         tienda.setNroCuenta(completarNroCuenta(request.getNroCuenta()));
         tienda.setAliasCuenta(request.getAliasCuenta() == null || request.getAliasCuenta().isBlank() ? null : request.getAliasCuenta().trim());
 
-        return toResponse(tiendaRepository.save(tienda), TipoVinculoTienda.PRINCIPAL);
+        return toResponse(tiendaRepository.save(tienda), vinculo.getTipo());
     }
 
     // El numero de cuenta local tiene 9 digitos: si es mas corto, se completa con ceros a la izquierda.
@@ -302,7 +303,7 @@ public class MiTiendaServiceImpl implements MiTiendaService {
     @Override
     public List<ContactoResponseDto> listarContactos() {
         ContactoFilterDto filtro = new ContactoFilterDto();
-        filtro.setIdTienda(tiendaDelDueno().getId());
+        filtro.setIdTienda(tiendaActual().getId());
         filtro.setPage(1);
         filtro.setPerPage(100);
         return contactoService.findAll(filtro).data();
@@ -316,7 +317,7 @@ public class MiTiendaServiceImpl implements MiTiendaService {
         datos.setUsuario(request.getUsuario().trim());
         datos.setNroTelefono(normalizarTelefono(request.getNroTelefono()));
         datos.setIdTipoContacto(request.getIdTipoContacto());
-        datos.setIdTienda(tiendaDelDueno().getId());
+        datos.setIdTienda(tiendaActual().getId());
         return contactoService.create(datos);
     }
 
@@ -401,7 +402,7 @@ public class MiTiendaServiceImpl implements MiTiendaService {
     @Override
     @Transactional
     public CuponResponseDto crearCupon(CuponRequestDto request) {
-        return cuponService.crear(tiendaDelDueno().getId(), request);
+        return cuponService.crear(tiendaActual().getId(), request);
     }
 
     @Override
@@ -417,7 +418,7 @@ public class MiTiendaServiceImpl implements MiTiendaService {
     @Override
     @Transactional
     public void eliminarCupon(Long idCupon) {
-        cuponService.eliminarDeTienda(tiendaDelDueno().getId(), idCupon);
+        cuponService.eliminarDeTienda(tiendaActual().getId(), idCupon);
     }
 
     // --------------------------------------------------------- Publicaciones
@@ -509,12 +510,8 @@ public class MiTiendaServiceImpl implements MiTiendaService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "No gestionás ninguna tienda"));
     }
 
-    private Tienda tiendaDelDueno() {
-        TiendaUsuario vinculo = vinculoActual();
-        if (vinculo.getTipo() != TipoVinculoTienda.PRINCIPAL) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Solo el dueño de la tienda puede realizar esta acción");
-        }
-        return vinculo.getTienda();
+    private Tienda tiendaActual() {
+        return vinculoActual().getTienda();
     }
 
     private Producto productoDeMiTienda(Long idProducto) {
@@ -525,7 +522,7 @@ public class MiTiendaServiceImpl implements MiTiendaService {
     }
 
     private Contacto contactoDeMiTienda(Long idContacto) {
-        Long idTienda = tiendaDelDueno().getId();
+        Long idTienda = tiendaActual().getId();
         return contactoRepository.findById(idContacto)
                 .filter(contacto -> contacto.getTienda().getId().equals(idTienda))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Contacto no encontrado"));

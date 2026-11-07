@@ -6,13 +6,14 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import styles from "@/components/admin/admin.module.css";
 import UbicacionSelects from "@/components/admin/usuarios/UbicacionSelects";
 import AvatarUsuario from "@/components/auth/AvatarUsuario";
+import ConPermiso from "@/components/auth/ConPermiso";
 import MenuUsuario from "@/components/auth/MenuUsuario";
 import BotonInicio from "@/components/catalogo/BotonInicio";
 import HistorialPedidos from "@/components/pedidos/HistorialPedidos";
 import { confirmar } from "@/components/dialogos/Dialogos";
 import { useSesion } from "@/components/auth/SesionProvider";
 import { ApiError, apiFetch } from "@/lib/api";
-import { puedeEntrarAlPanel } from "@/lib/access";
+import { ACCESO, cumplePermisos, puedeEntrarAlPanel } from "@/lib/access";
 import {
   etiquetaDireccionPerfil,
   etiquetaNumeroPerfil,
@@ -80,7 +81,7 @@ export default function PerfilPage() {
           <PerfilContenido
             key={sesion.id}
             accedeAlPanel={accedeAlPanel}
-            puedeSolicitarVendedor={sesion.idTienda === null && !accedeAlPanel}
+            puedeSolicitarVendedor={sesion.idTienda === null && !accedeAlPanel && cumplePermisos(sesion.permisos, ACCESO.verMiSolicitud)}
           />
         </div>
       </main>
@@ -157,14 +158,16 @@ function PerfilContenido({
             >
               Editar perfil
             </button>
-            <button
-              type="button"
-              className={claseBoton("pedidos")}
-              aria-pressed={vista === "pedidos"}
-              onClick={() => abrir("pedidos")}
-            >
-              Mis pedidos
-            </button>
+            <ConPermiso permisos={ACCESO.verMisCompras}>
+              <button
+                type="button"
+                className={claseBoton("pedidos")}
+                aria-pressed={vista === "pedidos"}
+                onClick={() => abrir("pedidos")}
+              >
+                Mis pedidos
+              </button>
+            </ConPermiso>
             <button
               type="button"
               className={claseBoton("contrasenha")}

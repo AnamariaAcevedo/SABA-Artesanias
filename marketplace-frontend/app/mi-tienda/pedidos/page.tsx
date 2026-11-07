@@ -6,7 +6,9 @@ import pedidosStyles from "@/components/pedidos/pedidos.module.css";
 import ComprobanteDialog from "@/components/pedidos/ComprobanteDialog";
 import EstadoPedidoBadge from "@/components/pedidos/EstadoPedidoBadge";
 import ReferenciaEntrega from "@/components/pedidos/ReferenciaEntrega";
+import { useSesion } from "@/components/auth/SesionProvider";
 import { confirmar } from "@/components/dialogos/Dialogos";
+import { ACCESO, cumplePermisos } from "@/lib/access";
 import { ApiError } from "@/lib/api";
 import { formatearPrecio } from "@/lib/carrito";
 import {
@@ -26,6 +28,8 @@ import type { Pedido } from "@/types/pedido";
 // Pedidos recibidos por la tienda, del más nuevo al más viejo. Cada fila ofrece
 // solo las transiciones válidas para su estado; el backend vuelve a validarlas.
 export default function PedidosTiendaPage() {
+  const { sesion } = useSesion();
+  const puedeGestionar = cumplePermisos(sesion?.permisos ?? [], ACCESO.gestionarPedidosTienda);
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [page, setPage] = useState(1);
@@ -187,7 +191,7 @@ export default function PedidosTiendaPage() {
             )}
             {!loading &&
               pedidos.map((pedido) => {
-                const acciones = accionesDisponibles(pedido.estado);
+                const acciones = puedeGestionar ? accionesDisponibles(pedido.estado) : [];
                 return (
                   <tr key={pedido.id}>
                     <td>
@@ -297,6 +301,7 @@ export default function PedidosTiendaPage() {
           key={pedidoConComprobante.id}
           pedido={pedidoConComprobante}
           procesando={procesando?.id === pedidoConComprobante.id ? procesando.accion : null}
+          puedeGestionar={puedeGestionar}
           // Se cierra al terminar para que un error quede a la vista en la página.
           onAccion={(accion) => void aplicar(pedidoConComprobante, accion, () => setPedidoConComprobante(null))}
           onCerrar={() => setPedidoConComprobante(null)}
