@@ -3,13 +3,21 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import styles from "@/components/admin/admin.module.css";
 import miTiendaStyles from "@/components/mi-tienda/miTienda.module.css";
+import { useSesion } from "@/components/auth/SesionProvider";
 import { confirmar } from "@/components/dialogos/Dialogos";
+import { ACCESO, cumplePermisos } from "@/lib/access";
 import { ApiError, apiFetch, apiFetchConPaginacion } from "@/lib/api";
 import type { Contacto, MiContactoInput, TipoContacto } from "@/types/miTienda";
 
 // Sección de contactos de la tienda (WhatsApp, Instagram, etc.), que se muestra
-// debajo de los datos de la tienda. Solo para el dueño.
+// debajo de los datos de la tienda. Cada acción se ofrece según el rol del usuario.
 export default function ContactosTienda() {
+  const { sesion } = useSesion();
+  const permisos = sesion?.permisos ?? [];
+  const puedeCrear = cumplePermisos(permisos, ACCESO.crearMisContactos);
+  const puedeEditar = cumplePermisos(permisos, ACCESO.editarMisContactos);
+  const puedeEliminar = cumplePermisos(permisos, ACCESO.eliminarMisContactos);
+
   const [contactos, setContactos] = useState<Contacto[]>([]);
   const [tipos, setTipos] = useState<TipoContacto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -105,17 +113,21 @@ export default function ContactosTienda() {
                 </small>
               </div>
               <div className={styles.rowActions}>
-                <button type="button" className={styles.linkAction} onClick={() => setEditando(contacto)}>
-                  Editar
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.linkAction} ${styles.linkActionDanger}`}
-                  disabled={eliminando === contacto.id}
-                  onClick={() => eliminar(contacto)}
-                >
-                  {eliminando === contacto.id ? "Eliminando…" : "Eliminar"}
-                </button>
+                {puedeEditar && (
+                  <button type="button" className={styles.linkAction} onClick={() => setEditando(contacto)}>
+                    Editar
+                  </button>
+                )}
+                {puedeEliminar && (
+                  <button
+                    type="button"
+                    className={`${styles.linkAction} ${styles.linkActionDanger}`}
+                    disabled={eliminando === contacto.id}
+                    onClick={() => eliminar(contacto)}
+                  >
+                    {eliminando === contacto.id ? "Eliminando…" : "Eliminar"}
+                  </button>
+                )}
               </div>
             </li>
           ))}
@@ -123,13 +135,15 @@ export default function ContactosTienda() {
       )}
 
       {/* `key` reinicia el formulario al cambiar entre "agregar" y "editar". */}
-      <ContactoForm
-        key={editando?.id ?? "nuevo"}
-        contacto={editando}
-        tipos={tipos}
-        onGuardado={guardado}
-        onCancelar={() => setEditando(null)}
-      />
+      {(editando || puedeCrear) && (
+        <ContactoForm
+          key={editando?.id ?? "nuevo"}
+          contacto={editando}
+          tipos={tipos}
+          onGuardado={guardado}
+          onCancelar={() => setEditando(null)}
+        />
+      )}
     </div>
   );
 }

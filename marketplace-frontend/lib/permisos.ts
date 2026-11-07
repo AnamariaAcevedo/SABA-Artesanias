@@ -27,6 +27,12 @@ const modulos: Modulo[] = [
     { id: "solicitudes-vendedor", nombre: "Solicitudes de vendedor", recursos: ["SOLICITUDES_VENDEDOR"] },
     { id: "pedidos", nombre: "Pedidos", recursos: ["PEDIDOS"] },
     { id: "publicaciones", nombre: "Publicaciones", recursos: ["ARCHIVOS_PUBLICACION", "COMENTARIOS", "REACCIONES"] },
+    {
+        id: "mi-tienda",
+        nombre: "Mi tienda (solo la tienda del usuario)",
+        recursos: ["MI_TIENDA", "MIS_PRODUCTOS", "MIS_CONTACTOS", "PEDIDOS_TIENDA", "MIS_CUPONES", "MIS_PUBLICACIONES", "COMENTARIOS_TIENDA"],
+    },
+    { id: "cuenta", nombre: "Cuenta del usuario", recursos: ["MIS_COMPRAS", "MI_SOLICITUD"] },
 ];
 
 const acciones: Record<string, string> = {
@@ -56,6 +62,15 @@ const recursos: Record<string, string> = {
     ARCHIVOS_PUBLICACION: "archivos de publicaciones",
     COMENTARIOS: "comentarios",
     REACCIONES: "reacciones",
+    MI_TIENDA: "datos de su tienda",
+    MIS_PRODUCTOS: "productos de su tienda",
+    MIS_CONTACTOS: "contactos de su tienda",
+    PEDIDOS_TIENDA: "pedidos de su tienda",
+    MIS_CUPONES: "cupones de su tienda",
+    MIS_PUBLICACIONES: "publicaciones de su tienda",
+    COMENTARIOS_TIENDA: "comentarios en publicaciones de su tienda",
+    MIS_COMPRAS: "sus compras",
+    MI_SOLICITUD: "su solicitud de vendedor",
 };
 
 // Estos permisos deben retirarse mediante la migración del backend.

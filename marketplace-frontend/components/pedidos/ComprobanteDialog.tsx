@@ -17,13 +17,14 @@ const EXTENSIONES: Record<string, string> = {
 interface ComprobanteDialogProps {
   pedido: Pedido;
   procesando: AccionTienda | null;
+  puedeGestionar: boolean;
   onAccion: (accion: AccionTienda) => void;
   onCerrar: () => void;
 }
 
 // Muestra el comprobante de un pedido junto a su total, para que la tienda pueda
 // compararlos y, si sigue pendiente, confirmarlo o cancelarlo desde acá mismo.
-export default function ComprobanteDialog({ pedido, procesando, onAccion, onCerrar }: ComprobanteDialogProps) {
+export default function ComprobanteDialog({ pedido, procesando, puedeGestionar, onAccion, onCerrar }: ComprobanteDialogProps) {
   const dialogo = useRef<HTMLDialogElement>(null);
   const [archivo, setArchivo] = useState<{ url: string; tipo: string } | null>(null);
   const [error, setError] = useState("");
@@ -98,7 +99,7 @@ export default function ComprobanteDialog({ pedido, procesando, onAccion, onCerr
             Descargar
           </a>
         )}
-        {pedido.estado === "PENDIENTE" && (
+        {puedeGestionar && pedido.estado === "PENDIENTE" && (
           <>
             <button
               type="button"

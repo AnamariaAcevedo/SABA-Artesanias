@@ -8,6 +8,7 @@ import { useSesion } from "@/components/auth/SesionProvider";
 import UbicacionFields from "@/components/auth/UbicacionFields";
 import { confirmar } from "@/components/dialogos/Dialogos";
 import styles from "@/components/auth/auth.module.css";
+import { ACCESO, cumplePermisos } from "@/lib/access";
 import { ApiError, apiFetch } from "@/lib/api";
 
 type EstadoSolicitud = "PENDIENTE" | "ACEPTADA" | "RECHAZADA";
@@ -40,8 +41,10 @@ export default function SolicitarVendedorPage() {
   const [ahora, setAhora] = useState(() => Date.now());
   const envioEnCurso = useRef(false);
 
+  const puedeSolicitar = sesion !== null && cumplePermisos(sesion.permisos, ACCESO.verMiSolicitud);
+
   useEffect(() => {
-    if (!sesion || sesion.idTienda !== null) return;
+    if (!sesion || sesion.idTienda !== null || !puedeSolicitar) return;
 
     let vigente = true;
     apiFetch<SolicitudVendedor>("/solicitudes-vendedor/mia")
@@ -62,7 +65,7 @@ export default function SolicitarVendedorPage() {
     return () => {
       vigente = false;
     };
-  }, [sesion]);
+  }, [sesion, puedeSolicitar]);
 
   const limiteEliminacion = solicitud?.createdAt
     ? new Date(solicitud.createdAt).getTime() + 24 * 60 * 60 * 1000
@@ -174,7 +177,7 @@ export default function SolicitarVendedorPage() {
     }
   }
 
-  if (cargando || (sesion && sesion.idTienda === null && consultando)) {
+  if (cargando || (sesion && sesion.idTienda === null && puedeSolicitar && consultando)) {
     return <AuthShell inicioHref="/home" title="Solicitar ser vendedor"><p className={styles.notice} role="status">Verificando tu solicitud…</p></AuthShell>;
   }
 
@@ -197,6 +200,18 @@ export default function SolicitarVendedorPage() {
         <div className={styles.formActions}>
           <Link href="/home" className={styles.cancelLink}>Volver al catálogo</Link>
           <Link href="/mi-tienda" className={styles.submit}>Ir a mi tienda</Link>
+        </div>
+      </AuthShell>
+    );
+  }
+
+  if (!puedeSolicitar) {
+    return (
+      <AuthShell inicioHref="/home" title="Solicitar ser vendedor">
+        <h2 className={styles.heading}>No podés solicitar ser vendedor</h2>
+        <p className={styles.notice}>Tu rol no tiene permiso para enviar esta solicitud.</p>
+        <div className={styles.formActions}>
+          <Link href="/home" className={styles.cancelLink}>Volver al catálogo</Link>
         </div>
       </AuthShell>
     );

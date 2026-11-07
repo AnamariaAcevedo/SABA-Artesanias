@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import styles from "@/components/admin/admin.module.css";
 import miTiendaStyles from "@/components/mi-tienda/miTienda.module.css";
+import ConPermiso from "@/components/auth/ConPermiso";
 import { confirmar } from "@/components/dialogos/Dialogos";
+import { ACCESO } from "@/lib/access";
 import { ApiError, apiFetch, apiFetchConPaginacion } from "@/lib/api";
 import type { Pagination } from "@/types/api";
 import type { Producto } from "@/types/Producto";
@@ -110,9 +112,11 @@ export default function MisProductosPage() {
     <div className={styles.card}>
       <div className={styles.sectionHeader}>
         <h2 className={styles.title}>Mis productos</h2>
-        <Link href="/mi-tienda/productos/nuevo" className={styles.buttonPrimary}>
-          + Nuevo producto
-        </Link>
+        <ConPermiso permisos={ACCESO.crearMisProductos}>
+          <Link href="/mi-tienda/productos/nuevo" className={styles.buttonPrimary}>
+            + Nuevo producto
+          </Link>
+        </ConPermiso>
       </div>
 
       <form onSubmit={buscar} className={styles.toolbar}>
@@ -197,17 +201,21 @@ export default function MisProductosPage() {
                   </td>
                   <td>
                     <div className={styles.rowActions}>
-                      <Link href={`/mi-tienda/productos/${producto.id}/editar`} className={styles.linkAction}>
-                        Editar
-                      </Link>
-                      <button
-                        type="button"
-                        disabled={eliminando === producto.id}
-                        onClick={() => eliminar(producto)}
-                        className={`${styles.linkAction} ${styles.linkActionDanger}`}
-                      >
-                        {eliminando === producto.id ? "Eliminando…" : "Eliminar"}
-                      </button>
+                      <ConPermiso permisos={ACCESO.editarMisProductos}>
+                        <Link href={`/mi-tienda/productos/${producto.id}/editar`} className={styles.linkAction}>
+                          Editar
+                        </Link>
+                      </ConPermiso>
+                      <ConPermiso permisos={ACCESO.eliminarMisProductos}>
+                        <button
+                          type="button"
+                          disabled={eliminando === producto.id}
+                          onClick={() => eliminar(producto)}
+                          className={`${styles.linkAction} ${styles.linkActionDanger}`}
+                        >
+                          {eliminando === producto.id ? "Eliminando…" : "Eliminar"}
+                        </button>
+                      </ConPermiso>
                     </div>
                   </td>
                 </tr>
