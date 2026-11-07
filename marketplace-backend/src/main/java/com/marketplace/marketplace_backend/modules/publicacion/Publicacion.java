@@ -16,6 +16,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @Setter
@@ -42,4 +44,13 @@ public class Publicacion extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cupon_id")
     private Cupon cupon;
+
+    // Hasta cuando se muestra al publico. Null solo en publicaciones anteriores a esta
+    // columna, que siguen visibles: las nuevas siempre se crean con una duracion.
+    @Column(name = "fecha_expiracion")
+    private LocalDateTime fechaExpiracion;
+
+    public boolean estaVigente(LocalDateTime ahora) {
+        return fechaExpiracion == null || fechaExpiracion.isAfter(ahora);
+    }
 }

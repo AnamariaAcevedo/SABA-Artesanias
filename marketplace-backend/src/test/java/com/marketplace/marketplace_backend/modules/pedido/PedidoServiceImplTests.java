@@ -13,6 +13,8 @@ import com.marketplace.marketplace_backend.modules.tienda.TiendaRepository;
 import com.marketplace.marketplace_backend.modules.usuario.UsuarioRepository;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mock.web.MockMultipartFile;
@@ -26,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -182,6 +185,16 @@ class PedidoServiceImplTests {
 
         assertEquals(HttpStatus.NOT_FOUND, error.getStatusCode());
         assertEquals("Este pedido no tiene comprobante", error.getReason());
+    }
+
+    @Test
+    void administracionPuedeFiltrarLosPedidosPorTienda() {
+        when(pedidoRepository.findByTienda_IdOrderByIdDesc(eq(7L), any(Pageable.class)))
+                .thenReturn(Page.empty());
+
+        service.listarTodos(7L, 1, 10);
+
+        verify(pedidoRepository).findByTienda_IdOrderByIdDesc(eq(7L), any(Pageable.class));
     }
 
     private void prepararCompraDeInvitado() {

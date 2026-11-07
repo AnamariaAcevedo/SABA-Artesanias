@@ -240,6 +240,41 @@
   line-height: 1.4;
 }
 
+/* Productos / Publicaciones de la tienda */
+.secciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.seccion {
+  height: 36px;
+  padding: 0 22px;
+  border: 1px solid #63240e;
+  border-radius: 999px;
+  background: transparent;
+  color: #63240e;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.seccion:hover {
+  background: rgba(99, 36, 14, 0.08);
+}
+
+.seccion[aria-pressed="true"] {
+  background: #63240e;
+  color: #f7dfb9;
+}
+
+.seccion:focus-visible {
+  outline: 3px solid #63240e;
+  outline-offset: 2px;
+}
+
 @media (max-width: 700px) {
   .content {
     padding: 24px;

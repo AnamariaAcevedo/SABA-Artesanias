@@ -7,6 +7,7 @@ import com.marketplace.marketplace_backend.modules.archivopublicacion.ArchivoPub
 import com.marketplace.marketplace_backend.modules.archivopublicacion.dto.ArchivoPublicacionResponseDto;
 import com.marketplace.marketplace_backend.modules.barrio.Barrio;
 import com.marketplace.marketplace_backend.modules.barrio.BarrioRepository;
+import com.marketplace.marketplace_backend.modules.comentario.ComentarioService;
 import com.marketplace.marketplace_backend.modules.contacto.Contacto;
 import com.marketplace.marketplace_backend.modules.contacto.ContactoRepository;
 import com.marketplace.marketplace_backend.modules.contacto.ContactoService;
@@ -100,6 +101,7 @@ public class MiTiendaServiceImpl implements MiTiendaService {
     private final PublicacionRepository publicacionRepository;
     private final ArchivoPublicacionRepository archivoPublicacionRepository;
     private final ArchivoPublicacionService archivoPublicacionService;
+    private final ComentarioService comentarioService;
 
     // ---------------------------------------------------------------- Tienda
 
@@ -480,6 +482,13 @@ public class MiTiendaServiceImpl implements MiTiendaService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Archivo no encontrado"));
 
         archivoPublicacionService.delete(archivo.getId());
+    }
+
+    @Override
+    @Transactional
+    public void eliminarComentarioPublicacion(Long idPublicacion, Long idComentario) {
+        publicacionDeMiTienda(idPublicacion);
+        comentarioService.eliminarDePublicacion(idPublicacion, idComentario);
     }
 
     private Publicacion publicacionDeMiTienda(Long idPublicacion) {
