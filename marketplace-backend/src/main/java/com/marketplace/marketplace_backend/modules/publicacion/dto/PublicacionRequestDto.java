@@ -1,5 +1,7 @@
 package com.marketplace.marketplace_backend.modules.publicacion.dto;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -20,7 +22,14 @@ public class PublicacionRequestDto {
     private String titulo;
 
     @NotBlank(message = "El contenido no puede estar vacío")
+    @Size(max = 2000, message = "El contenido no puede superar los 2000 caracteres")
     private String contenido;
+
+    // Dias que va a estar disponible, contados desde que se guarda. Obligatorio al crear;
+    // al editar, null mantiene la fecha actual.
+    @Min(value = 1, message = "La publicación debe estar disponible al menos 1 día")
+    @Max(value = 365, message = "La publicación puede estar disponible hasta 365 días")
+    private Integer duracionDias;
 
     // Cupon que esta publicacion promociona (opcional, debe ser de la misma tienda).
     private Long idCupon;

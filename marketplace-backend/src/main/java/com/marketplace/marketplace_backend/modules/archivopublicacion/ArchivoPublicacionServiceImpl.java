@@ -21,6 +21,7 @@ import java.util.Set;
 public class ArchivoPublicacionServiceImpl implements ArchivoPublicacionService {
 
     private static final Set<String> TIPOS_PERMITIDOS = Set.of("image/png", "image/jpeg");
+    private static final int MAXIMO_POR_PUBLICACION = 10;
 
     private final ArchivoPublicacionRepository archivoPublicacionRepository;
     private final PublicacionRepository publicacionRepository;
@@ -39,6 +40,10 @@ public class ArchivoPublicacionServiceImpl implements ArchivoPublicacionService 
 
         Publicacion publicacion = publicacionRepository.findById(idPublicacion)
                 .orElseThrow(() -> new EntityNotFoundException("Publicación no encontrada"));
+
+        if (archivoPublicacionRepository.countByPublicacion_Id(idPublicacion) >= MAXIMO_POR_PUBLICACION) {
+            throw new IllegalArgumentException("Una publicación puede tener hasta " + MAXIMO_POR_PUBLICACION + " fotos");
+        }
 
         ArchivoPublicacion archivoPublicacion = new ArchivoPublicacion();
         archivoPublicacion.setContentType(contentType);

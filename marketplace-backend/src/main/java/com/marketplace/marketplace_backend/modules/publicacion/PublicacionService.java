@@ -19,7 +19,7 @@ public interface PublicacionService {
 
     void eliminarDeTienda(Long idTienda, Long id);
 
-    // Lectura publica (catalogo de publicaciones que ven los compradores)
+    // Lectura publica (canal que ven los compradores): solo publicaciones vigentes
     PagedResult<List<PublicacionResponseDto>> findAllPublicas(Long idTienda, int page, int perPage);
 
     PublicacionResponseDto obtenerPublica(Long id);

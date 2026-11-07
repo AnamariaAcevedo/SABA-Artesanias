@@ -1,0 +1,174 @@
+/* Canal de publicaciones: misma paleta y tipografía que el listado de tiendas. */
+
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.publicacion {
+  padding: 22px 26px;
+  background: rgba(244, 221, 186, 0.8);
+  border-radius: 20px;
+  color: #63240e;
+}
+
+.cabecera {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.avatar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid #b88b44;
+  border-radius: 50%;
+  background: #f4ddba;
+  color: #7a5b34;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 22px;
+  text-decoration: none;
+}
+
+.autor {
+  min-width: 0;
+}
+
+.autor a {
+  display: block;
+  color: #63240e;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 18px;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.autor a:hover {
+  text-decoration: underline;
+}
+
+.fecha {
+  display: block;
+  font-size: 12px;
+  color: #63240e;
+  opacity: 0.75;
+}
+
+.titulo {
+  margin: 0 0 6px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 22px;
+  font-weight: normal;
+  overflow-wrap: anywhere;
+}
+
+/* pre-wrap conserva los saltos de línea que escribió la tienda. */
+.texto {
+  margin: 0;
+  color: #5f4638;
+  font-size: 15px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.fotos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.fotos a {
+  display: block;
+  overflow: hidden;
+  border: 1px solid #b88b44;
+  border-radius: 12px;
+  background: #fff6e6;
+}
+
+.fotos a:focus-visible {
+  outline: 3px solid #63240e;
+  outline-offset: 2px;
+}
+
+.fotos img {
+  display: block;
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+}
+
+/* Una foto sola, o la última si la cantidad es impar, ocupa todo el ancho. */
+.fotos a:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+.fotos a:only-child img {
+  height: auto;
+  max-height: 460px;
+  object-fit: contain;
+}
+
+.vigencia {
+  display: block;
+  margin-top: 12px;
+  font-size: 12px;
+  color: #63240e;
+  opacity: 0.75;
+}
+
+.mensaje {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 20px;
+  color: #63240e;
+}
+
+.alerta {
+  margin: 0;
+  color: #a3261b;
+  font-size: 14px;
+}
+
+.verMas {
+  align-self: center;
+  height: 36px;
+  padding: 0 22px;
+  border: 1px solid #63240e;
+  border-radius: 999px;
+  background: transparent;
+  color: #63240e;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.verMas:hover:not(:disabled) {
+  background: rgba(99, 36, 14, 0.08);
+}
+
+.verMas:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+@media (max-width: 700px) {
+  .publicacion {
+    padding: 18px 20px;
+  }
+
+  .fotos img {
+    height: 150px;
+  }
+}

@@ -10,12 +10,13 @@ import BotonInicio from "@/components/catalogo/BotonInicio";
 import { useSesion } from "@/components/auth/SesionProvider";
 
 // Secciones de "Mi tienda". Los datos de la tienda (con sus contactos) son solo
-// para el dueño; el colaborador gestiona productos, imágenes y pedidos. El
-// backend vuelve a verificar el vínculo en cada operación.
+// para el dueño; el colaborador gestiona productos, imágenes, pedidos y
+// publicaciones. El backend vuelve a verificar el vínculo en cada operación.
 const secciones = [
   { href: "/mi-tienda", label: "Inicio", soloDueno: false },
   { href: "/mi-tienda/productos", label: "Productos", soloDueno: false },
   { href: "/mi-tienda/pedidos", label: "Pedidos", soloDueno: false },
+  { href: "/mi-tienda/publicaciones", label: "Publicaciones", soloDueno: false },
   { href: "/mi-tienda/datos", label: "Datos de la tienda", soloDueno: true },
 ];
 

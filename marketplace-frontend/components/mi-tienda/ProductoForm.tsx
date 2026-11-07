@@ -26,7 +26,7 @@ interface ProductoFormProps {
 }
 
 // Valida un archivo de imagen antes de subirlo (mismas reglas que el backend).
-function errorDeImagen(archivo: File): string | null {
+export function errorDeImagen(archivo: File): string | null {
   if (!TIPOS_IMAGEN.includes(archivo.type)) return `"${archivo.name}" no es PNG ni JPG.`;
   if (archivo.size > TAMANO_MAXIMO_IMAGEN) return `"${archivo.name}" supera los 5 MB.`;
   return null;
@@ -423,7 +423,7 @@ export default function ProductoForm({ modo, producto }: ProductoFormProps) {
 }
 
 // Vista previa local de una imagen todavía no subida (modo crear).
-function VistaPreviaImagen({
+export function VistaPreviaImagen({
   archivo,
   principal,
   deshabilitado,
