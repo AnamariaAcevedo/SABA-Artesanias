@@ -8,6 +8,8 @@ import java.util.List;
 
 // Acceso a datos de Producto: CRUD y búsquedas por nombre/tienda/subcategoria
 public interface ProductoRepository extends JpaRepository<Producto, Long> {
+    long countByCantidadDisponibleLessThanEqual(Integer cantidadDisponible);
+
     Page<Producto> findAllByOrderByIdAsc(Pageable pageable);
 
     Page<Producto> findByNombreContainingIgnoreCaseAndTienda_Id(

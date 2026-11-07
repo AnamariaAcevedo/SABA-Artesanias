@@ -8,6 +8,7 @@ import com.marketplace.marketplace_backend.modules.direccion.*;
 import com.marketplace.marketplace_backend.modules.categoria.*;
 import com.marketplace.marketplace_backend.modules.subcategoria.*;
 import com.marketplace.marketplace_backend.modules.solicitudvendedor.*;
+import com.marketplace.marketplace_backend.modules.dashboard.*;
 import com.marketplace.marketplace_backend.modules.solicitudvendedor.dto.RechazarSolicitudRequestDto;
 import com.marketplace.marketplace_backend.common.PagedResult;
 import org.junit.jupiter.api.*;
@@ -41,6 +42,7 @@ class PermisosUnificadosTests {
             Arguments.of(RolController.class, "findAll", "LIST_ROLES"),
             Arguments.of(PermisoController.class, "get", "LIST_PERMISOS"),
             Arguments.of(PermisoController.class, "findAll", "LIST_PERMISOS"),
+            Arguments.of(DashboardController.class, "resumen", "LIST_PEDIDOS"),
             Arguments.of(PaisController.class, "create", "CREATE_DIRECCIONES"),
             Arguments.of(PaisController.class, "update", "UPDATE_DIRECCIONES"),
             Arguments.of(PaisController.class, "delete", "DELETE_DIRECCIONES"),
@@ -81,6 +83,7 @@ class PermisosUnificadosTests {
         var endpoint = Arrays.stream(controller.getMethods()).filter(m -> m.getName().equals(method)).findFirst().orElseThrow();
         var args = Arrays.stream(endpoint.getParameterTypes()).map(t -> {
             if (t == Long.class) return 1L;
+            if (t == int.class) return 30;
             if (t == RechazarSolicitudRequestDto.class) return new RechazarSolicitudRequestDto("Motivo de prueba");
             return null;
         }).toArray();
@@ -122,5 +125,7 @@ class PermisosUnificadosTests {
         @Bean SubcategoriaController subcategoriaController(SubcategoriaService service) { return new SubcategoriaController(service); }
         @Bean SolicitudVendedorService solicitudVendedorService() { return service(SolicitudVendedorService.class); }
         @Bean SolicitudVendedorController solicitudVendedorController(SolicitudVendedorService service) { return new SolicitudVendedorController(service); }
+        @Bean DashboardService dashboardService() { return mock(DashboardService.class); }
+        @Bean DashboardController dashboardController(DashboardService service) { return new DashboardController(service); }
     }
 }
