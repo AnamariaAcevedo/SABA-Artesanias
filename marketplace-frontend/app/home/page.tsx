@@ -274,6 +274,10 @@ async function cargarCategorias() {
           Tiendas
         </Link>
 
+        <Link href="/cupones" className={styles.navButton}>
+          Cupones
+        </Link>
+
         {haySesion === undefined ? null : haySesion ? (
           <MenuUsuario />
         ) : (
