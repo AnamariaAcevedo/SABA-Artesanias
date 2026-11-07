@@ -1,0 +1,152 @@
+.contenedor {
+  position: relative;
+}
+
+.disparador {
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid #b88b44;
+  border-radius: 18px;
+  padding: 8px 16px;
+  background: #f4ddba;
+  color: #291606;
+  font-family: Arial, sans-serif;
+  font-size: 15px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.placeholder {
+  color: #503715;
+}
+
+.icono {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  color: #63240e;
+  opacity: 0.8;
+}
+
+.panel {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 280px;
+  background: #fff6e6;
+  border: 1px solid #b88b44;
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 10px 26px rgba(41, 22, 6, 0.25);
+  color: #63240e;
+}
+
+.cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.mesAnio {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 15px;
+  text-transform: capitalize;
+}
+
+.navegacion {
+  display: flex;
+  gap: 4px;
+}
+
+.navegacion button {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #63240e;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.navegacion button:hover {
+  background: rgba(99, 36, 14, 0.1);
+}
+
+.grillaDias {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.nombreDia {
+  text-align: center;
+  font-size: 11px;
+  color: #7a5b34;
+  padding-bottom: 4px;
+}
+
+.celda {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #63240e;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.celda:hover:not(:disabled) {
+  background: rgba(99, 36, 14, 0.12);
+}
+
+.celda:disabled {
+  color: #c6ad84;
+  cursor: not-allowed;
+}
+
+.celdaOtroMes {
+  color: #c6ad84;
+}
+
+.celdaHoy {
+  border: 1px solid #63240e;
+}
+
+.celdaSeleccionada {
+  background: #63240e;
+  color: #fff6e6;
+  font-weight: bold;
+}
+
+.pie {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(184, 139, 68, 0.4);
+}
+
+.enlace {
+  border: none;
+  background: transparent;
+  color: #63240e;
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 2px;
+}
+
+.enlace:hover {
+  opacity: 0.75;
+}
