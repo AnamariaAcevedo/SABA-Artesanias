@@ -9,6 +9,8 @@ import java.util.Optional;
 // Acceso a datos de SolicitudVendedor
 public interface SolicitudVendedorRepository extends JpaRepository<SolicitudVendedor, Long> {
 
+    long countByEstado(EstadoSolicitudVendedor estado);
+
     boolean existsByUsuario_IdAndEstado(Long idUsuario, EstadoSolicitudVendedor estado);
 
     Optional<SolicitudVendedor> findFirstByUsuario_IdAndEstado(Long idUsuario, EstadoSolicitudVendedor estado);
