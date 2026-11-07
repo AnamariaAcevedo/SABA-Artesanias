@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, MouseEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -9,8 +9,11 @@ import styles from "./tiendas.module.css";
 
 import { Producto } from "@/types/Producto";
 import { Tienda } from "@/types/Tienda";
+import type { CuponPublico } from "@/types/cupon";
 import { obtenerTiendas } from "@/services/tiendaService";
 import { obtenerProductos } from "@/services/productoService";
+import { listarCuponesPublicos } from "@/services/cuponService";
+import ModalCodigoCupon from "@/components/cupones/ModalCodigoCupon";
 import MenuUsuario from "@/components/auth/MenuUsuario";
 import Carrito from "@/components/carrito/Carrito";
 import BotonBuscar from "@/components/catalogo/BotonBuscar";
@@ -29,11 +32,14 @@ export default function TiendasPage() {
 
   const [tiendas, setTiendas] = useState<Tienda[]>([]);
   const [productosPorTienda, setProductosPorTienda] = useState<Record<number, Producto[]>>({});
+  const [cuponPorTienda, setCuponPorTienda] = useState<Record<number, CuponPublico>>({});
   const [cargando, setCargando] = useState(true);
   const [mensaje, setMensaje] = useState("");
   const [busqueda, setBusqueda] = useState("");
   // Filtro aplicado al listado: cambia con Enter o al vaciar el buscador.
   const [busquedaAplicada, setBusquedaAplicada] = useState("");
+  // Cupón cuyo modal con el código está abierto (botón "Obtener cupón").
+  const [cuponAbierto, setCuponAbierto] = useState<CuponPublico | null>(null);
 
   useEffect(() => {
     let cancelado = false;
@@ -63,6 +69,19 @@ export default function TiendasPage() {
           mapa[tienda.id] = resultados[indice].data;
         });
         setProductosPorTienda(mapa);
+
+        // Cupón vigente de cada tienda (si tiene más de uno, se muestra el primero).
+        try {
+          const cupones = await listarCuponesPublicos(1, 50);
+          if (cancelado) return;
+          const mapaCupones: Record<number, CuponPublico> = {};
+          cupones.data.forEach((cupon) => {
+            if (!mapaCupones[cupon.idTienda]) mapaCupones[cupon.idTienda] = cupon;
+          });
+          setCuponPorTienda(mapaCupones);
+        } catch (error) {
+          console.error("Error cargando cupones:", error);
+        }
       } catch (error) {
         if (cancelado) return;
         console.error("Error cargando tiendas:", error);
@@ -98,6 +117,13 @@ export default function TiendasPage() {
     return tiendas
       .filter((tienda) => coincide(tienda.nombre, texto))
       .map((tienda) => ({ clave: tienda.id, texto: tienda.nombre, detalle: tienda.direccionCompleta }));
+  }
+
+  // El botón vive dentro del <Link> de la tienda: evita que el click navegue.
+  function obtenerCupon(evento: MouseEvent, cupon: CuponPublico) {
+    evento.preventDefault();
+    evento.stopPropagation();
+    setCuponAbierto(cupon);
   }
 
   return (
@@ -149,6 +175,7 @@ export default function TiendasPage() {
           <div className={styles.storeGrid}>
             {tiendasFiltradas.map((tienda) => {
               const recap = (productosPorTienda[tienda.id] ?? []).slice(0, CANTIDAD_RECAP);
+              const cupon = cuponPorTienda[tienda.id];
 
               return (
                 <Link key={tienda.id} href={`/tiendas/${tienda.id}`} className={styles.storeRow}>
@@ -180,6 +207,18 @@ export default function TiendasPage() {
                         ))}
                       </div>
                     )}
+
+                    {cupon && (
+                      <div className={styles.couponBlock}>
+                        <button
+                          type="button"
+                          className={styles.obtenerButton}
+                          onClick={(evento) => obtenerCupon(evento, cupon)}
+                        >
+                          Obtener cupón (−{cupon.porcentaje}%)
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </Link>
               );
@@ -187,6 +226,8 @@ export default function TiendasPage() {
           </div>
         )}
       </div>
+
+      {cuponAbierto && <ModalCodigoCupon cupon={cuponAbierto} onCerrar={() => setCuponAbierto(null)} />}
     </main>
   );
 }
