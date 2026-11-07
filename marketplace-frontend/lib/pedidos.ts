@@ -120,3 +120,9 @@ export function aplicarAccionTienda(id: number, accion: AccionTienda): Promise<P
 export function listarMisPedidos(page: number, perPage: number) {
   return apiFetchConPaginacion<Pedido[]>(`/pedidos/mios?page=${page}&perPage=${perPage}`);
 }
+
+export function listarPedidosAdministracion(page: number, perPage: number, idTienda?: number) {
+  const params = new URLSearchParams({ page: String(page), perPage: String(perPage) });
+  if (idTienda !== undefined) params.set("idTienda", String(idTienda));
+  return apiFetchConPaginacion<Pedido[]>(`/pedidos?${params.toString()}`);
+}

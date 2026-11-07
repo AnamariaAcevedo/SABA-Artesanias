@@ -36,5 +36,6 @@ public interface PedidoService {
 
     PedidoResponseDto cancelarDeTienda(Long idTienda, Long id);
 
-    PagedResult<List<PedidoResponseDto>> listarTodos(int page, int perPage);
+    // idTienda es opcional para que administracion pueda consultar todas o una tienda.
+    PagedResult<List<PedidoResponseDto>> listarTodos(Long idTienda, int page, int perPage);
 }
