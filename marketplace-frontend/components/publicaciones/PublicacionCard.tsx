@@ -2,6 +2,7 @@ import Link from "next/link";
 import { formatearFechaHora } from "@/lib/pedidos";
 import { urlFotoPublicacion } from "@/services/publicacionService";
 import type { Publicacion } from "@/types/Publicacion";
+import InteraccionPublicacion from "./InteraccionPublicacion";
 import styles from "./publicaciones.module.css";
 
 // Las fotos abren en otra pestaña en tamaño completo, porque acá se recortan para
@@ -44,6 +45,8 @@ export default function PublicacionCard({ publicacion }: { publicacion: Publicac
       {publicacion.fechaExpiracion && (
         <span className={styles.vigencia}>Disponible hasta el {formatearFechaHora(publicacion.fechaExpiracion)}</span>
       )}
+
+      <InteraccionPublicacion publicacion={publicacion} />
     </article>
   );
 }

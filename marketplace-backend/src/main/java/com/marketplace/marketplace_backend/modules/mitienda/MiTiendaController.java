@@ -256,6 +256,12 @@ public class MiTiendaController {
         return ok(null);
     }
 
+    @DeleteMapping("/publicaciones/{id}/comentarios/{idComentario}")
+    public ResponseEntity<StandardResponseDto<Void>> eliminarComentarioPublicacion(@PathVariable Long id, @PathVariable Long idComentario) {
+        miTiendaService.eliminarComentarioPublicacion(id, idComentario);
+        return ok(null);
+    }
+
     private <T> ResponseEntity<StandardResponseDto<T>> ok(T data) {
         StandardResponseDto<T> response = new StandardResponseDto<>();
         response.setSuccess(true);

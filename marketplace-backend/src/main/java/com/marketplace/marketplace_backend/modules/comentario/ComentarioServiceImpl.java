@@ -31,8 +31,7 @@ public class ComentarioServiceImpl implements ComentarioService {
     @Override
     @Transactional
     public ComentarioResponseDto crear(Long idPublicacion, ComentarioRequestDto request) {
-        Publicacion publicacion = publicacionRepository.findById(idPublicacion)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Publicación no encontrada"));
+        Publicacion publicacion = publicacionVigente(idPublicacion);
 
         Comentario comentario = new Comentario();
         comentario.setContenido(request.getContenido().trim());
@@ -45,9 +44,7 @@ public class ComentarioServiceImpl implements ComentarioService {
     @Override
     @Transactional(readOnly = true)
     public PagedResult<List<ComentarioResponseDto>> listarPorPublicacion(Long idPublicacion, int page, int perPage) {
-        if (!publicacionRepository.existsById(idPublicacion)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Publicación no encontrada");
-        }
+        publicacionVigente(idPublicacion);
 
         PageRequest pageable = PageRequest.of(Math.max(page, 1) - 1, Math.max(perPage, 1));
         Page<Comentario> resultado = comentarioRepository.findByPublicacion_IdOrderByIdDesc(idPublicacion, pageable);
@@ -71,6 +68,23 @@ public class ComentarioServiceImpl implements ComentarioService {
 
         comentario.setDeletedAt(LocalDateTime.now());
         comentarioRepository.save(comentario);
+    }
+
+    @Override
+    @Transactional
+    public void eliminarDePublicacion(Long idPublicacion, Long id) {
+        Comentario comentario = comentarioRepository.findByIdAndPublicacion_Id(id, idPublicacion)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Comentario no encontrado"));
+
+        comentario.setDeletedAt(LocalDateTime.now());
+        comentarioRepository.save(comentario);
+    }
+
+    // Una publicacion vencida ya no esta disponible para el publico, ni sus comentarios.
+    private Publicacion publicacionVigente(Long idPublicacion) {
+        return publicacionRepository.findById(idPublicacion)
+                .filter(publicacion -> publicacion.estaVigente(LocalDateTime.now()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Publicación no encontrada"));
     }
 
     private Usuario usuarioAutenticado() {

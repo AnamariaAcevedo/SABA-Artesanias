@@ -3,6 +3,7 @@ package com.marketplace.marketplace_backend.modules.publicacion;
 import com.marketplace.marketplace_backend.common.PagedResult;
 import com.marketplace.marketplace_backend.modules.archivopublicacion.ArchivoPublicacion;
 import com.marketplace.marketplace_backend.modules.archivopublicacion.ArchivoPublicacionRepository;
+import com.marketplace.marketplace_backend.modules.comentario.ComentarioRepository;
 import com.marketplace.marketplace_backend.modules.cupon.Cupon;
 import com.marketplace.marketplace_backend.modules.cupon.CuponRepository;
 import com.marketplace.marketplace_backend.modules.publicacion.dto.PublicacionRequestDto;
@@ -10,10 +11,15 @@ import com.marketplace.marketplace_backend.modules.publicacion.dto.PublicacionRe
 import com.marketplace.marketplace_backend.modules.reaccion.ReaccionRepository;
 import com.marketplace.marketplace_backend.modules.tienda.Tienda;
 import com.marketplace.marketplace_backend.modules.tienda.TiendaRepository;
+import com.marketplace.marketplace_backend.modules.usuario.Usuario;
+import com.marketplace.marketplace_backend.modules.usuario.UsuarioRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -31,6 +37,8 @@ public class PublicacionServiceImpl implements PublicacionService {
     private final CuponRepository cuponRepository;
     private final ReaccionRepository reaccionRepository;
     private final ArchivoPublicacionRepository archivoPublicacionRepository;
+    private final ComentarioRepository comentarioRepository;
+    private final UsuarioRepository usuarioRepository;
 
     @Override
     @Transactional
@@ -137,14 +145,29 @@ public class PublicacionServiceImpl implements PublicacionService {
     }
 
     private PagedResult<List<PublicacionResponseDto>> toPagedResult(Page<Publicacion> resultado, int page, int perPage) {
+        // El usuario se busca una sola vez, no por cada publicacion del listado.
+        Long idUsuario = idUsuarioActual();
         List<PublicacionResponseDto> data = resultado.getContent().stream()
-                .map(this::toResponse)
+                .map(publicacion -> toResponse(publicacion, idUsuario))
                 .toList();
 
         return new PagedResult<>(data, page, perPage, (int) resultado.getTotalElements());
     }
 
+    // Null si no hay sesion: el canal tambien lo ven los invitados.
+    private Long idUsuarioActual() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+            return null;
+        }
+        return usuarioRepository.findByUsuarioIgnoreCase(auth.getName()).map(Usuario::getId).orElse(null);
+    }
+
     private PublicacionResponseDto toResponse(Publicacion publicacion) {
+        return toResponse(publicacion, idUsuarioActual());
+    }
+
+    private PublicacionResponseDto toResponse(Publicacion publicacion, Long idUsuario) {
         Cupon cupon = publicacion.getCupon();
 
         return new PublicacionResponseDto(
@@ -156,6 +179,8 @@ public class PublicacionServiceImpl implements PublicacionService {
                 cupon == null ? null : cupon.getId(),
                 cupon == null ? null : cupon.getCodigo(),
                 reaccionRepository.countByPublicacion_Id(publicacion.getId()),
+                comentarioRepository.countByPublicacion_Id(publicacion.getId()),
+                idUsuario != null && reaccionRepository.existsByPublicacion_IdAndUsuario_Id(publicacion.getId(), idUsuario),
                 archivoPublicacionRepository.buscarIdsDePublicacion(publicacion.getId()),
                 publicacion.getFechaExpiracion(),
                 publicacion.estaVigente(LocalDateTime.now()),

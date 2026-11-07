@@ -163,6 +163,180 @@
   opacity: 0.6;
 }
 
+/* Me gusta y comentarios */
+.interaccion {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #e0c48f;
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.accion,
+.accionFija {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  color: #63240e;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.accion {
+  border: 1px solid #63240e;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.accion:hover:not(:disabled) {
+  background: rgba(99, 36, 14, 0.08);
+}
+
+.accion:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.accion:focus-visible,
+.enviar:focus-visible,
+.eliminarComentario:focus-visible,
+.nuevoComentario textarea:focus-visible {
+  outline: 3px solid #63240e;
+  outline-offset: 2px;
+}
+
+.accion[aria-pressed="true"] {
+  background: #63240e;
+  color: #f7dfb9;
+}
+
+.comentarios {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.nuevoComentario {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.nuevoComentario textarea {
+  width: 100%;
+  resize: vertical;
+  padding: 10px 16px;
+  border: 1px solid #b88b44;
+  border-radius: 16px;
+  background: #fff6e6;
+  color: #291606;
+  font: 14px/1.4 Arial, sans-serif;
+}
+
+.enviar {
+  height: 34px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 999px;
+  background: #63240e;
+  color: #f7dfb9;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.enviar:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.invitacion {
+  margin: 0;
+  color: #5f4638;
+  font-size: 14px;
+}
+
+.invitacion a {
+  color: #63240e;
+}
+
+.listaComentarios {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.comentario {
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(255, 246, 230, 0.8);
+}
+
+.comentario p {
+  margin: 4px 0 0;
+  color: #5f4638;
+  font-size: 14px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.comentarioCabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.comentarioCabecera time {
+  color: #63240e;
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.eliminarComentario {
+  margin-left: auto;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #a3261b;
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.eliminarComentario:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 @media (max-width: 700px) {
   .publicacion {
     padding: 18px 20px;

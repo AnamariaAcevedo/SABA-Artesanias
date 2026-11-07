@@ -22,6 +22,9 @@ public class PublicacionResponseDto {
     private Long idCupon;
     private String codigoCupon;
     private long cantidadReacciones;
+    private long cantidadComentarios;
+    // Si el usuario autenticado ya reacciono; siempre false para quien no tiene sesion.
+    private boolean reaccionada;
     // Fotos de la publicacion, en orden; cada una se pide a /archivos-publicacion/{id}.
     private List<Long> idsArchivos;
     private LocalDateTime fechaExpiracion;

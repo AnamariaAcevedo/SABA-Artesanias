@@ -1,8 +1,9 @@
 package com.marketplace.marketplace_backend.modules.reaccion;
 
-// Gestion de reacciones de usuarios a publicaciones
+// Gestion de reacciones de usuarios a publicaciones. Ambas operaciones actuan sobre
+// el usuario autenticado y devuelven la cantidad total de reacciones de la publicacion.
 public interface ReaccionService {
-    // Registra una reaccion del usuario autenticado a la publicacion y devuelve
-    // la cantidad total de reacciones de esa publicacion.
     long crear(Long idPublicacion);
+
+    long quitar(Long idPublicacion);
 }

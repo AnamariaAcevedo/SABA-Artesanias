@@ -10,18 +10,21 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"publicacion_id", "usuario_id"}))
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-// Reaccion de un usuario a una publicacion. Un mismo usuario puede reaccionar
-// varias veces: no hay restriccion de unicidad entre usuario y publicacion.
+// "Me gusta" de un usuario a una publicacion: uno por usuario, que se pone y se quita.
+// Al quitarlo se borra la fila, porque un borrado logico chocaria con la restriccion unica.
 public class Reaccion extends BaseEntity {
 
     @Id

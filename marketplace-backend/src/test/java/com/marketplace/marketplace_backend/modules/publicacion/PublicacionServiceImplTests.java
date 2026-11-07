@@ -2,17 +2,23 @@ package com.marketplace.marketplace_backend.modules.publicacion;
 
 import com.marketplace.marketplace_backend.modules.archivopublicacion.ArchivoPublicacionRepository;
 import com.marketplace.marketplace_backend.modules.archivopublicacion.ArchivoPublicacionServiceImpl;
+import com.marketplace.marketplace_backend.modules.comentario.ComentarioRepository;
 import com.marketplace.marketplace_backend.modules.cupon.CuponRepository;
 import com.marketplace.marketplace_backend.modules.publicacion.dto.PublicacionRequestDto;
 import com.marketplace.marketplace_backend.modules.publicacion.dto.PublicacionResponseDto;
 import com.marketplace.marketplace_backend.modules.reaccion.ReaccionRepository;
 import com.marketplace.marketplace_backend.modules.tienda.Tienda;
 import com.marketplace.marketplace_backend.modules.tienda.TiendaRepository;
+import com.marketplace.marketplace_backend.modules.usuario.Usuario;
+import com.marketplace.marketplace_backend.modules.usuario.UsuarioRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
@@ -27,6 +33,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -36,13 +43,60 @@ class PublicacionServiceImplTests {
     private final TiendaRepository tiendaRepository = mock(TiendaRepository.class);
     private final ArchivoPublicacionRepository archivoRepository = mock(ArchivoPublicacionRepository.class);
 
+    private final ReaccionRepository reaccionRepository = mock(ReaccionRepository.class);
+    private final UsuarioRepository usuarioRepository = mock(UsuarioRepository.class);
+
     private final PublicacionServiceImpl service = new PublicacionServiceImpl(
             publicacionRepository,
             tiendaRepository,
             mock(CuponRepository.class),
-            mock(ReaccionRepository.class),
-            archivoRepository
+            reaccionRepository,
+            archivoRepository,
+            mock(ComentarioRepository.class),
+            usuarioRepository
     );
+
+    @AfterEach
+    void limpiarContextoDeSeguridad() {
+        SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    void indicaSiElUsuarioAutenticadoYaReacciono() {
+        Usuario usuario = new Usuario();
+        usuario.setId(7L);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("cliente", null, List.of())
+        );
+        when(usuarioRepository.findByUsuarioIgnoreCase("cliente")).thenReturn(Optional.of(usuario));
+        when(publicacionRepository.findById(5L)).thenReturn(Optional.of(publicacion(null)));
+        when(reaccionRepository.existsByPublicacion_IdAndUsuario_Id(5L, 7L)).thenReturn(true);
+
+        assertTrue(service.obtenerPublica(5L).isReaccionada());
+    }
+
+    @Test
+    void unInvitadoVeLaPublicacionSinReaccionMarcada() {
+        when(publicacionRepository.findById(5L)).thenReturn(Optional.of(publicacion(null)));
+
+        assertFalse(service.obtenerPublica(5L).isReaccionada());
+        verify(usuarioRepository, never()).findByUsuarioIgnoreCase(any());
+    }
+
+    @Test
+    void elListadoBuscaAlUsuarioUnaSolaVez() {
+        Usuario usuario = new Usuario();
+        usuario.setId(7L);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("cliente", null, List.of())
+        );
+        when(usuarioRepository.findByUsuarioIgnoreCase("cliente")).thenReturn(Optional.of(usuario));
+        when(publicacionRepository.buscarVigentes(any(LocalDateTime.class), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(publicacion(null), publicacion(null))));
+
+        assertEquals(2, service.findAllPublicas(null, 1, 10).data().size());
+        verify(usuarioRepository, times(1)).findByUsuarioIgnoreCase("cliente");
+    }
 
     @Test
     void alCrearCalculaElVencimientoSegunLaDuracion() {
