@@ -65,8 +65,8 @@ public interface MiTiendaService {
 
     PedidoResponseDto cancelarPedido(Long idPedido);
 
-    // Crear y eliminar cupones es solo del dueño (PRINCIPAL); listar/ver tambien lo puede
-    // hacer el colaborador (SECUNDARIO), para repartir el codigo o QR a los clientes.
+    // Crear, listar y ver cupones lo puede hacer el dueño (PRINCIPAL) y el colaborador
+    // (SECUNDARIO); eliminarlos es solo del dueño.
     CuponResponseDto crearCupon(CuponRequestDto request);
 
     PagedResult<List<CuponResponseDto>> listarCupones(int page, int perPage);

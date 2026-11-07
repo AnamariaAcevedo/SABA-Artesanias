@@ -399,7 +399,7 @@ public class MiTiendaServiceImpl implements MiTiendaService {
     @Override
     @Transactional
     public CuponResponseDto crearCupon(CuponRequestDto request) {
-        return cuponService.crear(tiendaDelDueno().getId(), request);
+        return cuponService.crear(vinculoActual().getTienda().getId(), request);
     }
 
     @Override
