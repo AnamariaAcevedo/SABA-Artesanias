@@ -37,6 +37,11 @@ const secciones = [
     permisos: ACCESO.verSolicitudesVendedor,
   },
   {
+    href: "/admin/pedidos",
+    label: "Pedidos",
+    permisos: ACCESO.verPedidos,
+  },
+  {
     href: "/admin/general",
     label: "Administración general",
     permisos: ACCESO.administracionGeneral,

@@ -45,6 +45,8 @@ export const ACCESO = {
 
     gestionarSolicitudesVendedor: ["UPDATE_SOLICITUDES_VENDEDOR"],
 
+    verPedidos: ["LIST_PEDIDOS"],
+
     administracionGeneral: [
         "LIST_PRODUCTOS", "CREATE_PRODUCTOS", "UPDATE_PRODUCTOS", "DELETE_PRODUCTOS",
         "LIST_TIENDAS", "CREATE_TIENDAS", "UPDATE_TIENDAS", "DELETE_TIENDAS",
@@ -81,6 +83,7 @@ export function puedeEntrarAlPanel(
         cumplePermisos(permisos, ACCESO.verRoles) ||
         cumplePermisos(permisos, ACCESO.verCategorias) ||
         cumplePermisos(permisos, ACCESO.verSolicitudesVendedor) ||
+        cumplePermisos(permisos, ACCESO.verPedidos) ||
         puedeGestionarAdministracionGeneral(permisos) ||
         cumplePermisos(permisos, ACCESO.verUbicaciones)
     );
@@ -122,6 +125,10 @@ export function puedeAbrirRuta(
 
     if (ruta === "/admin/solicitudes-vendedor") {
         return cumplePermisos(permisos, ACCESO.verSolicitudesVendedor);
+    }
+
+    if (ruta === "/admin/pedidos") {
+        return cumplePermisos(permisos, ACCESO.verPedidos);
     }
 
     if (ruta === "/admin/general") {

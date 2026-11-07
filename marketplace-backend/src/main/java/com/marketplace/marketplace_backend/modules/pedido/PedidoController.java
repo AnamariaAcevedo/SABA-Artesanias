@@ -65,10 +65,11 @@ public class PedidoController {
     @GetMapping
     @PreAuthorize("hasAuthority('LIST_PEDIDOS')")
     public ResponseEntity<StandardResponseDto<List<PedidoResponseDto>>> listarTodos(
+            @RequestParam(required = false) Long idTienda,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int perPage) {
         StandardResponseDto<List<PedidoResponseDto>> response = new StandardResponseDto<>();
-        var resultado = pedidoService.listarTodos(page, perPage);
+        var resultado = pedidoService.listarTodos(idTienda, page, perPage);
         response.setSuccess(true);
         response.setData(resultado.data());
         response.setErrors(null);

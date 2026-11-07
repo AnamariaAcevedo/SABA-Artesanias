@@ -278,9 +278,11 @@ public class PedidoServiceImpl implements PedidoService {
 
     @Override
     @Transactional(readOnly = true)
-    public PagedResult<List<PedidoResponseDto>> listarTodos(int page, int perPage) {
+    public PagedResult<List<PedidoResponseDto>> listarTodos(Long idTienda, int page, int perPage) {
         PageRequest pageable = PageRequest.of(Math.max(page, 1) - 1, Math.max(perPage, 1));
-        Page<Pedido> resultado = pedidoRepository.findAllByOrderByIdDesc(pageable);
+        Page<Pedido> resultado = idTienda == null
+                ? pedidoRepository.findAllByOrderByIdDesc(pageable)
+                : pedidoRepository.findByTienda_IdOrderByIdDesc(idTienda, pageable);
         return paginar(resultado, page, perPage);
     }
 
