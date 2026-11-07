@@ -38,11 +38,16 @@ public class PublicacionServiceImpl implements PublicacionService {
         Tienda tienda = tiendaRepository.findById(idTienda)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tienda no encontrada"));
 
+        if (request.getDuracionDias() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Indicá cuántos días va a estar disponible la publicación");
+        }
+
         Publicacion publicacion = new Publicacion();
         publicacion.setTitulo(request.getTitulo().trim());
         publicacion.setContenido(request.getContenido().trim());
         publicacion.setTienda(tienda);
         publicacion.setCupon(resolverCupon(idTienda, request.getIdCupon()));
+        publicacion.setFechaExpiracion(LocalDateTime.now().plusDays(request.getDuracionDias()));
 
         return toResponse(publicacionRepository.save(publicacion));
     }
@@ -55,6 +60,9 @@ public class PublicacionServiceImpl implements PublicacionService {
         publicacion.setTitulo(request.getTitulo().trim());
         publicacion.setContenido(request.getContenido().trim());
         publicacion.setCupon(resolverCupon(idTienda, request.getIdCupon()));
+        if (request.getDuracionDias() != null) {
+            publicacion.setFechaExpiracion(LocalDateTime.now().plusDays(request.getDuracionDias()));
+        }
 
         return toResponse(publicacionRepository.save(publicacion));
     }
@@ -92,9 +100,10 @@ public class PublicacionServiceImpl implements PublicacionService {
     @Transactional(readOnly = true)
     public PagedResult<List<PublicacionResponseDto>> findAllPublicas(Long idTienda, int page, int perPage) {
         PageRequest pageable = PageRequest.of(Math.max(page, 1) - 1, Math.max(perPage, 1));
+        LocalDateTime ahora = LocalDateTime.now();
         Page<Publicacion> resultado = idTienda != null
-                ? publicacionRepository.findByTienda_IdOrderByIdDesc(idTienda, pageable)
-                : publicacionRepository.findAllByOrderByIdDesc(pageable);
+                ? publicacionRepository.buscarVigentesDeTienda(idTienda, ahora, pageable)
+                : publicacionRepository.buscarVigentes(ahora, pageable);
         return toPagedResult(resultado, page, perPage);
     }
 
@@ -102,6 +111,7 @@ public class PublicacionServiceImpl implements PublicacionService {
     @Transactional(readOnly = true)
     public PublicacionResponseDto obtenerPublica(Long id) {
         Publicacion publicacion = publicacionRepository.findById(id)
+                .filter(encontrada -> encontrada.estaVigente(LocalDateTime.now()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Publicación no encontrada"));
         return toResponse(publicacion);
     }
@@ -146,6 +156,9 @@ public class PublicacionServiceImpl implements PublicacionService {
                 cupon == null ? null : cupon.getId(),
                 cupon == null ? null : cupon.getCodigo(),
                 reaccionRepository.countByPublicacion_Id(publicacion.getId()),
+                archivoPublicacionRepository.buscarIdsDePublicacion(publicacion.getId()),
+                publicacion.getFechaExpiracion(),
+                publicacion.estaVigente(LocalDateTime.now()),
                 publicacion.getCreatedAt(),
                 publicacion.getUpdatedAt()
         );

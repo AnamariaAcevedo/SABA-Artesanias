@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -21,6 +22,10 @@ public class PublicacionResponseDto {
     private Long idCupon;
     private String codigoCupon;
     private long cantidadReacciones;
+    // Fotos de la publicacion, en orden; cada una se pide a /archivos-publicacion/{id}.
+    private List<Long> idsArchivos;
+    private LocalDateTime fechaExpiracion;
+    private boolean vigente;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

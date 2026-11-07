@@ -15,6 +15,7 @@ import MenuUsuario from "@/components/auth/MenuUsuario";
 import Carrito from "@/components/carrito/Carrito";
 import BotonInicio from "@/components/catalogo/BotonInicio";
 import ProductoCard from "@/components/catalogo/ProductoCard";
+import FeedPublicaciones from "@/components/publicaciones/FeedPublicaciones";
 import { useHaySesion } from "@/lib/auth";
 
 export default function TiendaDetallePage() {
@@ -33,6 +34,7 @@ function TiendaDetalleContenido({ id }: { id: string }) {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [cargando, setCargando] = useState(true);
   const [mensaje, setMensaje] = useState("");
+  const [seccion, setSeccion] = useState<"productos" | "publicaciones">("productos");
 
   useEffect(() => {
     let cancelado = false;
@@ -107,14 +109,42 @@ function TiendaDetalleContenido({ id }: { id: string }) {
               </div>
             </section>
 
-            {mensaje && <p className={styles.statusMessage}>{mensaje}</p>}
+            <div className={styles.secciones}>
+              <button
+                type="button"
+                className={styles.seccion}
+                aria-pressed={seccion === "productos"}
+                onClick={() => setSeccion("productos")}
+              >
+                Productos
+              </button>
+              <button
+                type="button"
+                className={styles.seccion}
+                aria-pressed={seccion === "publicaciones"}
+                onClick={() => setSeccion("publicaciones")}
+              >
+                Publicaciones
+              </button>
+            </div>
 
-            {productos.length > 0 && (
-              <div className={homeStyles.products}>
-                {productos.map((producto) => (
-                  <ProductoCard key={producto.id} producto={producto} />
-                ))}
-              </div>
+            {seccion === "publicaciones" ? (
+              <FeedPublicaciones
+                idTienda={idTienda}
+                textoVacio="Esta tienda no tiene publicaciones disponibles."
+              />
+            ) : (
+              <>
+                {mensaje && <p className={styles.statusMessage}>{mensaje}</p>}
+
+                {productos.length > 0 && (
+                  <div className={homeStyles.products}>
+                    {productos.map((producto) => (
+                      <ProductoCard key={producto.id} producto={producto} />
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </>
         )}
