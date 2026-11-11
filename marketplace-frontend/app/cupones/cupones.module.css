@@ -1,0 +1,107 @@
+.content {
+  padding: 30px 45px 45px;
+}
+
+.pageTitle {
+  margin: 0 0 24px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 30px;
+  font-weight: normal;
+  color: #63240e;
+}
+
+.statusMessage {
+  margin: 0 0 20px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 20px;
+  color: #63240e;
+}
+
+.couponGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 14px;
+}
+
+.couponCard {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: rgba(244, 221, 186, 0.8);
+  border-radius: 16px;
+  padding: 16px 18px;
+  color: #63240e;
+}
+
+.couponHeader {
+  display: flex;
+  flex: 1;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.couponHeader > div {
+  min-width: 0;
+}
+
+.couponHeader h3,
+.couponStore {
+  overflow-wrap: break-word;
+}
+
+.couponHeader h3 {
+  margin: 0 0 2px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 16px;
+  font-weight: normal;
+  line-height: 1.25;
+}
+
+.couponStore {
+  margin: 0;
+  font-size: 12px;
+  color: #5f4638;
+}
+
+.couponDiscount {
+  flex-shrink: 0;
+  background: #63240e;
+  color: #fff6e6;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.obtenerButton {
+  /* Empuja el botón al fondo de la tarjeta, para que quede alineado entre
+     tarjetas aunque el nombre o la tienda ocupen distinta cantidad de líneas. */
+  margin-top: 14px;
+  width: 100%;
+  background: transparent;
+  color: #63240e;
+  border: 1px solid #63240e;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.obtenerButton:hover {
+  background: rgba(99, 36, 14, 0.08);
+}
+
+@media (max-width: 700px) {
+  .content {
+    padding: 24px;
+  }
+
+  .couponGrid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+}

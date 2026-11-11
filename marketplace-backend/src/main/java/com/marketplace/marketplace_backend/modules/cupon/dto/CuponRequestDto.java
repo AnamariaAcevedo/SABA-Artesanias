@@ -34,6 +34,7 @@ public class CuponRequestDto {
     private Double porcentaje;
 
     @NotNull(message = "La fecha de inicio es obligatoria")
+    @FutureOrPresent(message = "La fecha de inicio no puede estar en el pasado")
     private LocalDate fechaInicio;
 
     @NotNull(message = "La fecha de fin es obligatoria")

@@ -274,6 +274,10 @@ async function cargarCategorias() {
           Tiendas
         </Link>
 
+        <Link href="/cupones" className={styles.navButton}>
+          Cupones
+        </Link>
+
         <Link href="/canal" className={styles.navButton}>
           Canal
         </Link>

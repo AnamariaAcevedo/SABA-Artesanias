@@ -17,6 +17,7 @@ const secciones: { href: string; label: string; permisos: string[][] }[] = [
   { href: "/mi-tienda", label: "Inicio", permisos: [] },
   { href: "/mi-tienda/productos", label: "Productos", permisos: [ACCESO.verMisProductos] },
   { href: "/mi-tienda/pedidos", label: "Pedidos", permisos: [ACCESO.verPedidosTienda] },
+  { href: "/mi-tienda/cupones", label: "Cupones", permisos: [] },
   { href: "/mi-tienda/publicaciones", label: "Publicaciones", permisos: [ACCESO.verMisPublicaciones] },
   { href: "/mi-tienda/datos", label: "Datos de la tienda", permisos: [ACCESO.verMiTienda, ACCESO.verMisContactos] },
 ];

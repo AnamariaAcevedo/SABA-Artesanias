@@ -17,6 +17,7 @@ export interface PedidoCreateInput {
   idBarrio?: number;
   direccion?: string;
   referencia?: string;
+  codigoCupon?: string;
 }
 
 export interface ProductoPedido {

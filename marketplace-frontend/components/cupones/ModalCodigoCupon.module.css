@@ -1,0 +1,84 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(41, 22, 6, 0.55);
+}
+
+.dialogo {
+  width: 100%;
+  max-width: 420px;
+  padding: 24px 26px 26px;
+  background: #fff6e6;
+  border-radius: 20px;
+  color: #63240e;
+}
+
+.cabecera {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.cabecera h3 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 20px;
+  font-weight: normal;
+}
+
+.cerrar {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #63240e;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.mensaje {
+  margin: 0 0 18px;
+  font-size: 14px;
+  color: #5f4638;
+  line-height: 1.4;
+}
+
+.codigoBox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.codigo {
+  font-family: "Courier New", monospace;
+  font-size: 20px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  background: #fff;
+  border: 1px dashed #b88b44;
+  border-radius: 10px;
+  padding: 8px 18px;
+}
+
+.copyButton {
+  height: 40px;
+  padding: 0 22px;
+  border: none;
+  border-radius: 999px;
+  background: #63240e;
+  color: #f7dfb9;
+  font: 14px Arial, sans-serif;
+  cursor: pointer;
+}
+
+.copyButton:hover {
+  background: #7a3216;
+}
