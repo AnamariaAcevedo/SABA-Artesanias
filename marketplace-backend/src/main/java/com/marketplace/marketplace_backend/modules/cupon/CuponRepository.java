@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 // Acceso a datos de Cupon
@@ -15,4 +16,8 @@ public interface CuponRepository extends JpaRepository<Cupon, Long> {
     Page<Cupon> findByTienda_IdOrderByIdDesc(Long idTienda, Pageable pageable);
 
     Optional<Cupon> findByIdAndTienda_Id(Long id, Long idTienda);
+
+    // Cupones vigentes hoy, para el catalogo publico.
+    Page<Cupon> findByFechaInicioLessThanEqualAndFechaFinGreaterThanEqualOrderByIdDesc(
+            LocalDate hoy1, LocalDate hoy2, Pageable pageable);
 }

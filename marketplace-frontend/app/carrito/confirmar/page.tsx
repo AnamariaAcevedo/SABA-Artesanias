@@ -10,6 +10,7 @@ import styles from "./confirmar.module.css";
 import type { Pedido, PedidoCreateInput } from "@/types/pedido";
 import type { DatosPagoTienda } from "@/types/Tienda";
 import { obtenerDatosPagoTienda } from "@/services/tiendaService";
+import type { CuponPreview } from "@/types/cupon";
 import { obtenerProductoPorId } from "@/services/productoService";
 import { errorDeComprobante } from "@/lib/pedidos";
 import { cancelarPedidoPropio, crearPedido } from "@/services/pedidoService";
@@ -18,6 +19,7 @@ import { confirmar as pedirConfirmacion } from "@/components/dialogos/Dialogos";
 import UbicacionFields from "@/components/auth/UbicacionFields";
 import BotonInicio from "@/components/catalogo/BotonInicio";
 import SelectorPuntoEntrega from "@/components/mapa/SelectorPuntoEntrega";
+import ModalCupon from "@/components/carrito/ModalCupon";
 import { useHaySesion } from "@/lib/auth";
 import { LARGO_MAXIMO_REFERENCIA, armarReferencia, type Punto } from "@/lib/mapa";
 import {
@@ -43,6 +45,9 @@ export default function ConfirmarCompraPage() {
   const router = useRouter();
   const haySesion = useHaySesion();
   const { items } = useCarrito();
+
+  const [cuponesPorTienda, setCuponesPorTienda] = useState<Record<number, CuponPreview>>({});
+  const [modalCuponTienda, setModalCuponTienda] = useState<number | null>(null);
 
   // Lista de productos (ids) cuyo stock ya se consultó en el servidor.
   const [verificados, setVerificados] = useState<string | null>(null);
@@ -111,10 +116,30 @@ export default function ConfirmarCompraPage() {
     return grupos;
   }, {});
 
+  function subtotalDeTienda(lineas: ItemCarrito[]): number {
+    return lineas.reduce((suma, item) => suma + item.precioUnitario * item.cantidad, 0);
+  }
+
+  function totalDeTienda(idTienda: number, lineas: ItemCarrito[]): number {
+    const subtotal = subtotalDeTienda(lineas);
+    const cupon = cuponesPorTienda[idTienda];
+    return cupon ? subtotal - subtotal * (cupon.porcentaje / 100) : subtotal;
+  }
+
+  function quitarCupon(idTienda: number) {
+    setCuponesPorTienda((actuales) => {
+      const { [idTienda]: _quitado, ...resto } = actuales;
+      return resto;
+    });
+  }
+
   // Cancelar un pedido o la compra no toca el carrito: los productos quedan
   // guardados para comprarlos más adelante. Solo se excluyen de esta compra.
   const incluidos = items.filter((item) => !excluidas.includes(item.idTienda));
-  const totalIncluido = incluidos.reduce((suma, item) => suma + item.precioUnitario * item.cantidad, 0);
+  const totalIncluido = Object.entries(porTienda).reduce((suma, [idTienda, lineas]) => {
+    if (excluidas.includes(Number(idTienda))) return suma;
+    return suma + totalDeTienda(Number(idTienda), lineas);
+  }, 0);
   const sinStockSuficiente = incluidos.filter((item) => item.cantidad > item.cantidadDisponible);
   const tiendasIncluidas = Object.entries(porTienda)
     .map(([idTienda, lineas]) => ({ idTienda: Number(idTienda), lineas }))
@@ -214,6 +239,7 @@ export default function ConfirmarCompraPage() {
             ...entregaBase,
             idTienda: Number(idTienda),
             items: lineas.map((linea) => ({ idProducto: linea.idProducto, cantidad: linea.cantidad })),
+            codigoCupon: cuponesPorTienda[Number(idTienda)]?.codigo,
           },
           comprobantes[Number(idTienda)],
         );
@@ -389,6 +415,33 @@ export default function ConfirmarCompraPage() {
                       </li>
                     ))}
                   </ul>
+                  )}
+                  {!excluida && (
+                    <p className={styles.nota}>
+                      {cuponesPorTienda[Number(idTienda)] ? (
+                        <>
+                          Cupón <strong>{cuponesPorTienda[Number(idTienda)].codigo}</strong> aplicado (−
+                          {cuponesPorTienda[Number(idTienda)].porcentaje}%) ·{" "}
+                          <button
+                            type="button"
+                            className={styles.enlaceCancelar}
+                            onClick={() => quitarCupon(Number(idTienda))}
+                            disabled={enviando}
+                          >
+                            Quitar
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          className={styles.enlaceIncluir}
+                          onClick={() => setModalCuponTienda(Number(idTienda))}
+                          disabled={enviando}
+                        >
+                          Utilizar cupón
+                        </button>
+                      )}
+                    </p>
                   )}
                 </div>
                 );
@@ -592,6 +645,14 @@ export default function ConfirmarCompraPage() {
           </div>
         )}
       </div>
+
+      {modalCuponTienda !== null && (
+        <ModalCupon
+          idTienda={modalCuponTienda}
+          onAplicar={(cupon) => setCuponesPorTienda((actuales) => ({ ...actuales, [modalCuponTienda]: cupon }))}
+          onCerrar={() => setModalCuponTienda(null)}
+        />
+      )}
     </main>
   );
 }

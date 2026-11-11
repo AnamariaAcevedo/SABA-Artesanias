@@ -58,7 +58,8 @@ public class SecurityConfig {
                         "/contactos", "/contactos/**",
                         "/tipos-contacto", "/tipos-contacto/**",
                         "/publicaciones", "/publicaciones/**",
-                        "/archivos-publicacion", "/archivos-publicacion/**"
+                        "/archivos-publicacion", "/archivos-publicacion/**",
+                        "/cupones", "/cupones/**"
                 ).permitAll()
                 .anyRequest().authenticated()
             )

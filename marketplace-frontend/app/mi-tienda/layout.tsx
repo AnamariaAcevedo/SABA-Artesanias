@@ -16,6 +16,7 @@ const secciones = [
   { href: "/mi-tienda", label: "Inicio", soloDueno: false },
   { href: "/mi-tienda/productos", label: "Productos", soloDueno: false },
   { href: "/mi-tienda/pedidos", label: "Pedidos", soloDueno: false },
+  { href: "/mi-tienda/cupones", label: "Cupones", soloDueno: false },
   { href: "/mi-tienda/publicaciones", label: "Publicaciones", soloDueno: false },
   { href: "/mi-tienda/datos", label: "Datos de la tienda", soloDueno: true },
 ];
