@@ -30,6 +30,7 @@ public class SolicitudVendedorController {
     private final SolicitudVendedorService solicitudVendedorService;
 
     @PostMapping
+    @PreAuthorize("hasAuthority('CREATE_MI_SOLICITUD')")
     public ResponseEntity<StandardResponseDto<SolicitudVendedorResponseDto>> crear(@Valid @RequestBody SolicitudVendedorRequestDto request) {
         StandardResponseDto<SolicitudVendedorResponseDto> response = new StandardResponseDto<>();
         response.setSuccess(true);
@@ -40,6 +41,7 @@ public class SolicitudVendedorController {
     }
 
     @GetMapping("/mia")
+    @PreAuthorize("hasAuthority('LIST_MI_SOLICITUD')")
     public ResponseEntity<StandardResponseDto<SolicitudVendedorResponseDto>> obtenerMia() {
         StandardResponseDto<SolicitudVendedorResponseDto> response = new StandardResponseDto<>();
         response.setSuccess(true);
@@ -50,6 +52,7 @@ public class SolicitudVendedorController {
     }
 
     @DeleteMapping("/mia")
+    @PreAuthorize("hasAuthority('DELETE_MI_SOLICITUD')")
     public ResponseEntity<StandardResponseDto<Void>> eliminarMia() {
         StandardResponseDto<Void> response = new StandardResponseDto<>();
         solicitudVendedorService.eliminarMia();

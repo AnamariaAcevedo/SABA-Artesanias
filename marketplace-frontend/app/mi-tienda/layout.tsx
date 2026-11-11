@@ -8,17 +8,18 @@ import MenuUsuario from "@/components/auth/MenuUsuario";
 import miTiendaStyles from "@/components/mi-tienda/miTienda.module.css";
 import BotonInicio from "@/components/catalogo/BotonInicio";
 import { useSesion } from "@/components/auth/SesionProvider";
+import { ACCESO, cumplePermisos } from "@/lib/access";
 
-// Secciones de "Mi tienda". Los datos de la tienda (con sus contactos) son solo
-// para el dueño; el colaborador gestiona productos, imágenes, pedidos y
-// publicaciones. El backend vuelve a verificar el vínculo en cada operación.
-const secciones = [
-  { href: "/mi-tienda", label: "Inicio", soloDueno: false },
-  { href: "/mi-tienda/productos", label: "Productos", soloDueno: false },
-  { href: "/mi-tienda/pedidos", label: "Pedidos", soloDueno: false },
-  { href: "/mi-tienda/cupones", label: "Cupones", soloDueno: false },
-  { href: "/mi-tienda/publicaciones", label: "Publicaciones", soloDueno: false },
-  { href: "/mi-tienda/datos", label: "Datos de la tienda", soloDueno: true },
+// Secciones de "Mi tienda": cada una se ve con cualquiera de sus permisos, que se
+// asignan al rol desde el panel. El backend vuelve a verificar el permiso y el
+// vínculo con la tienda en cada operación.
+const secciones: { href: string; label: string; permisos: string[][] }[] = [
+  { href: "/mi-tienda", label: "Inicio", permisos: [] },
+  { href: "/mi-tienda/productos", label: "Productos", permisos: [ACCESO.verMisProductos] },
+  { href: "/mi-tienda/pedidos", label: "Pedidos", permisos: [ACCESO.verPedidosTienda] },
+  { href: "/mi-tienda/cupones", label: "Cupones", permisos: [] },
+  { href: "/mi-tienda/publicaciones", label: "Publicaciones", permisos: [ACCESO.verMisPublicaciones] },
+  { href: "/mi-tienda/datos", label: "Datos de la tienda", permisos: [ACCESO.verMiTienda, ACCESO.verMisContactos] },
 ];
 
 export default function MiTiendaLayout({
@@ -71,12 +72,13 @@ export default function MiTiendaLayout({
     );
   }
 
-  const esDueno = sesion.vinculoTienda === "PRINCIPAL";
-  const visibles = secciones.filter((seccion) => esDueno || !seccion.soloDueno);
+  const permitida = (seccion: (typeof secciones)[number]) =>
+    seccion.permisos.length === 0 || seccion.permisos.some((permisos) => cumplePermisos(sesion.permisos, permisos));
+  const visibles = secciones.filter(permitida);
   const seccionActual = secciones.find((seccion) =>
     seccion.href === "/mi-tienda" ? pathname === "/mi-tienda" : pathname.startsWith(seccion.href),
   );
-  const autorizado = esDueno || !seccionActual?.soloDueno;
+  const autorizado = !seccionActual || permitida(seccionActual);
 
   return (
     <div className={styles.page}>
@@ -116,8 +118,8 @@ export default function MiTiendaLayout({
           children
         ) : (
           <div className={styles.card}>
-            <p role="alert">Esta sección es solo para el dueño de la tienda.</p>
-            <Link href="/mi-tienda/productos">Volver a productos</Link>
+            <p role="alert">Tu rol no tiene permiso para ver esta sección.</p>
+            <Link href="/mi-tienda">Volver al inicio de Mi tienda</Link>
           </div>
         )}
       </main>

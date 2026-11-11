@@ -33,6 +33,7 @@ public class PedidoController {
     // El comprobante viaja junto con el pedido: un invitado no tiene sesion para subirlo despues.
     // Es obligatorio, pero lo valida el service para responder con un mensaje claro.
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("isAnonymous() or hasAuthority('CREATE_MIS_COMPRAS')")
     public ResponseEntity<StandardResponseDto<PedidoResponseDto>> crear(
             @Valid @RequestPart("pedido") PedidoCreateRequestDto request,
             @RequestPart(value = "comprobante", required = false) MultipartFile comprobante) {
@@ -40,6 +41,7 @@ public class PedidoController {
     }
 
     @GetMapping("/mios")
+    @PreAuthorize("hasAuthority('LIST_MIS_COMPRAS')")
     public ResponseEntity<StandardResponseDto<List<PedidoResponseDto>>> listarMios(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int perPage) {
@@ -53,11 +55,13 @@ public class PedidoController {
     }
 
     @GetMapping("/mios/{id}")
+    @PreAuthorize("hasAuthority('LIST_MIS_COMPRAS')")
     public ResponseEntity<StandardResponseDto<PedidoResponseDto>> obtenerMio(@PathVariable Long id) {
         return ok(pedidoService.obtenerMio(id));
     }
 
     @PutMapping("/mios/{id}/cancelar")
+    @PreAuthorize("hasAuthority('UPDATE_MIS_COMPRAS')")
     public ResponseEntity<StandardResponseDto<PedidoResponseDto>> cancelarMio(@PathVariable Long id) {
         return ok(pedidoService.cancelarMio(id));
     }
