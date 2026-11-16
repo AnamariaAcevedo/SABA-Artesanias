@@ -220,6 +220,7 @@ public class MiTiendaServiceImpl implements MiTiendaService {
     @Override
     @Transactional
     public void eliminarProducto(Long idProducto) {
+        exigirDueno("Solo el dueño de la tienda puede eliminar productos.");
         productoDeMiTienda(idProducto);
 
         // Las imagenes tambien se dan de baja para no dejarlas huerfanas.
@@ -448,7 +449,8 @@ public class MiTiendaServiceImpl implements MiTiendaService {
     @Override
     @Transactional
     public void eliminarPublicacion(Long idPublicacion) {
-        publicacionService.eliminarDeTienda(vinculoActual().getTienda().getId(), idPublicacion);
+        TiendaUsuario vinculo = exigirDueno("Solo el dueño de la tienda puede eliminar publicaciones.");
+        publicacionService.eliminarDeTienda(vinculo.getTienda().getId(), idPublicacion);
     }
 
     @Override
@@ -508,6 +510,16 @@ public class MiTiendaServiceImpl implements MiTiendaService {
 
         return tiendaUsuarioRepository.findFirstByUsuario_Id(usuario.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "No gestionás ninguna tienda"));
+    }
+
+    // Acciones que no se pueden deshacer desde la aplicacion: ademas del permiso del rol,
+    // se exige el vinculo PRINCIPAL, por si desde el panel se le asigna el permiso a otro rol.
+    private TiendaUsuario exigirDueno(String mensaje) {
+        TiendaUsuario vinculo = vinculoActual();
+        if (vinculo.getTipo() != TipoVinculoTienda.PRINCIPAL) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, mensaje);
+        }
+        return vinculo;
     }
 
     private Tienda tiendaActual() {

@@ -7,6 +7,8 @@ import com.marketplace.marketplace_backend.modules.direccion.Direccion;
 import com.marketplace.marketplace_backend.modules.direccion.DireccionRepository;
 import com.marketplace.marketplace_backend.modules.rol.Rol;
 import com.marketplace.marketplace_backend.modules.rol.RolRepository;
+import com.marketplace.marketplace_backend.modules.tiendausuario.TiendaUsuarioRepository;
+import com.marketplace.marketplace_backend.modules.tiendausuario.TipoVinculoTienda;
 import com.marketplace.marketplace_backend.modules.usuario.dto.UsuarioCreateRequestDto;
 import com.marketplace.marketplace_backend.modules.usuario.dto.UsuarioFilterDto;
 import com.marketplace.marketplace_backend.modules.usuario.dto.UsuarioResponseDto;
@@ -28,8 +30,11 @@ import java.util.List;
 // Implementación de la lógica de negocio para gestionar usuarios
 public class UsuarioServiceImpl implements UsuarioService {
 
+    private static final String ROL_VENDEDOR_SECUNDARIO = "VendedorSecundario";
+
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
+    private final TiendaUsuarioRepository tiendaUsuarioRepository;
     private final DireccionRepository direccionRepository;
     private final BarrioRepository barrioRepository;
     private final PasswordEncoder passwordEncoder;
@@ -128,6 +133,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         if (request.getIdRol() != null) {
             Rol rol = rolRepository.findById(request.getIdRol())
                     .orElseThrow(() -> new EntityNotFoundException("Rol no encontrado con ID: " + request.getIdRol()));
+            quitarDelEquipoSiDejaDeSerColaborador(usuario, rol);
             usuario.setRol(rol);
         }
 
@@ -139,6 +145,21 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         Usuario updated = usuarioRepository.save(usuario);
         return toResponse(updated);
+    }
+
+    // Si un colaborador de una tienda (vinculo SECUNDARIO) pasa a otro rol, deja de ser
+    // colaborador: se borra el vinculo para que no quede en el equipo sin sus permisos.
+    // El vinculo del dueño (PRINCIPAL) no se toca.
+    private void quitarDelEquipoSiDejaDeSerColaborador(Usuario usuario, Rol nuevoRol) {
+        if (ROL_VENDEDOR_SECUNDARIO.equalsIgnoreCase(nuevoRol.getNombre())) {
+            return;
+        }
+        tiendaUsuarioRepository.findFirstByUsuario_Id(usuario.getId())
+                .filter(vinculo -> vinculo.getTipo() == TipoVinculoTienda.SECUNDARIO)
+                .ifPresent(vinculo -> {
+                    vinculo.setDeletedAt(LocalDateTime.now());
+                    tiendaUsuarioRepository.save(vinculo);
+                });
     }
 
     @Override

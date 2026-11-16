@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import styles from "@/components/admin/admin.module.css";
 import ConPermiso from "@/components/auth/ConPermiso";
+import { useSesion } from "@/components/auth/SesionProvider";
 import { confirmar } from "@/components/dialogos/Dialogos";
 import { ACCESO } from "@/lib/access";
 import miTiendaStyles from "@/components/mi-tienda/miTienda.module.css";
@@ -16,6 +17,8 @@ import type { Publicacion } from "@/types/Publicacion";
 // Publicaciones de la propia tienda, incluidas las vencidas: al público ya no se
 // le muestran, pero acá se pueden editar para volver a publicarlas.
 export default function MisPublicacionesPage() {
+  // Eliminar es solo del dueño; el colaborador crea y edita (el backend también lo exige).
+  const esDueno = useSesion().sesion?.vinculoTienda === "PRINCIPAL";
   const [publicaciones, setPublicaciones] = useState<Publicacion[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [page, setPage] = useState(1);
@@ -151,16 +154,18 @@ export default function MisPublicacionesPage() {
                           Editar
                         </Link>
                       </ConPermiso>
-                      <ConPermiso permisos={ACCESO.eliminarMisPublicaciones}>
-                        <button
-                          type="button"
-                          disabled={eliminando !== null}
-                          onClick={() => void eliminar(publicacion)}
-                          className={`${styles.linkAction} ${styles.linkActionDanger}`}
-                        >
-                          {eliminando === publicacion.id ? "Eliminando…" : "Eliminar"}
-                        </button>
-                      </ConPermiso>
+                      {esDueno && (
+                        <ConPermiso permisos={ACCESO.eliminarMisPublicaciones}>
+                          <button
+                            type="button"
+                            disabled={eliminando !== null}
+                            onClick={() => void eliminar(publicacion)}
+                            className={`${styles.linkAction} ${styles.linkActionDanger}`}
+                          >
+                            {eliminando === publicacion.id ? "Eliminando…" : "Eliminar"}
+                          </button>
+                        </ConPermiso>
+                      )}
                     </div>
                   </td>
                 </tr>
