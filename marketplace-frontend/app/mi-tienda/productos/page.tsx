@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import styles from "@/components/admin/admin.module.css";
 import miTiendaStyles from "@/components/mi-tienda/miTienda.module.css";
 import ConPermiso from "@/components/auth/ConPermiso";
+import { useSesion } from "@/components/auth/SesionProvider";
 import { confirmar } from "@/components/dialogos/Dialogos";
 import { ACCESO } from "@/lib/access";
 import { ApiError, apiFetch, apiFetchConPaginacion } from "@/lib/api";
@@ -14,6 +15,8 @@ import { urlImagen } from "@/types/miTienda";
 import BuscadorConSugerencias, { type Sugerencia } from "@/components/buscador/BuscadorConSugerencias";
 
 export default function MisProductosPage() {
+  // Eliminar es solo del dueño; el colaborador crea y edita (el backend también lo exige).
+  const esDueno = useSesion().sesion?.vinculoTienda === "PRINCIPAL";
   const [productos, setProductos] = useState<Producto[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [page, setPage] = useState(1);
@@ -206,16 +209,18 @@ export default function MisProductosPage() {
                           Editar
                         </Link>
                       </ConPermiso>
-                      <ConPermiso permisos={ACCESO.eliminarMisProductos}>
-                        <button
-                          type="button"
-                          disabled={eliminando === producto.id}
-                          onClick={() => eliminar(producto)}
-                          className={`${styles.linkAction} ${styles.linkActionDanger}`}
-                        >
-                          {eliminando === producto.id ? "Eliminando…" : "Eliminar"}
-                        </button>
-                      </ConPermiso>
+                      {esDueno && (
+                        <ConPermiso permisos={ACCESO.eliminarMisProductos}>
+                          <button
+                            type="button"
+                            disabled={eliminando === producto.id}
+                            onClick={() => eliminar(producto)}
+                            className={`${styles.linkAction} ${styles.linkActionDanger}`}
+                          >
+                            {eliminando === producto.id ? "Eliminando…" : "Eliminar"}
+                          </button>
+                        </ConPermiso>
+                      )}
                     </div>
                   </td>
                 </tr>

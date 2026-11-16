@@ -12,14 +12,15 @@ import { ACCESO, cumplePermisos } from "@/lib/access";
 
 // Secciones de "Mi tienda": cada una se ve con cualquiera de sus permisos, que se
 // asignan al rol desde el panel. El backend vuelve a verificar el permiso y el
-// vínculo con la tienda en cada operación.
-const secciones: { href: string; label: string; permisos: string[][] }[] = [
+// vínculo con la tienda en cada operación. `soloDueno` la limita al vínculo PRINCIPAL.
+const secciones: { href: string; label: string; permisos: string[][]; soloDueno?: boolean }[] = [
   { href: "/mi-tienda", label: "Inicio", permisos: [] },
   { href: "/mi-tienda/productos", label: "Productos", permisos: [ACCESO.verMisProductos] },
   { href: "/mi-tienda/pedidos", label: "Pedidos", permisos: [ACCESO.verPedidosTienda] },
   { href: "/mi-tienda/cupones", label: "Cupones", permisos: [] },
   { href: "/mi-tienda/publicaciones", label: "Publicaciones", permisos: [ACCESO.verMisPublicaciones] },
   { href: "/mi-tienda/datos", label: "Datos de la tienda", permisos: [ACCESO.verMiTienda, ACCESO.verMisContactos] },
+  { href: "/mi-tienda/equipo", label: "Equipo", permisos: [ACCESO.verMisColaboradores], soloDueno: true },
 ];
 
 export default function MiTiendaLayout({
@@ -73,7 +74,8 @@ export default function MiTiendaLayout({
   }
 
   const permitida = (seccion: (typeof secciones)[number]) =>
-    seccion.permisos.length === 0 || seccion.permisos.some((permisos) => cumplePermisos(sesion.permisos, permisos));
+    (!seccion.soloDueno || sesion.vinculoTienda === "PRINCIPAL") &&
+    (seccion.permisos.length === 0 || seccion.permisos.some((permisos) => cumplePermisos(sesion.permisos, permisos)));
   const visibles = secciones.filter(permitida);
   const seccionActual = secciones.find((seccion) =>
     seccion.href === "/mi-tienda" ? pathname === "/mi-tienda" : pathname.startsWith(seccion.href),
