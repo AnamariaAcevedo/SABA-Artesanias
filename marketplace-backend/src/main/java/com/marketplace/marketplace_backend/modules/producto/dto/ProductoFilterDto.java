@@ -14,4 +14,7 @@ public class ProductoFilterDto {
     private Long idTienda;
     private Long idCategoria;
     private Long idSubcategoria;
+
+    // Lo fija el servidor (nunca el cliente): false solo para el dueño o un administrador.
+    private Boolean soloActivos = true;
 }

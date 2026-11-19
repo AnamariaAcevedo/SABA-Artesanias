@@ -95,6 +95,10 @@ public class PedidoServiceImpl implements PedidoService {
         Tienda tienda = tiendaRepository.findByIdParaActualizar(request.getIdTienda())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tienda no encontrada"));
 
+        if (Boolean.FALSE.equals(tienda.getActivo())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    tienda.getNombre() + " no está recibiendo pedidos por ahora. Quitá sus productos del carrito para continuar.");
+        }
         if (!tienda.tieneDatosDePago()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     tienda.getNombre() + " todavía no cargó sus datos de cuenta, por lo que no puede recibir pedidos");
@@ -106,8 +110,14 @@ public class PedidoServiceImpl implements PedidoService {
         double total = 0;
         for (PedidoItemRequestDto item : request.getItems()) {
             Producto producto = productoRepository.findById(item.getIdProducto())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado: " + item.getIdProducto()));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                            "Uno de los productos ya no existe. Quitalo del carrito para continuar."));
 
+            // Pudo quedar en un carrito de antes de que la tienda lo desactivara.
+            if (Boolean.FALSE.equals(producto.getActivo())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "El producto " + producto.getNombre() + " ya no está a la venta. Quitalo del carrito para continuar.");
+            }
             if (!producto.getTienda().getId().equals(tienda.getId())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         "El producto " + producto.getNombre() + " no pertenece a la tienda indicada");
@@ -120,6 +130,7 @@ public class PedidoServiceImpl implements PedidoService {
             double subtotal = precioUnitario * item.getCantidad();
             ProductoPedido linea = new ProductoPedido();
             linea.setProducto(producto);
+            linea.setNombreProducto(producto.getNombre());
             linea.setCantidad(item.getCantidad());
             linea.setPrecioUnitario(precioUnitario);
             linea.setTotal(subtotal);
@@ -440,10 +451,10 @@ public class PedidoServiceImpl implements PedidoService {
 
         if (pedido.getEstado() == EstadoPedido.CONFIRMADO) {
             List<ProductoPedido> lineas = productoPedidoRepository.findByPedido_IdOrderByIdAsc(pedido.getId());
+            // El producto puede haberse desactivado o eliminado despues de confirmar el
+            // pedido: el stock se devuelve igual. getId() no carga el producto.
             for (ProductoPedido linea : lineas) {
-                Producto producto = linea.getProducto();
-                producto.setCantidadDisponible(producto.getCantidadDisponible() + linea.getCantidad());
-                productoRepository.save(producto);
+                productoRepository.devolverStock(linea.getProducto().getId(), linea.getCantidad());
             }
         }
 
@@ -472,7 +483,7 @@ public class PedidoServiceImpl implements PedidoService {
     private void enviarCorreoConfirmacion(Pedido pedido, List<ProductoPedido> lineas) {
         StringBuilder detalle = new StringBuilder();
         lineas.forEach(linea -> detalle.append("- ")
-                .append(linea.getProducto().getNombre())
+                .append(nombreDelProducto(linea))
                 .append(" x")
                 .append(linea.getCantidad())
                 .append(": Gs. ")
@@ -523,15 +534,23 @@ public class PedidoServiceImpl implements PedidoService {
         return usuarioRepository.findByUsuarioIgnoreCase(auth.getName()).orElse(null);
     }
 
+    // Usa el nombre guardado en la linea; solo lee el producto si la linea es anterior a
+    // esa columna y el script todavia no la completo.
+    private static String nombreDelProducto(ProductoPedido linea) {
+        return linea.getNombreProducto() != null ? linea.getNombreProducto() : linea.getProducto().getNombre();
+    }
+
     private PedidoResponseDto toResponse(Pedido pedido) {
         List<ProductoPedido> lineas = productoPedidoRepository.findByPedido_IdOrderByIdAsc(pedido.getId());
         List<ProductoPedidoResponseDto> items = lineas.stream()
                 .map(linea -> new ProductoPedidoResponseDto(
                         linea.getProducto().getId(),
-                        linea.getProducto().getNombre(),
+                        nombreDelProducto(linea),
                         linea.getCantidad(),
                         linea.getPrecioUnitario(),
-                        linea.getTotal()
+                        linea.getTotal(),
+                        // existsById no ve los eliminados; getId() no carga el producto.
+                        productoRepository.existsById(linea.getProducto().getId())
                 ))
                 .toList();
 

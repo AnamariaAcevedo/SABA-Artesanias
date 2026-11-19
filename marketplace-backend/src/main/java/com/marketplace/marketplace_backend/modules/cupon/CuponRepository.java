@@ -1,5 +1,6 @@
 package com.marketplace.marketplace_backend.modules.cupon;
 
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,7 +18,9 @@ public interface CuponRepository extends JpaRepository<Cupon, Long> {
 
     Optional<Cupon> findByIdAndTienda_Id(Long id, Long idTienda);
 
-    // Cupones vigentes hoy, para el catalogo publico.
-    Page<Cupon> findByFechaInicioLessThanEqualAndFechaFinGreaterThanEqualOrderByIdDesc(
+    // Cupones vigentes hoy de tiendas activas, para el catalogo publico.
+    Page<Cupon> findByFechaInicioLessThanEqualAndFechaFinGreaterThanEqualAndTienda_ActivoTrueOrderByIdDesc(
             LocalDate hoy1, LocalDate hoy2, Pageable pageable);
+
+    List<Cupon> findAllByTienda_Id(Long idTienda);
 }

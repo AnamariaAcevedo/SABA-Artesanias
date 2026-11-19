@@ -197,11 +197,74 @@ class PedidoServiceImplTests {
         verify(pedidoRepository).findByTienda_IdOrderByIdDesc(eq(7L), any(Pageable.class));
     }
 
+    @Test
+    void rechazaUnProductoDesactivado() {
+        prepararCompraDeInvitado();
+        Producto desactivado = mock(Producto.class);
+        when(desactivado.getActivo()).thenReturn(false);
+        when(desactivado.getNombre()).thenReturn("Mantel");
+        when(productoRepository.findById(2L)).thenReturn(Optional.of(desactivado));
+        MockMultipartFile archivo = new MockMultipartFile("comprobante", "pago.pdf", "application/pdf", PDF);
+
+        ResponseStatusException error = assertThrows(ResponseStatusException.class,
+                () -> service.crear(pedidoDeInvitado(), archivo));
+
+        assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
+        assertEquals("El producto Mantel ya no está a la venta. Quitalo del carrito para continuar.", error.getReason());
+    }
+
+    @Test
+    void rechazaUnPedidoAUnaTiendaDesactivada() {
+        prepararCompraDeInvitado();
+        Tienda desactivada = mock(Tienda.class);
+        when(desactivada.getActivo()).thenReturn(false);
+        when(desactivada.getNombre()).thenReturn("Cueros del Sur");
+        when(tiendaRepository.findByIdParaActualizar(1L)).thenReturn(Optional.of(desactivada));
+        MockMultipartFile archivo = new MockMultipartFile("comprobante", "pago.pdf", "application/pdf", PDF);
+
+        ResponseStatusException error = assertThrows(ResponseStatusException.class,
+                () -> service.crear(pedidoDeInvitado(), archivo));
+
+        assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
+        assertEquals("Cueros del Sur no está recibiendo pedidos por ahora. Quitá sus productos del carrito para continuar.",
+                error.getReason());
+    }
+
+    @Test
+    void alCancelarUnPedidoConfirmadoDevuelveElStockAunqueElProductoYaNoEste() {
+        Tienda tienda = new Tienda();
+        tienda.setId(1L);
+        Pedido pedido = new Pedido();
+        pedido.setId(10L);
+        pedido.setTienda(tienda);
+        pedido.setBarrio(new Barrio());
+        pedido.setEstado(EstadoPedido.CONFIRMADO);
+        when(pedidoRepository.findByIdAndTienda_Id(10L, 1L)).thenReturn(Optional.of(pedido));
+        when(pedidoRepository.save(pedido)).thenReturn(pedido);
+
+        // El producto pudo eliminarse: solo se usa su id, que no lo carga.
+        Producto producto = new Producto();
+        producto.setId(2L);
+        ProductoPedido linea = new ProductoPedido();
+        linea.setProducto(producto);
+        linea.setNombreProducto("Mantel");
+        linea.setCantidad(3);
+        when(productoPedidoRepository.findByPedido_IdOrderByIdAsc(10L)).thenReturn(List.of(linea));
+
+        PedidoResponseDto cancelado = service.cancelarDeTienda(1L, 10L);
+
+        verify(productoRepository).devolverStock(2L, 3);
+        assertEquals("CANCELADO", cancelado.getEstado());
+        assertEquals("Mantel", cancelado.getItems().get(0).getNombreProducto());
+    }
+
     private void prepararCompraDeInvitado() {
         Tienda tienda = mock(Tienda.class);
         when(tienda.getId()).thenReturn(1L);
         when(tienda.getNombre()).thenReturn("Tienda");
         when(tienda.tieneDatosDePago()).thenReturn(true);
+        // Un mock devuelve false para un Boolean: hay que indicar que estan activos.
+        when(tienda.getActivo()).thenReturn(true);
         when(tiendaRepository.findByIdParaActualizar(1L)).thenReturn(Optional.of(tienda));
 
         Barrio barrio = mock(Barrio.class);
@@ -210,6 +273,7 @@ class PedidoServiceImplTests {
 
         Producto producto = mock(Producto.class);
         when(producto.getTienda()).thenReturn(tienda);
+        when(producto.getActivo()).thenReturn(true);
         when(producto.getCantidadDisponible()).thenReturn(10);
         when(producto.getPrecio()).thenReturn(1000.0);
         when(productoRepository.findById(2L)).thenReturn(Optional.of(producto));

@@ -1,5 +1,6 @@
 package com.marketplace.marketplace_backend.modules.rol;
 
+import com.marketplace.marketplace_backend.modules.usuario.UsuarioRepository;
 import com.marketplace.marketplace_backend.common.PagedResult;
 import com.marketplace.marketplace_backend.modules.permiso.Permiso;
 import com.marketplace.marketplace_backend.modules.permiso.PermisoRepository;
@@ -26,9 +27,15 @@ import java.util.List;
 // Implementación de la lógica de negocio para gestionar roles
 public class RolServiceImpl implements RolService {
 
+    // El sistema busca estos roles por nombre: el registro asigna Cliente, aceptar una
+    // solicitud asigna VendedorPrincipal y el equipo de la tienda VendedorSecundario.
+    private static final List<String> ROLES_DEL_SISTEMA =
+            List.of("Administrador", "Cliente", "VendedorPrincipal", "VendedorSecundario");
+
     private final RolRepository rolRepository;
     private final RolPermisoRepository rolPermisoRepository;
     private final PermisoRepository permisoRepository;
+    private final UsuarioRepository usuarioRepository;
 
     @Override
     @Transactional
@@ -55,6 +62,8 @@ public class RolServiceImpl implements RolService {
             throw new IllegalArgumentException("Debe enviar al menos un campo a actualizar.");
         }
 
+        protegerRolDelSistema(rol, request.getNombre(), request.getActivo());
+
         if (request.getNombre() != null) {
             rol.setNombre(request.getNombre());
         }
@@ -80,8 +89,15 @@ public class RolServiceImpl implements RolService {
         Rol rol = rolRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Rol no encontrado con ID: " + id));
 
-        // Cuando exista el módulo usuario (SABA-37/55), validar que el rol
-        // no esté asignado a ningún usuario antes de permitir el borrado.
+        if (esRolDelSistema(rol)) {
+            throw new IllegalStateException("No se puede eliminar el rol " + rol.getNombre() + ": lo usa el sistema.");
+        }
+        // Los usuarios con ese rol no podrian iniciar sesion: sus permisos se leen del rol.
+        long usuarios = usuarioRepository.countByRol_Id(id);
+        if (usuarios > 0) {
+            throw new IllegalStateException("No se puede eliminar el rol: lo tienen " + usuarios
+                    + (usuarios == 1 ? " usuario" : " usuarios") + ". Asignales otro rol primero.");
+        }
         rol.setDeletedAt(LocalDateTime.now());
         rolRepository.save(rol);
     }
@@ -154,6 +170,8 @@ public class RolServiceImpl implements RolService {
         Rol rol = rolRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Rol no encontrado con ID: " + id));
 
+        protegerRolDelSistema(rol, request.getNombre(), request.getActivo());
+
         rol.setNombre(request.getNombre());
         if (request.getActivo() != null) {
             rol.setActivo(request.getActivo());
@@ -197,5 +215,25 @@ public class RolServiceImpl implements RolService {
                 rol.getCreatedAt(),
                 rol.getUpdatedAt()
         );
+    }
+
+    private static boolean esRolDelSistema(Rol rol) {
+        return ROLES_DEL_SISTEMA.stream().anyMatch(nombre -> nombre.equalsIgnoreCase(rol.getNombre()));
+    }
+
+    // Un rol del sistema no se puede desactivar (sus usuarios quedarian sin permisos; con
+    // Administrador, nadie podria volver a activarlo desde la aplicacion) ni renombrar
+    // (el sistema dejaria de encontrarlo). Sus permisos si se pueden cambiar.
+    private static void protegerRolDelSistema(Rol rol, String nombreNuevo, Boolean activoNuevo) {
+        if (!esRolDelSistema(rol)) {
+            return;
+        }
+        if (Boolean.FALSE.equals(activoNuevo)) {
+            throw new IllegalStateException("No se puede desactivar el rol " + rol.getNombre() + ": lo usa el sistema.");
+        }
+        // Exacto, sin ignorar mayusculas: la busqueda por nombre las distingue.
+        if (nombreNuevo != null && !nombreNuevo.trim().equals(rol.getNombre())) {
+            throw new IllegalStateException("No se puede cambiar el nombre del rol " + rol.getNombre() + ": lo usa el sistema.");
+        }
     }
 }

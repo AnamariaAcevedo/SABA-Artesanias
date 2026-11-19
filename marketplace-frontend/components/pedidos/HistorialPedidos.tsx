@@ -138,7 +138,12 @@ export default function HistorialPedidos({ onVolver }: { onVolver?: () => void }
                   <ul className={pedidosStyles.items}>
                     {pedido.items.map((item) => (
                       <li key={item.idProducto}>
-                        <Link href={`/productos/${item.idProducto}`}>{item.nombreProducto}</Link> · {item.cantidad} ×{" "}
+                        {item.productoExiste === false ? (
+                          item.nombreProducto
+                        ) : (
+                          <Link href={`/productos/${item.idProducto}`}>{item.nombreProducto}</Link>
+                        )}{" "}
+                        · {item.cantidad} ×{" "}
                         {formatearPrecio(item.precioUnitario)}
                       </li>
                     ))}

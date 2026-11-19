@@ -24,4 +24,6 @@ public class SesionActualResponseDto {
     private Long idTienda;
     private String nombreTienda;
     private String vinculoTienda;
+    // false si la tienda esta desactivada (Mi tienda muestra el aviso); null sin tienda.
+    private Boolean tiendaActiva;
 }

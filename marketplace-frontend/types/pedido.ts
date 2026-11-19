@@ -26,6 +26,8 @@ export interface ProductoPedido {
   cantidad: number;
   precioUnitario: number;
   total: number;
+  // false si el producto se eliminó después del pedido (se muestra sin link).
+  productoExiste: boolean;
 }
 
 export interface Pedido {

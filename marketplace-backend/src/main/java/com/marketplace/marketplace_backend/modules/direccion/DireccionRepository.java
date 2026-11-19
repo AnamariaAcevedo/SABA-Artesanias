@@ -17,4 +17,6 @@ public interface DireccionRepository extends JpaRepository<Direccion, Long> {
     Page<Direccion> findByCalleContainingIgnoreCase(String calle, Pageable pageable);
 
     Page<Direccion> findByBarrio_Id(Long idBarrio, Pageable pageable);
+
+    long countByBarrio_Id(Long idBarrio);
 }

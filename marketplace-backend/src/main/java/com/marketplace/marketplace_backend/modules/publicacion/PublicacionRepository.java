@@ -1,5 +1,6 @@
 package com.marketplace.marketplace_backend.modules.publicacion;
 
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,7 +18,8 @@ public interface PublicacionRepository extends JpaRepository<Publicacion, Long> 
 
     @Query("""
             select p from Publicacion p
-            where p.fechaExpiracion is null or p.fechaExpiracion > :ahora
+            where (p.fechaExpiracion is null or p.fechaExpiracion > :ahora)
+              and p.tienda.activo = true
             order by p.id desc
             """)
     Page<Publicacion> buscarVigentes(@Param("ahora") LocalDateTime ahora, Pageable pageable);
@@ -25,7 +27,12 @@ public interface PublicacionRepository extends JpaRepository<Publicacion, Long> 
     @Query("""
             select p from Publicacion p
             where p.tienda.id = :idTienda and (p.fechaExpiracion is null or p.fechaExpiracion > :ahora)
+              and p.tienda.activo = true
             order by p.id desc
             """)
     Page<Publicacion> buscarVigentesDeTienda(@Param("idTienda") Long idTienda, @Param("ahora") LocalDateTime ahora, Pageable pageable);
+
+    long countByCupon_Id(Long idCupon);
+
+    List<Publicacion> findAllByTienda_Id(Long idTienda);
 }

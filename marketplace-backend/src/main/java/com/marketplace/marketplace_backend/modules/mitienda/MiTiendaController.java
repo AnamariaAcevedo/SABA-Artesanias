@@ -48,6 +48,20 @@ public class MiTiendaController {
         return ok(miTiendaService.actualizarTienda(request));
     }
 
+    @PutMapping("/activar")
+    @PreAuthorize("hasAuthority('UPDATE_MI_TIENDA')")
+    public ResponseEntity<StandardResponseDto<Void>> activarTienda() {
+        miTiendaService.cambiarActivoTienda(true);
+        return ok(null);
+    }
+
+    @PutMapping("/desactivar")
+    @PreAuthorize("hasAuthority('UPDATE_MI_TIENDA')")
+    public ResponseEntity<StandardResponseDto<Void>> desactivarTienda() {
+        miTiendaService.cambiarActivoTienda(false);
+        return ok(null);
+    }
+
     @GetMapping("/productos")
     @PreAuthorize("hasAuthority('LIST_MIS_PRODUCTOS')")
     public ResponseEntity<StandardResponseDto<List<ProductoResponseDto>>> listarProductos(
@@ -79,6 +93,18 @@ public class MiTiendaController {
     @PreAuthorize("hasAuthority('UPDATE_MIS_PRODUCTOS')")
     public ResponseEntity<StandardResponseDto<ProductoResponseDto>> actualizarProducto(@PathVariable Long id, @Valid @RequestBody MiProductoRequestDto request) {
         return ok(miTiendaService.actualizarProducto(id, request));
+    }
+
+    @PutMapping("/productos/{id}/activar")
+    @PreAuthorize("hasAuthority('UPDATE_MIS_PRODUCTOS')")
+    public ResponseEntity<StandardResponseDto<ProductoResponseDto>> activarProducto(@PathVariable Long id) {
+        return ok(miTiendaService.cambiarActivoProducto(id, true));
+    }
+
+    @PutMapping("/productos/{id}/desactivar")
+    @PreAuthorize("hasAuthority('UPDATE_MIS_PRODUCTOS')")
+    public ResponseEntity<StandardResponseDto<ProductoResponseDto>> desactivarProducto(@PathVariable Long id) {
+        return ok(miTiendaService.cambiarActivoProducto(id, false));
     }
 
     @DeleteMapping("/productos/{id}")

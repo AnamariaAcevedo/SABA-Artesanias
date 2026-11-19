@@ -1,5 +1,6 @@
 package com.marketplace.marketplace_backend.modules.departamento;
 
+import com.marketplace.marketplace_backend.modules.ciudad.CiudadRepository;
 import com.marketplace.marketplace_backend.common.PagedResult;
 import com.marketplace.marketplace_backend.modules.departamento.dto.DepartamentoCreateRequestDto;
 import com.marketplace.marketplace_backend.modules.departamento.dto.DepartamentoFilterDto;
@@ -25,6 +26,7 @@ public class DepartamentoServiceImpl implements DepartamentoService {
 
     private final DepartamentoRepository departamentoRepository;
     private final PaisRepository paisRepository;
+    private final CiudadRepository ciudadRepository;
 
     @Override
     @Transactional
@@ -76,6 +78,13 @@ public class DepartamentoServiceImpl implements DepartamentoService {
     public void delete(Long id) {
         Departamento departamento = departamentoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Departamento no encontrado"));
+
+        // Sus ciudades quedarian apuntando a un departamento borrado y dejarian de cargarse.
+        long ciudades = ciudadRepository.countByDepartamento_Id(id);
+        if (ciudades > 0) {
+            throw new IllegalStateException("No se puede eliminar el departamento: tiene " + ciudades
+                    + (ciudades == 1 ? " ciudad. Eliminala primero." : " ciudades. Eliminalas primero."));
+        }
 
         departamento.setDeletedAt(LocalDateTime.now());
         departamentoRepository.save(departamento);

@@ -1,5 +1,12 @@
 package com.marketplace.marketplace_backend.modules.usuario;
 
+import org.springframework.security.core.context.SecurityContextHolder;
+import com.marketplace.marketplace_backend.modules.recuperacion.TokenRecuperacionRepository;
+import com.marketplace.marketplace_backend.modules.refreshtoken.RefreshTokenRepository;
+import com.marketplace.marketplace_backend.modules.solicitudvendedor.SolicitudVendedorRepository;
+import com.marketplace.marketplace_backend.modules.reaccion.ReaccionRepository;
+import com.marketplace.marketplace_backend.modules.comentario.ComentarioRepository;
+import com.marketplace.marketplace_backend.modules.pedido.PedidoRepository;
 import com.marketplace.marketplace_backend.common.PagedResult;
 import com.marketplace.marketplace_backend.modules.barrio.Barrio;
 import com.marketplace.marketplace_backend.modules.barrio.BarrioRepository;
@@ -35,6 +42,12 @@ public class UsuarioServiceImpl implements UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
     private final TiendaUsuarioRepository tiendaUsuarioRepository;
+    private final PedidoRepository pedidoRepository;
+    private final ComentarioRepository comentarioRepository;
+    private final ReaccionRepository reaccionRepository;
+    private final SolicitudVendedorRepository solicitudVendedorRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final TokenRecuperacionRepository tokenRecuperacionRepository;
     private final DireccionRepository direccionRepository;
     private final BarrioRepository barrioRepository;
     private final PasswordEncoder passwordEncoder;
@@ -175,8 +188,32 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + id));
 
+        String autenticado = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (usuario.getUsuario().equalsIgnoreCase(autenticado)) {
+            throw new IllegalStateException("No podés eliminar tu propia cuenta.");
+        }
+        // Lo que hizo el usuario apunta a el y dejaria de cargarse. Eliminar queda solo para
+        // cuentas sin uso (de prueba o creadas por error); las demas se desactivan.
+        if (tieneActividad(id)) {
+            throw new IllegalStateException(
+                    "Este usuario tiene actividad registrada (pedidos, tienda, comentarios, reacciones o solicitudes). "
+                            + "Desactivalo en lugar de eliminarlo.");
+        }
+
+        // Sus sesiones abiertas y enlaces de recuperacion dejan de servir.
+        refreshTokenRepository.deleteByUsuario_Id(id);
+        tokenRecuperacionRepository.deleteByUsuario_Id(id);
+
         usuario.setDeletedAt(LocalDateTime.now());
         usuarioRepository.save(usuario);
+    }
+
+    private boolean tieneActividad(Long idUsuario) {
+        return tiendaUsuarioRepository.existsByUsuario_Id(idUsuario)
+                || pedidoRepository.existsByUsuario_Id(idUsuario)
+                || comentarioRepository.existsByUsuario_Id(idUsuario)
+                || reaccionRepository.existsByUsuario_Id(idUsuario)
+                || solicitudVendedorRepository.existsByUsuario_Id(idUsuario);
     }
 
     @Override

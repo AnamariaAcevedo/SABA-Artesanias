@@ -16,6 +16,9 @@ public interface ProductoService {
 
     ProductoResponseDto get(Long id);
 
+    // Activa o desactiva el producto. Desactivar exige que no tenga pedidos pendientes.
+    ProductoResponseDto cambiarActivo(Long id, boolean activo);
+
     void delete(Long id);
 
     PagedResult<List<ProductoResponseDto>> findAll(ProductoFilterDto filter);

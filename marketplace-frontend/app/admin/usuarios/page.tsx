@@ -7,7 +7,7 @@ import { ApiError, apiFetch, apiFetchConPaginacion } from "@/lib/api";
 import type { Pagination } from "@/types/api";
 import type { Usuario } from "@/types/usuario";
 import ConPermiso from "@/components/auth/ConPermiso";
-import { confirmar } from "@/components/dialogos/Dialogos";
+import { avisarError, confirmar } from "@/components/dialogos/Dialogos";
 import { ACCESO } from "@/lib/access";
 import BuscadorConSugerencias, { type Sugerencia } from "@/components/buscador/BuscadorConSugerencias";
 
@@ -120,7 +120,7 @@ export default function UsuariosPage() {
       await apiFetch(`/usuarios/${usuarioSeleccionado.id}`, { method: "DELETE" });
       await cargarUsuarios();
     } catch (cause) {
-      setError(cause instanceof ApiError ? cause.message : "No pudimos eliminar el usuario.");
+      await avisarError("No se puede eliminar el usuario", cause, "No pudimos eliminar el usuario.");
     } finally {
       setAccionEnCurso(null);
     }

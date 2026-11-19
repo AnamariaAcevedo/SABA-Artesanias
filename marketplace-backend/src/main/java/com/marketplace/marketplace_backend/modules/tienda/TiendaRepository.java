@@ -13,9 +13,23 @@ import java.util.Optional;
 
 // Acceso a datos de Tienda: CRUD y búsqueda por nombre
 public interface TiendaRepository extends JpaRepository<Tienda, Long> {
+    // Se mantienen porque el DataSeeder local de cada uno (fuera de git) las usa.
     Page<Tienda> findAllByOrderByIdAsc(Pageable pageable);
 
     Page<Tienda> findByNombreContainingIgnoreCase(String nombre, Pageable pageable);
+
+    // Listado de tiendas. `nombre` llega en minusculas y con los comodines de LIKE
+    // escapados ("" = sin filtro); las inactivas solo se incluyen si soloActivas es false.
+    @Query("""
+            SELECT tienda FROM Tienda tienda
+            WHERE LOWER(tienda.nombre) LIKE CONCAT('%', :nombre, '%') ESCAPE '\\'
+              AND (:soloActivas = false OR tienda.activo = true)
+            ORDER BY tienda.id ASC
+            """)
+    Page<Tienda> buscar(
+            @Param("nombre") String nombre,
+            @Param("soloActivas") boolean soloActivas,
+            Pageable pageable);
 
     boolean existsByDireccion_Id(Long idDireccion);
 

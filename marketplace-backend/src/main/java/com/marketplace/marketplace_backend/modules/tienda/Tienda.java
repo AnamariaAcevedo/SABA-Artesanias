@@ -1,5 +1,6 @@
 package com.marketplace.marketplace_backend.modules.tienda;
 
+import org.hibernate.annotations.ColumnDefault;
 import com.marketplace.marketplace_backend.common.BaseEntity;
 import com.marketplace.marketplace_backend.modules.direccion.Direccion;
 import jakarta.persistence.Column;
@@ -53,6 +54,13 @@ public class Tienda extends BaseEntity {
 
     @Column(name = "alias_cuenta", length = 100)
     private String aliasCuenta;
+
+    // Una tienda inactiva no aparece en el catalogo (ni ella, ni sus productos, ni sus
+    // publicaciones o cupones) y no recibe pedidos nuevos. El dueño la sigue gestionando y
+    // puede reactivarla. El valor por defecto deja activas a las tiendas existentes.
+    @ColumnDefault("true")
+    @Column(nullable = false)
+    private Boolean activo = true;
 
     // El alias es opcional, por eso no cuenta.
     public boolean tieneDatosDePago() {

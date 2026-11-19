@@ -11,7 +11,6 @@ import type { Pedido, PedidoCreateInput } from "@/types/pedido";
 import type { DatosPagoTienda } from "@/types/Tienda";
 import { obtenerDatosPagoTienda } from "@/services/tiendaService";
 import type { CuponPreview } from "@/types/cupon";
-import { obtenerProductoPorId } from "@/services/productoService";
 import { errorDeComprobante } from "@/lib/pedidos";
 import { cancelarPedidoPropio, crearPedido } from "@/services/pedidoService";
 import MenuUsuario from "@/components/auth/MenuUsuario";
@@ -29,7 +28,7 @@ import {
   formatearPrecio,
   quitarDelCarrito,
   quitarVariosDelCarrito,
-  sincronizarCarrito,
+  verificarCarrito,
   useCarrito,
   type ItemCarrito,
 } from "@/lib/carrito";
@@ -81,11 +80,8 @@ export default function ConfirmarCompraPage() {
     const ids = idsProductos ? idsProductos.split(",").map(Number) : [];
 
     async function verificar() {
-      const respuestas = await Promise.all(
-        ids.map((id) => obtenerProductoPorId(id).then((r) => r.data).catch(() => null)),
-      );
+      await verificarCarrito();
       if (cancelado) return;
-      sincronizarCarrito(respuestas.filter((producto) => producto !== null));
       setVerificados(ids.join(","));
     }
 
@@ -146,7 +142,11 @@ export default function ConfirmarCompraPage() {
     if (excluidas.includes(Number(idTienda))) return suma;
     return suma + totalDeTienda(Number(idTienda), lineas);
   }, 0);
-  const sinStockSuficiente = incluidos.filter((item) => item.cantidad > item.cantidadDisponible);
+  // Productos que ya no están a la venta: hay que quitarlos para poder confirmar.
+  const noDisponibles = incluidos.filter((item) => item.disponible === false);
+  const sinStockSuficiente = incluidos.filter(
+    (item) => item.disponible !== false && item.cantidad > item.cantidadDisponible,
+  );
   const tiendasIncluidas = Object.entries(porTienda)
     .map(([idTienda, lineas]) => ({ idTienda: Number(idTienda), lineas }))
     .filter(({ idTienda }) => !excluidas.includes(idTienda));
@@ -204,7 +204,7 @@ export default function ConfirmarCompraPage() {
 
   async function confirmar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
-    if (!puedeComprar || enviando || sinStockSuficiente.length > 0 || incluidos.length === 0 || cargandoDatosPago || haySinDatosPago) return;
+    if (!puedeComprar || enviando || sinStockSuficiente.length > 0 || noDisponibles.length > 0 || incluidos.length === 0 || cargandoDatosPago || haySinDatosPago) return;
 
     const sinComprobante = tiendasIncluidas.find(({ idTienda }) => !comprobantes[idTienda]);
     if (sinComprobante) {
@@ -396,7 +396,9 @@ export default function ConfirmarCompraPage() {
                               +
                             </button>
                           </div>
-                          {item.cantidad > item.cantidadDisponible ? (
+                          {item.disponible === false ? (
+                            <span className={styles.alerta}>Ya no está a la venta: quitalo para continuar.</span>
+                          ) : item.cantidad > item.cantidadDisponible ? (
                             <span className={styles.alerta}>
                               {item.cantidadDisponible === 0
                                 ? "Sin stock: quitalo para continuar."
@@ -629,6 +631,7 @@ export default function ConfirmarCompraPage() {
                   haySesion === undefined ||
                   incluidos.length === 0 ||
                   sinStockSuficiente.length > 0 ||
+                  noDisponibles.length > 0 ||
                   cargandoDatosPago ||
                   haySinDatosPago
                 }
@@ -643,6 +646,11 @@ export default function ConfirmarCompraPage() {
               >
                 Cancelar compra
               </button>
+              {noDisponibles.length > 0 && (
+                <p className={styles.alerta}>
+                  Hay productos que ya no están a la venta. Quitalos del carrito para poder confirmar.
+                </p>
+              )}
               {sinStockSuficiente.length > 0 && (
                 <p className={styles.alerta}>
                   Hay productos sin stock suficiente. Quitalos del carrito para poder confirmar.

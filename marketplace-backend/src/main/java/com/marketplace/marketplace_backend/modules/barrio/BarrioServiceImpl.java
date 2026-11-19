@@ -1,5 +1,9 @@
 package com.marketplace.marketplace_backend.modules.barrio;
 
+import java.util.ArrayList;
+import com.marketplace.marketplace_backend.modules.solicitudvendedor.SolicitudVendedorRepository;
+import com.marketplace.marketplace_backend.modules.pedido.PedidoRepository;
+import com.marketplace.marketplace_backend.modules.direccion.DireccionRepository;
 import com.marketplace.marketplace_backend.common.PagedResult;
 import com.marketplace.marketplace_backend.modules.barrio.dto.BarrioCreateRequestDto;
 import com.marketplace.marketplace_backend.modules.barrio.dto.BarrioFilterDto;
@@ -25,6 +29,9 @@ public class BarrioServiceImpl implements BarrioService {
 
     private final BarrioRepository barrioRepository;
     private final CiudadRepository ciudadRepository;
+    private final DireccionRepository direccionRepository;
+    private final PedidoRepository pedidoRepository;
+    private final SolicitudVendedorRepository solicitudVendedorRepository;
 
     @Override
     @Transactional
@@ -77,6 +84,16 @@ public class BarrioServiceImpl implements BarrioService {
         Barrio barrio = barrioRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Barrio no encontrado"));
 
+        // Las direcciones, los pedidos (tambien los historicos, que muestran el barrio de
+        // entrega) y las solicitudes de vendedor que lo usan dejarian de cargarse.
+        List<String> usos = new ArrayList<>();
+        agregarUso(usos, direccionRepository.countByBarrio_Id(id), "dirección", "direcciones");
+        agregarUso(usos, pedidoRepository.countByBarrio_Id(id), "pedido", "pedidos");
+        agregarUso(usos, solicitudVendedorRepository.countByBarrio_Id(id), "solicitud de vendedor", "solicitudes de vendedor");
+        if (!usos.isEmpty()) {
+            throw new IllegalStateException("No se puede eliminar el barrio: lo usan " + String.join(", ", usos) + ".");
+        }
+
         barrio.setDeletedAt(LocalDateTime.now());
         barrioRepository.save(barrio);
     }
@@ -127,5 +144,11 @@ public class BarrioServiceImpl implements BarrioService {
                 barrio.getCreatedAt(),
                 barrio.getUpdatedAt()
         );
+    }
+
+    private static void agregarUso(List<String> usos, long cantidad, String singular, String plural) {
+        if (cantidad > 0) {
+            usos.add(cantidad + " " + (cantidad == 1 ? singular : plural));
+        }
     }
 }

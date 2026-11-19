@@ -16,4 +16,6 @@ public class ProductoPedidoResponseDto {
     private Integer cantidad;
     private Double precioUnitario;
     private Double total;
+    // false si el producto se elimino despues del pedido: se muestra sin link.
+    private Boolean productoExiste;
 }

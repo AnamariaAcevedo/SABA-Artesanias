@@ -25,6 +25,8 @@ type Sesion = {
     idTienda: number | null;
     nombreTienda: string | null;
     vinculoTienda: "PRINCIPAL" | "SECUNDARIO" | null;
+    // false si la tienda está desactivada; null si no gestiona ninguna.
+    tiendaActiva: boolean | null;
 };
 
 type ContextoSesion = {

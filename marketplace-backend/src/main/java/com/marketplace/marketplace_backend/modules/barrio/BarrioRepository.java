@@ -21,4 +21,6 @@ public interface BarrioRepository extends JpaRepository<Barrio, Long> {
     Page<Barrio> findByCiudad_Id(Long idCiudad, Pageable pageable);
 
     Optional<Barrio> findByNombreIgnoreCaseAndCiudad_IdAndDeletedAtIsNull(String nombre, Long idCiudad);
+
+    long countByCiudad_Id(Long idCiudad);
 }

@@ -48,3 +48,5 @@
 
 .botonPrincipal:focus-visible,
 .botonSecundario:focus-visible { outline: 3px solid #63240e; outline-offset: 2px; }
+
+.detalle small.noDisponible { color: #a3261b; font-weight: bold; }

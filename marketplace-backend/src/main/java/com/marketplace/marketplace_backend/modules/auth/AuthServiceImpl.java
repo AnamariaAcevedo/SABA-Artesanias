@@ -193,7 +193,8 @@ public class AuthServiceImpl implements AuthService {
                 permisos,
                 vinculo == null ? null : vinculo.getTienda().getId(),
                 vinculo == null ? null : vinculo.getTienda().getNombre(),
-                vinculo == null ? null : vinculo.getTipo().name()
+                vinculo == null ? null : vinculo.getTipo().name(),
+                vinculo == null ? null : !Boolean.FALSE.equals(vinculo.getTienda().getActivo())
         );
     }
 }

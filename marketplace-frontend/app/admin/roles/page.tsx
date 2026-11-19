@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { apiFetch, apiFetchConPaginacion } from "@/lib/api";
+import { ApiError, apiFetch, apiFetchConPaginacion } from "@/lib/api";
 import BuscadorConSugerencias, { coincide } from "@/components/buscador/BuscadorConSugerencias";
 import styles from "@/components/admin/admin.module.css";
 import ConPermiso from "@/components/auth/ConPermiso";
-import { confirmar } from "@/components/dialogos/Dialogos";
+import { avisarError, confirmar } from "@/components/dialogos/Dialogos";
 import { ACCESO } from "@/lib/access";
 import { esPermisoObsoleto, type Permiso } from "@/lib/permisos";
 import { resolverModulos } from "@/lib/capacidades";
@@ -380,7 +380,13 @@ function EditorRol({
             guardado();
             window.dispatchEvent(new Event("sesion-cambiada"));
         } catch (cause) {
-            setError(mensajeError(cause));
+            // Lo que el sistema no permite (p. ej. desactivar un rol del sistema) va en un
+            // popup; los errores de datos del formulario quedan junto al formulario.
+            if (cause instanceof ApiError && cause.status === 409) {
+                await avisarError("No se puede guardar el rol", cause, mensajeError(cause));
+            } else {
+                setError(mensajeError(cause));
+            }
         } finally {
             ocupado.current = false;
             setGuardando(false);

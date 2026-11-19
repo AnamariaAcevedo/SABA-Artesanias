@@ -5,6 +5,8 @@ export interface Tienda {
   idDireccion: number;
   nombreDireccion: string;
   direccionCompleta: string;
+  // Inactiva: no aparece en el catálogo ni recibe pedidos.
+  activo: boolean;
   createdAt: string;
   updatedAt: string;
 }

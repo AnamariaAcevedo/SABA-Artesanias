@@ -105,7 +105,7 @@ public class DashboardService {
                 valor(pedidoRepository.sumarVentas(ESTADOS_VENTA, inicioMes, hasta)),
                 ventasPeriodo,
                 pedidosPeriodo == 0 ? 0 : ventasPeriodo / pedidosPeriodo,
-                productoRepository.countByCantidadDisponibleLessThanEqual(STOCK_BAJO),
+                productoRepository.countByCantidadDisponibleLessThanEqualAndActivoTrueAndTienda_ActivoTrue(STOCK_BAJO),
                 solicitudVendedorRepository.countByEstado(EstadoSolicitudVendedor.PENDIENTE),
                 ventasDiarias,
                 tiendas,
