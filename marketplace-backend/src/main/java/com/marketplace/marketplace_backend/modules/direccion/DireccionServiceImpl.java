@@ -1,5 +1,8 @@
 package com.marketplace.marketplace_backend.modules.direccion;
 
+import java.util.ArrayList;
+import com.marketplace.marketplace_backend.modules.tienda.TiendaRepository;
+import com.marketplace.marketplace_backend.modules.usuario.UsuarioRepository;
 import com.marketplace.marketplace_backend.common.PagedResult;
 import com.marketplace.marketplace_backend.modules.barrio.Barrio;
 import com.marketplace.marketplace_backend.modules.barrio.BarrioRepository;
@@ -25,6 +28,8 @@ public class DireccionServiceImpl implements DireccionService {
 
     private final DireccionRepository direccionRepository;
     private final BarrioRepository barrioRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final TiendaRepository tiendaRepository;
 
     @Override
     @Transactional
@@ -90,6 +95,16 @@ public class DireccionServiceImpl implements DireccionService {
     public void delete(Long id) {
         Direccion direccion = direccionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Dirección no encontrada"));
+
+        // Los usuarios y las tiendas que la usan dejarian de cargarse.
+        long usuarios = usuarioRepository.countByDireccion_Id(id);
+        long tiendas = tiendaRepository.countByDireccion_Id(id);
+        if (usuarios + tiendas > 0) {
+            List<String> usos = new ArrayList<>();
+            if (usuarios > 0) usos.add(usuarios + (usuarios == 1 ? " usuario" : " usuarios"));
+            if (tiendas > 0) usos.add(tiendas + (tiendas == 1 ? " tienda" : " tiendas"));
+            throw new IllegalStateException("No se puede eliminar la dirección: la usan " + String.join(" y ", usos) + ".");
+        }
 
         direccion.setDeletedAt(LocalDateTime.now());
         direccionRepository.save(direccion);

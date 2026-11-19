@@ -1,5 +1,6 @@
 package com.marketplace.marketplace_backend.modules.pais;
 
+import com.marketplace.marketplace_backend.modules.departamento.DepartamentoRepository;
 import com.marketplace.marketplace_backend.common.PagedResult;
 import com.marketplace.marketplace_backend.modules.pais.dto.PaisCreateRequestDto;
 import com.marketplace.marketplace_backend.modules.pais.dto.PaisFilterDto;
@@ -22,6 +23,7 @@ import java.util.List;
 public class PaisServiceImpl implements PaisService {
 
     private final PaisRepository paisRepository;
+    private final DepartamentoRepository departamentoRepository;
 
     @Override
     @Transactional
@@ -63,6 +65,13 @@ public class PaisServiceImpl implements PaisService {
     public void delete(Long id) {
         Pais pais = paisRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Pais no encontrado"));
+
+        // Sus departamentos quedarian apuntando a un pais borrado y dejarian de cargarse.
+        long departamentos = departamentoRepository.countByPais_Id(id);
+        if (departamentos > 0) {
+            throw new IllegalStateException("No se puede eliminar el país: tiene " + departamentos
+                    + (departamentos == 1 ? " departamento. Eliminalo primero." : " departamentos. Eliminalos primero."));
+        }
 
         pais.setDeletedAt(LocalDateTime.now());
         paisRepository.save(pais);

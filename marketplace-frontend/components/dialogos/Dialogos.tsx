@@ -92,6 +92,13 @@ export function avisar({ titulo, mensaje, textoBoton = "Entendido" }: OpcionesAv
   );
 }
 
+// Muestra en un popup el motivo que devolvió el backend cuando una acción no se pudo
+// hacer, p. ej. por qué no se puede eliminar algo. Si no hay motivo usa `porDefecto`.
+export function avisarError(titulo: string, causa: unknown, porDefecto: string): Promise<void> {
+  const mensaje = causa instanceof Error && causa.message ? causa.message : porDefecto;
+  return avisar({ titulo, mensaje });
+}
+
 export default function DialogosHost() {
   const actual = useSyncExternalStore(suscribir, pedidoActual, sinPedidosEnServidor);
   if (!actual) return null;

@@ -6,7 +6,7 @@ import styles from "@/components/admin/admin.module.css";
 import miTiendaStyles from "@/components/mi-tienda/miTienda.module.css";
 import ConPermiso from "@/components/auth/ConPermiso";
 import { useSesion } from "@/components/auth/SesionProvider";
-import { confirmar } from "@/components/dialogos/Dialogos";
+import { avisarError, confirmar } from "@/components/dialogos/Dialogos";
 import { ACCESO } from "@/lib/access";
 import { ApiError, apiFetch, apiFetchConPaginacion } from "@/lib/api";
 import type { Pagination } from "@/types/api";
@@ -25,6 +25,7 @@ export default function MisProductosPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [eliminando, setEliminando] = useState<number | null>(null);
+  const [cambiandoActivo, setCambiandoActivo] = useState<number | null>(null);
 
   const perPage = 10;
 
@@ -84,6 +85,37 @@ export default function MisProductosPage() {
     setNombreBuscado(sugerencia.texto);
   }
 
+  // Desactivar lo saca del catálogo sin borrarlo; el backend lo rechaza si el producto
+  // tiene pedidos pendientes y el mensaje se muestra tal cual.
+  async function cambiarActivo(producto: Producto) {
+    const activar = !producto.activo;
+    if (!activar) {
+      const confirmado = await confirmar({
+        titulo: "¿Desactivar este producto?",
+        mensaje: `"${producto.nombre}" deja de verse en el catálogo y no se puede comprar. Podés volver a activarlo cuando quieras.`,
+        textoConfirmar: "Desactivar",
+      });
+      if (!confirmado) return;
+    }
+    setCambiandoActivo(producto.id);
+    setError("");
+    try {
+      const actualizado = await apiFetch<Producto>(
+        `/mi-tienda/productos/${producto.id}/${activar ? "activar" : "desactivar"}`,
+        { method: "PUT" },
+      );
+      setProductos((actuales) => actuales.map((actual) => (actual.id === actualizado.id ? actualizado : actual)));
+    } catch (cause) {
+      await avisarError(
+        `No se puede ${activar ? "activar" : "desactivar"} el producto`,
+        cause,
+        "No pudimos cambiar el estado del producto.",
+      );
+    } finally {
+      setCambiandoActivo(null);
+    }
+  }
+
   async function eliminar(producto: Producto) {
     const confirmado = await confirmar({
       titulo: "¿Eliminar este producto?",
@@ -103,7 +135,7 @@ export default function MisProductosPage() {
         await cargarProductos();
       }
     } catch (cause) {
-      setError(cause instanceof ApiError ? cause.message : "No pudimos eliminar el producto.");
+      await avisarError("No se puede eliminar el producto", cause, "No pudimos eliminar el producto.");
     } finally {
       setEliminando(null);
     }
@@ -189,6 +221,9 @@ export default function MisProductosPage() {
                   </td>
                   <td>
                     <strong>{producto.nombre}</strong>
+                    {!producto.activo && (
+                      <> <span className={`${styles.badge} ${styles.badgeInactivo}`}>Inactivo</span></>
+                    )}
                     {producto.nombresSubcategorias.length > 0 && (
                       <div className={miTiendaStyles.subcategorias}>{producto.nombresSubcategorias.join(" · ")}</div>
                     )}
@@ -208,6 +243,20 @@ export default function MisProductosPage() {
                         <Link href={`/mi-tienda/productos/${producto.id}/editar`} className={styles.linkAction}>
                           Editar
                         </Link>
+                      </ConPermiso>
+                      <ConPermiso permisos={ACCESO.editarMisProductos}>
+                        <button
+                          type="button"
+                          disabled={cambiandoActivo === producto.id}
+                          onClick={() => void cambiarActivo(producto)}
+                          className={styles.linkAction}
+                        >
+                          {cambiandoActivo === producto.id
+                            ? "Guardando…"
+                            : producto.activo
+                              ? "Desactivar"
+                              : "Activar"}
+                        </button>
                       </ConPermiso>
                       {esDueno && (
                         <ConPermiso permisos={ACCESO.eliminarMisProductos}>

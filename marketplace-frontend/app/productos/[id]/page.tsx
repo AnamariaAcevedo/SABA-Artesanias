@@ -70,7 +70,10 @@ function ProductoDetalleContenido({ id }: { id: number }) {
   }, [id]);
 
   const enCarrito = items.find((item) => item.idProducto === id)?.cantidad ?? 0;
-  const stock = producto?.cantidadDisponible ?? 0;
+  // Un producto desactivado por la tienda se muestra (p. ej. desde un pedido viejo),
+  // pero no se puede comprar: para la compra cuenta como sin stock.
+  const aLaVenta = producto?.activo !== false && producto?.tiendaActiva !== false;
+  const stock = aLaVenta ? (producto?.cantidadDisponible ?? 0) : 0;
   const disponibleParaAgregar = Math.max(0, stock - enCarrito);
   const cantidadValida = Math.min(Math.max(cantidad, 1), Math.max(disponibleParaAgregar, 1));
 
@@ -188,7 +191,7 @@ function ProductoDetalleContenido({ id }: { id: number }) {
               )}
 
               <p className={stock > 0 ? styles.stock : `${styles.stock} ${styles.sinStock}`}>
-                {stock > 0 ? `Stock disponible: ${stock}` : "Sin stock"}
+                {!aLaVenta ? "No disponible" : stock > 0 ? `Stock disponible: ${stock}` : "Sin stock"}
                 {enCarrito > 0 && ` · ${enCarrito} en tu carrito`}
               </p>
 
@@ -226,7 +229,13 @@ function ProductoDetalleContenido({ id }: { id: number }) {
                 </p>
               )}
 
-              {stock === 0 && (
+              {!aLaVenta && (
+                <p className={styles.aviso} role="status">
+                  Este producto ya no está a la venta.
+                </p>
+              )}
+
+              {aLaVenta && stock === 0 && (
                 <p className={styles.aviso} role="status">
                   Este producto no tiene stock, por lo que no se puede pedir por ahora.
                 </p>

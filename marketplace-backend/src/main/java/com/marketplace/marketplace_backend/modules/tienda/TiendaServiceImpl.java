@@ -95,9 +95,10 @@ public class TiendaServiceImpl implements TiendaService {
             if (nombre.isEmpty()) nombre = null;
         }
 
-        Page<Tienda> result = nombre != null
-                ? tiendaRepository.findByNombreContainingIgnoreCase(nombre, pageable)
-                : tiendaRepository.findAllByOrderByIdAsc(pageable);
+        Page<Tienda> result = tiendaRepository.buscar(
+                nombre != null ? escaparLike(nombre.toLowerCase()) : "",
+                !Boolean.FALSE.equals(filter.getSoloActivas()),
+                pageable);
 
         List<TiendaResponseDto> data = result.getContent().stream()
                 .map(this::toResponse)
@@ -125,6 +126,10 @@ public class TiendaServiceImpl implements TiendaService {
         );
     }
 
+    private static String escaparLike(String texto) {
+        return texto.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
+    }
+
     private TiendaResponseDto toResponse(Tienda tienda) {
         return new TiendaResponseDto(
                 tienda.getId(),
@@ -133,6 +138,7 @@ public class TiendaServiceImpl implements TiendaService {
                 tienda.getDireccion().getId(),
                 tienda.getDireccion().getCalle(),
                 direccionCompleta(tienda.getDireccion()),
+                !Boolean.FALSE.equals(tienda.getActivo()),
                 tienda.getCreatedAt(),
                 tienda.getUpdatedAt()
         );

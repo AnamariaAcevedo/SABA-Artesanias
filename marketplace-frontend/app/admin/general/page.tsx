@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import styles from "@/components/admin/admin.module.css";
 import { useSesion } from "@/components/auth/SesionProvider";
+import { avisarError, confirmar } from "@/components/dialogos/Dialogos";
 import { apiFetch, apiFetchConPaginacion } from "@/lib/api";
 
 type ModuloId = "productos" | "tiendas" | "contactos" | "tipos-contacto";
@@ -30,6 +31,7 @@ type Entidad = {
   nroTelefono?: string | null;
   idTipoContacto?: number;
   nombreTipoContacto?: string;
+  activo?: boolean;
 };
 
 type Opcion = { value: string; label: string };
@@ -270,7 +272,14 @@ export default function AdministracionGeneralPage() {
   }
 
   async function eliminar(entidad: Entidad) {
-    if (!config || !window.confirm(`¿Eliminar ${config.singular} "${entidad.nombre ?? entidad.usuario ?? entidad.id}"?`)) return;
+    if (!config) return;
+    const confirmado = await confirmar({
+      titulo: `¿Eliminar ${config.singular}?`,
+      mensaje: `Vas a eliminar "${entidad.nombre ?? entidad.usuario ?? entidad.id}". Esta acción no se puede deshacer.`,
+      textoConfirmar: "Eliminar",
+      peligro: true,
+    });
+    if (!confirmado) return;
     setError("");
     setAviso("");
     try {
@@ -278,14 +287,45 @@ export default function AdministracionGeneralPage() {
       setAviso(`${config.singular[0].toUpperCase()}${config.singular.slice(1)} eliminado correctamente.`);
       await cargar();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "No pudimos eliminar el registro.");
+      await avisarError(`No se puede eliminar ${config.singular}`, cause, "No pudimos eliminar el registro.");
+    }
+  }
+
+  // Productos y tiendas: desactivar los saca del catálogo sin borrarlos. Si tienen
+  // pedidos pendientes, el backend lo rechaza y se muestra su mensaje.
+  async function cambiarActivo(entidad: Entidad) {
+    if (!config) return;
+    const activar = entidad.activo === false;
+    const esTienda = config.id === "tiendas";
+    if (!activar) {
+      const confirmado = await confirmar({
+        titulo: `¿Desactivar ${esTienda ? "la tienda" : "el producto"}?`,
+        mensaje: esTienda
+          ? `"${entidad.nombre}" y todos sus productos dejan de verse en el catálogo y no reciben pedidos nuevos. Se puede volver a activar.`
+          : `"${entidad.nombre}" deja de verse en el catálogo y no se puede comprar. Se puede volver a activar.`,
+        textoConfirmar: "Desactivar",
+      });
+      if (!confirmado) return;
+    }
+    setError("");
+    setAviso("");
+    try {
+      await apiFetch(`${config.endpoint}/${entidad.id}/${activar ? "activar" : "desactivar"}`, { method: "PUT" });
+      setAviso(`${esTienda ? "Tienda" : "Producto"} ${activar ? "activad" : "desactivad"}${esTienda ? "a" : "o"} correctamente.`);
+      await cargar();
+    } catch (cause) {
+      await avisarError(
+        `No se puede ${activar ? "activar" : "desactivar"} ${esTienda ? "la tienda" : "el producto"}`,
+        cause,
+        "No pudimos cambiar el estado.",
+      );
     }
   }
 
   function detalle(entidad: Entidad): string {
     switch (config?.id) {
-      case "productos": return `Gs. ${(entidad.precio ?? 0).toLocaleString("es-PY")} · Stock: ${entidad.cantidadDisponible ?? 0}`;
-      case "tiendas": return entidad.direccionCompleta ?? "Sin dirección";
+      case "productos": return `Gs. ${(entidad.precio ?? 0).toLocaleString("es-PY")} · Stock: ${entidad.cantidadDisponible ?? 0}${entidad.activo === false ? " · Inactivo" : ""}`;
+      case "tiendas": return `${entidad.direccionCompleta ?? "Sin dirección"}${entidad.activo === false ? " · Inactiva" : ""}`;
       case "contactos": return `${entidad.nombreTipoContacto ?? "Sin tipo"} · ${entidad.nombreTienda ?? "Sin tienda"}`;
       default: return `ID ${entidad.id}`;
     }
@@ -378,6 +418,7 @@ export default function AdministracionGeneralPage() {
                     <td>{detalle(entidad)}{entidad.enlace && <small className={styles.tableDescription}>{entidad.enlace}</small>}</td>
                     <td><div className={styles.rowActions}>
                       {puedeEditar && !(config.id === "tiendas" && direccionRequerida) && <button type="button" className={styles.linkAction} onClick={() => editar(entidad)}>Editar</button>}
+                      {puedeEditar && (config.id === "productos" || config.id === "tiendas") && <button type="button" className={styles.linkAction} onClick={() => void cambiarActivo(entidad)}>{entidad.activo === false ? "Activar" : "Desactivar"}</button>}
                       {puedeEliminar && <button type="button" className={`${styles.linkAction} ${styles.linkActionDanger}`} onClick={() => void eliminar(entidad)}>Eliminar</button>}
                       {!puedeEditar && !puedeEliminar && <span>Solo lectura</span>}
                     </div></td>

@@ -21,4 +21,6 @@ public interface CiudadRepository extends JpaRepository<Ciudad, Long> {
     Page<Ciudad> findByDepartamento_Id(Long idDepartamento, Pageable pageable);
 
     Optional<Ciudad> findByNombreIgnoreCaseAndDepartamento_IdAndDeletedAtIsNull(String nombre, Long idDepartamento);
+
+    long countByDepartamento_Id(Long idDepartamento);
 }

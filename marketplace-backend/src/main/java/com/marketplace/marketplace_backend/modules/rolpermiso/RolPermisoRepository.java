@@ -20,4 +20,6 @@ public interface RolPermisoRepository extends JpaRepository<RolPermiso, RolPermi
     Page<RolPermiso> findByRol_Id(Long rolId, Pageable pageable);
 
     List<RolPermiso> findByRol_Id(Long rolId);
+
+    List<RolPermiso> findByPermiso_Id(Long permisoId);
 }

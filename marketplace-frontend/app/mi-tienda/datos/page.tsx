@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import styles from "@/components/admin/admin.module.css";
 import UbicacionSelects from "@/components/admin/usuarios/UbicacionSelects";
 import ContactosTienda from "@/components/mi-tienda/ContactosTienda";
+import { PanelEstadoTienda } from "@/components/mi-tienda/EstadoTienda";
 import miTiendaStyles from "@/components/mi-tienda/miTienda.module.css";
 import perfilStyles from "@/app/perfil/perfil.module.css";
 import { useSesion } from "@/components/auth/SesionProvider";
@@ -62,6 +63,7 @@ export default function DatosTiendaPage() {
         </div>
       )}
       {cumplePermisos(permisos, ACCESO.verMisContactos) && <ContactosTienda />}
+      <PanelEstadoTienda />
     </div>
   );
 }

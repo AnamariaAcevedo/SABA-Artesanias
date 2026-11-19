@@ -20,4 +20,8 @@ public interface SolicitudVendedorRepository extends JpaRepository<SolicitudVend
     Page<SolicitudVendedor> findAllByOrderByIdDesc(Pageable pageable);
 
     Optional<SolicitudVendedor> findFirstByUsuario_IdOrderByIdDesc(Long idUsuario);
+
+    long countByBarrio_Id(Long idBarrio);
+
+    boolean existsByUsuario_Id(Long idUsuario);
 }

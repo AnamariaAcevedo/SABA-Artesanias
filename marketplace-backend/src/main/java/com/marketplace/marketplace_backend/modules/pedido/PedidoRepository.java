@@ -115,4 +115,12 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
         Double getTotalVendido();
         Long getPendientes();
     }
+
+    long countByBarrio_Id(Long idBarrio);
+
+    boolean existsByUsuario_Id(Long idUsuario);
+
+    long countByTienda_Id(Long idTienda);
+
+    long countByTienda_IdAndEstado(Long idTienda, EstadoPedido estado);
 }

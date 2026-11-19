@@ -1,5 +1,6 @@
 package com.marketplace.marketplace_backend.modules.ciudad;
 
+import com.marketplace.marketplace_backend.modules.barrio.BarrioRepository;
 import com.marketplace.marketplace_backend.common.PagedResult;
 import com.marketplace.marketplace_backend.modules.ciudad.dto.CiudadCreateRequestDto;
 import com.marketplace.marketplace_backend.modules.ciudad.dto.CiudadFilterDto;
@@ -25,6 +26,7 @@ public class CiudadServiceImpl implements CiudadService {
 
     private final CiudadRepository ciudadRepository;
     private final DepartamentoRepository departamentoRepository;
+    private final BarrioRepository barrioRepository;
 
     @Override
     @Transactional
@@ -76,6 +78,13 @@ public class CiudadServiceImpl implements CiudadService {
     public void delete(Long id) {
         Ciudad ciudad = ciudadRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Ciudad no encontrada"));
+
+        // Sus barrios quedarian apuntando a una ciudad borrada y dejarian de cargarse.
+        long barrios = barrioRepository.countByCiudad_Id(id);
+        if (barrios > 0) {
+            throw new IllegalStateException("No se puede eliminar la ciudad: tiene " + barrios
+                    + (barrios == 1 ? " barrio. Eliminalo primero." : " barrios. Eliminalos primero."));
+        }
 
         ciudad.setDeletedAt(LocalDateTime.now());
         ciudadRepository.save(ciudad);

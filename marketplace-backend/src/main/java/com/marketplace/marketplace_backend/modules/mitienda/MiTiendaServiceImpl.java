@@ -1,5 +1,6 @@
 package com.marketplace.marketplace_backend.modules.mitienda;
 
+import com.marketplace.marketplace_backend.modules.tienda.EstadoTiendaService;
 import com.marketplace.marketplace_backend.common.PagedResult;
 import com.marketplace.marketplace_backend.modules.archivopublicacion.ArchivoPublicacion;
 import com.marketplace.marketplace_backend.modules.archivopublicacion.ArchivoPublicacionRepository;
@@ -82,6 +83,7 @@ public class MiTiendaServiceImpl implements MiTiendaService {
 
     private final UsuarioRepository usuarioRepository;
     private final TiendaUsuarioRepository tiendaUsuarioRepository;
+    private final EstadoTiendaService estadoTiendaService;
     private final TiendaRepository tiendaRepository;
     private final DireccionRepository direccionRepository;
     private final BarrioRepository barrioRepository;
@@ -163,6 +165,15 @@ public class MiTiendaServiceImpl implements MiTiendaService {
         return "0".repeat(DIGITOS_NRO_CUENTA - nroCuenta.length()) + nroCuenta;
     }
 
+    @Override
+    @Transactional
+    public void cambiarActivoTienda(boolean activo) {
+        TiendaUsuario vinculo = exigirDueno(activo
+                ? "Solo el dueño de la tienda puede activarla."
+                : "Solo el dueño de la tienda puede desactivarla.");
+        estadoTiendaService.cambiarActivo(vinculo.getTienda().getId(), activo);
+    }
+
     // ------------------------------------------------------------- Productos
 
     @Override
@@ -172,7 +183,16 @@ public class MiTiendaServiceImpl implements MiTiendaService {
         filtro.setNombre(nombre);
         filtro.setPage(Math.max(page, 1));
         filtro.setPerPage(Math.min(Math.max(perPage, 1), 100));
+        // El dueño y los colaboradores ven tambien los inactivos, para poder reactivarlos.
+        filtro.setSoloActivos(false);
         return productoService.findAll(filtro);
+    }
+
+    @Override
+    @Transactional
+    public ProductoResponseDto cambiarActivoProducto(Long idProducto, boolean activo) {
+        productoDeMiTienda(idProducto);
+        return productoService.cambiarActivo(idProducto, activo);
     }
 
     @Override

@@ -1,5 +1,7 @@
 package com.marketplace.marketplace_backend.modules.producto;
 
+import com.marketplace.marketplace_backend.modules.pedido.ProductoPedidoRepository;
+import com.marketplace.marketplace_backend.modules.pedido.EstadoPedido;
 import com.marketplace.marketplace_backend.common.PagedResult;
 import com.marketplace.marketplace_backend.modules.categoriasubcategoria.CategoriaSubcategoriaRepository;
 import com.marketplace.marketplace_backend.modules.imagenproducto.ImagenProducto;
@@ -28,11 +30,13 @@ import java.util.List;
 // Implementación de la lógica de negocio para gestionar productos
 public class ProductoServiceImpl implements ProductoService {
 
+
     private final ProductoRepository productoRepository;
     private final TiendaRepository tiendaRepository;
     private final ProductoSubcategoriaRepository productoSubcategoriaRepository;
     private final CategoriaSubcategoriaRepository categoriaSubcategoriaRepository;
     private final ImagenProductoRepository imagenProductoRepository;
+    private final ProductoPedidoRepository productoPedidoRepository;
 
     @Override
     @Transactional
@@ -105,8 +109,37 @@ public class ProductoServiceImpl implements ProductoService {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado"));
 
+        exigirSinPedidosPendientes(id, "eliminar");
+
         producto.setDeletedAt(LocalDateTime.now());
         productoRepository.save(producto);
+    }
+
+    @Override
+    @Transactional
+    public ProductoResponseDto cambiarActivo(Long id, boolean activo) {
+        Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado"));
+        if (!activo) {
+            exigirSinPedidosPendientes(id, "desactivar");
+        }
+        producto.setActivo(activo);
+        return toResponse(productoRepository.save(producto));
+    }
+
+    // Un pedido pendiente todavia se tiene que confirmar, y eso descuenta el stock del
+    // producto: se resuelven antes de sacarlo de la venta. Con pedidos confirmados,
+    // enviados o terminados se puede, porque esos pedidos ya no dependen del producto
+    // (guardan nombre y precio, y al cancelarlos el stock se devuelve igual).
+    private void exigirSinPedidosPendientes(Long idProducto, String accion) {
+        long pendientes = productoPedidoRepository.countByProducto_IdAndPedido_EstadoIn(
+                idProducto, List.of(EstadoPedido.PENDIENTE));
+        if (pendientes > 0) {
+            throw new IllegalStateException("No se puede " + accion + " el producto: está en " + pendientes
+                    + (pendientes == 1
+                            ? " pedido pendiente. Confirmalo o cancelalo primero."
+                            : " pedidos pendientes. Confirmalos o cancelalos primero."));
+        }
     }
 
     @Override
@@ -139,33 +172,27 @@ public class ProductoServiceImpl implements ProductoService {
             }
         }
 
-        Page<Producto> result;
-
-        if (hasFiltroCategoria) {
-            if (hasNombre && hasIdTienda) {
-                result = productoRepository.findByIdInAndNombreContainingIgnoreCaseAndTienda_Id(idsElegibles, nombre, idTienda, pageable);
-            } else if (hasNombre) {
-                result = productoRepository.findByIdInAndNombreContainingIgnoreCase(idsElegibles, nombre, pageable);
-            } else if (hasIdTienda) {
-                result = productoRepository.findByIdInAndTienda_Id(idsElegibles, idTienda, pageable);
-            } else {
-                result = productoRepository.findByIdIn(idsElegibles, pageable);
-            }
-        } else if (!hasNombre && !hasIdTienda) {
-            result = productoRepository.findAllByOrderByIdAsc(pageable);
-        } else if (hasNombre && hasIdTienda) {
-            result = productoRepository.findByNombreContainingIgnoreCaseAndTienda_Id(nombre, idTienda, pageable);
-        } else if (hasNombre) {
-            result = productoRepository.findByNombreContainingIgnoreCase(nombre, pageable);
-        } else {
-            result = productoRepository.findByTienda_Id(idTienda, pageable);
-        }
+        // Una sola consulta con filtros opcionales; los inactivos solo se incluyen cuando
+        // quien lista es el dueño de la tienda o un administrador (lo decide el llamador).
+        boolean filtrarIds = idsElegibles != null;
+        Page<Producto> result = productoRepository.buscar(
+                hasNombre ? escaparLike(nombre.toLowerCase()) : "",
+                hasIdTienda,
+                hasIdTienda ? idTienda : 0L,
+                filtrarIds,
+                filtrarIds ? idsElegibles : List.of(0L),
+                !Boolean.FALSE.equals(filter.getSoloActivos()),
+                pageable);
 
         List<ProductoResponseDto> data = result.getContent().stream()
                 .map(this::toResponse)
                 .toList();
 
         return new PagedResult<>(data, page, perPage, (int) result.getTotalElements());
+    }
+
+    private static String escaparLike(String texto) {
+        return texto.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
     }
 
     // Resuelve los ids de producto elegibles a partir de idCategoria y/o idSubcategoria.
@@ -236,6 +263,8 @@ public class ProductoServiceImpl implements ProductoService {
                 idsSubcategorias,
                 nombresSubcategorias,
                 idImagenPrincipal,
+                !Boolean.FALSE.equals(producto.getActivo()),
+                !Boolean.FALSE.equals(producto.getTienda().getActivo()),
                 producto.getCreatedAt(),
                 producto.getUpdatedAt()
         );

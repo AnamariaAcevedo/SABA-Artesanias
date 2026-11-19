@@ -95,7 +95,11 @@ function TiendaDetalleContenido({ id }: { id: string }) {
       <div className={styles.content}>
         {cargando && <p className={styles.statusMessage}>Cargando tienda...</p>}
 
-        {!cargando && tienda && (
+        {!cargando && tienda && tienda.activo === false && (
+          <p className={styles.statusMessage}>Esta tienda no está disponible por el momento.</p>
+        )}
+
+        {!cargando && tienda && tienda.activo !== false && (
           <>
             <section className={styles.storeBanner}>
               <div className={styles.storeBannerCover} aria-hidden="true">

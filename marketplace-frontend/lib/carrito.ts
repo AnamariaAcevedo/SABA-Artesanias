@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import type { Producto } from "@/types/Producto";
+import { obtenerProductoPorId } from "@/services/productoService";
 
 // Carrito de compras del navegador. Se guarda en localStorage para que sobreviva
 // a recargas y se comparte entre pestañas (evento "storage"). Cada usuario tiene
@@ -18,6 +19,9 @@ export interface ItemCarrito {
   idTienda: number;
   nombreTienda: string;
   idImagenPrincipal: number | null;
+  // false si el producto ya no se puede comprar (desactivado, eliminado o de una tienda
+  // desactivada). Se actualiza al verificar el carrito; ausente = disponible.
+  disponible?: boolean;
 }
 
 const CLAVE_INVITADO = "carrito";
@@ -172,19 +176,45 @@ export function limpiarCarrito() {
 }
 
 // Actualiza precio y stock de las líneas con los datos vigentes del servidor.
-export function sincronizarCarrito(productos: Producto[]) {
+// `idsEliminados`: productos que el backend ya no encuentra (se eliminaron).
+export function sincronizarCarrito(productos: Producto[], idsEliminados: number[] = []) {
   guardar(
     leer().map((item) => {
       const actual = productos.find((producto) => producto.id === item.idProducto);
-      return actual
-        ? {
-            ...item,
-            nombre: actual.nombre,
-            precioUnitario: precioFinalProducto(actual),
-            cantidadDisponible: actual.cantidadDisponible,
-          }
-        : item;
+      if (actual) {
+        return {
+          ...item,
+          nombre: actual.nombre,
+          precioUnitario: precioFinalProducto(actual),
+          cantidadDisponible: actual.cantidadDisponible,
+          disponible: actual.activo !== false && actual.tiendaActiva !== false,
+        };
+      }
+      return idsEliminados.includes(item.idProducto) ? { ...item, disponible: false } : item;
     }),
+  );
+}
+
+// Consulta precio, stock y disponibilidad actuales de lo que hay en el carrito y lo
+// actualiza. Un 404 es un producto eliminado; otros errores (p. ej. sin conexión) no
+// cambian nada. La usan el carrito desplegable al abrirse y la pantalla de confirmar.
+export async function verificarCarrito(): Promise<void> {
+  const ids = leer().map((item) => item.idProducto);
+  if (ids.length === 0) return;
+  const idsEliminados: number[] = [];
+  const respuestas = await Promise.all(
+    ids.map((id) =>
+      obtenerProductoPorId(id)
+        .then((respuesta) => respuesta.data)
+        .catch((cause) => {
+          if (cause instanceof Error && cause.message === "Error 404") idsEliminados.push(id);
+          return null;
+        }),
+    ),
+  );
+  sincronizarCarrito(
+    respuestas.filter((producto): producto is Producto => producto !== null),
+    idsEliminados,
   );
 }
 

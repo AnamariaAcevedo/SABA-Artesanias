@@ -1,5 +1,6 @@
 package com.marketplace.marketplace_backend.modules.producto;
 
+import org.hibernate.annotations.ColumnDefault;
 import com.marketplace.marketplace_backend.common.BaseEntity;
 import com.marketplace.marketplace_backend.modules.tienda.Tienda;
 import jakarta.persistence.Column;
@@ -46,4 +47,11 @@ public class Producto extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tienda_id", nullable = false)
     private Tienda tienda;
+
+    // Un producto inactivo no aparece en el catalogo ni se puede comprar, pero sigue
+    // existiendo para sus pedidos y se puede volver a activar. El valor por defecto en la
+    // base deja activos a los productos existentes al agregar la columna.
+    @ColumnDefault("true")
+    @Column(nullable = false)
+    private Boolean activo = true;
 }

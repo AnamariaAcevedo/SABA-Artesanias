@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import styles from "@/components/admin/admin.module.css";
 import { useSesion } from "@/components/auth/SesionProvider";
+import { avisarError, confirmar } from "@/components/dialogos/Dialogos";
 import { ApiError } from "@/lib/api";
 import type { Pagination } from "@/types/api";
 import type { Cupon } from "@/types/cupon";
@@ -41,7 +42,13 @@ export default function MisCuponesPage() {
   }, [cargarCupones]);
 
   async function eliminar(cupon: Cupon) {
-    if (!window.confirm(`¿Eliminar el cupón "${cupon.codigo}"? Deja de poder usarse de inmediato.`)) return;
+    const confirmado = await confirmar({
+      titulo: "¿Eliminar este cupón?",
+      mensaje: `El cupón "${cupon.codigo}" deja de poder usarse de inmediato.`,
+      textoConfirmar: "Eliminar cupón",
+      peligro: true,
+    });
+    if (!confirmado) return;
     setEliminando(cupon.id);
     setError("");
     try {
@@ -52,7 +59,7 @@ export default function MisCuponesPage() {
         await cargarCupones();
       }
     } catch (cause) {
-      setError(cause instanceof ApiError ? cause.message : "No pudimos eliminar el cupón.");
+      await avisarError("No se puede eliminar el cupón", cause, "No pudimos eliminar el cupón.");
     } finally {
       setEliminando(null);
     }

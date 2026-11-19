@@ -1,5 +1,6 @@
 package com.marketplace.marketplace_backend.modules.tipocontacto;
 
+import com.marketplace.marketplace_backend.modules.contacto.ContactoRepository;
 import com.marketplace.marketplace_backend.common.PagedResult;
 import com.marketplace.marketplace_backend.modules.tipocontacto.dto.TipoContactoCreateRequestDto;
 import com.marketplace.marketplace_backend.modules.tipocontacto.dto.TipoContactoFilterDto;
@@ -21,7 +22,10 @@ import java.util.List;
 // Implementación de la lógica de negocio para gestionar tipos de contacto
 public class TipoContactoServiceImpl implements TipoContactoService {
 
+    private static final String TIPO_CONTACTO_WHATSAPP = "WhatsApp";
+
     private final TipoContactoRepository tipoContactoRepository;
+    private final ContactoRepository contactoRepository;
 
     @Override
     @Transactional
@@ -63,6 +67,17 @@ public class TipoContactoServiceImpl implements TipoContactoService {
     public void delete(Long id) {
         TipoContacto tipoContacto = tipoContactoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Tipo de contacto no encontrado"));
+
+        // Al aceptar una solicitud de vendedor se crea el contacto de WhatsApp de la tienda.
+        if (TIPO_CONTACTO_WHATSAPP.equalsIgnoreCase(tipoContacto.getNombre())) {
+            throw new IllegalStateException("No se puede eliminar el tipo de contacto WhatsApp: se usa al aceptar solicitudes de vendedor.");
+        }
+        // Los contactos de ese tipo dejarian de cargarse en las tiendas.
+        long contactos = contactoRepository.countByTipoContacto_Id(id);
+        if (contactos > 0) {
+            throw new IllegalStateException("No se puede eliminar el tipo de contacto: lo usan " + contactos
+                    + (contactos == 1 ? " contacto" : " contactos") + " de tiendas.");
+        }
 
         tipoContacto.setDeletedAt(LocalDateTime.now());
         tipoContactoRepository.save(tipoContacto);

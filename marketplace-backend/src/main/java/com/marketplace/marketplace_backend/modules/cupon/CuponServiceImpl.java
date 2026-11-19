@@ -1,5 +1,6 @@
 package com.marketplace.marketplace_backend.modules.cupon;
 
+import com.marketplace.marketplace_backend.modules.publicacion.PublicacionRepository;
 import com.marketplace.marketplace_backend.common.PagedResult;
 import com.marketplace.marketplace_backend.modules.cupon.dto.CuponPreviewResponseDto;
 import com.marketplace.marketplace_backend.modules.cupon.dto.CuponPublicoResponseDto;
@@ -35,6 +36,7 @@ public class CuponServiceImpl implements CuponService {
     private final TiendaRepository tiendaRepository;
     private final PedidoRepository pedidoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final PublicacionRepository publicacionRepository;
 
     @Override
     @Transactional
@@ -85,6 +87,12 @@ public class CuponServiceImpl implements CuponService {
     @Transactional
     public void eliminarDeTienda(Long idTienda, Long id) {
         Cupon cupon = buscar(idTienda, id);
+        // Las publicaciones muestran el codigo del cupon y dejarian de cargarse.
+        long publicaciones = publicacionRepository.countByCupon_Id(id);
+        if (publicaciones > 0) {
+            throw new IllegalStateException("No se puede eliminar el cupón: está en " + publicaciones
+                    + (publicaciones == 1 ? " publicación" : " publicaciones") + ". Quitalo de ahí primero.");
+        }
         cupon.setDeletedAt(LocalDateTime.now());
         cuponRepository.save(cupon);
     }
@@ -127,7 +135,7 @@ public class CuponServiceImpl implements CuponService {
         PageRequest pageable = PageRequest.of(Math.max(page, 1) - 1, Math.max(perPage, 1));
         LocalDate hoy = LocalDate.now();
         Page<Cupon> resultado = cuponRepository
-                .findByFechaInicioLessThanEqualAndFechaFinGreaterThanEqualOrderByIdDesc(hoy, hoy, pageable);
+                .findByFechaInicioLessThanEqualAndFechaFinGreaterThanEqualAndTienda_ActivoTrueOrderByIdDesc(hoy, hoy, pageable);
 
         List<CuponPublicoResponseDto> data = resultado.getContent().stream()
                 .map(this::toPublico)

@@ -11,4 +11,7 @@ public class TiendaFilterDto {
     private Integer perPage = 10;
 
     private String nombre;
+
+    // Lo fija el servidor (nunca el cliente): false solo para un administrador.
+    private Boolean soloActivas = true;
 }

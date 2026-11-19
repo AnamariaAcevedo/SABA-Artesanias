@@ -33,4 +33,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     boolean existsByUsuarioIgnoreCaseAndIdNot(String usuario, Long id);
 
     long countByDireccion_Id(Long idDireccion);
+
+    // Usuarios (activos o no) que tienen el rol: impide borrar un rol en uso.
+    long countByRol_Id(Long idRol);
 }

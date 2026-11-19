@@ -8,6 +8,7 @@ import {
   limpiarCarrito,
   quitarDelCarrito,
   useCarrito,
+  verificarCarrito,
 } from "@/lib/carrito";
 import { confirmar } from "@/components/dialogos/Dialogos";
 import styles from "./carrito.module.css";
@@ -25,6 +26,11 @@ export default function Carrito() {
   const contenedor = useRef<HTMLDivElement>(null);
   const boton = useRef<HTMLButtonElement>(null);
   const id = useId();
+
+  // Al abrirlo se revisa que lo guardado siga a la venta (pudo desactivarse o eliminarse).
+  useEffect(() => {
+    if (abierto) void verificarCarrito();
+  }, [abierto]);
 
   useEffect(() => {
     if (!abierto) return;
@@ -118,6 +124,7 @@ export default function Carrito() {
                         {item.nombre}
                       </Link>
                       <small>{item.nombreTienda}</small>
+                      {item.disponible === false && <small className={styles.noDisponible}>Ya no está a la venta</small>}
                       <span>
                         {item.cantidad} × {formatearPrecio(item.precioUnitario)}
                       </span>

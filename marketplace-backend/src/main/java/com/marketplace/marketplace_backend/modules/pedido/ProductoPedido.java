@@ -36,6 +36,12 @@ public class ProductoPedido extends BaseEntity {
     @JoinColumn(name = "producto_id", nullable = false)
     private Producto producto;
 
+    // Nombre del producto al momento del pedido: el pedido se sigue viendo aunque el
+    // producto se elimine despues. Es nullable para que ddl-auto pueda agregar la columna;
+    // scripts/guardar-nombre-producto-en-pedidos.sql completa los pedidos existentes.
+    @Column(name = "nombre_producto")
+    private String nombreProducto;
+
     @Column(nullable = false)
     private Integer cantidad;
 

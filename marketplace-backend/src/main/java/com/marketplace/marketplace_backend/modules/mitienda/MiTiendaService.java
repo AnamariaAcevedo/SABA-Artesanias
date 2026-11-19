@@ -25,6 +25,9 @@ public interface MiTiendaService {
 
     MiTiendaResponseDto actualizarTienda(MiTiendaUpdateRequestDto request);
 
+    // Activa o desactiva la propia tienda. Solo el dueño.
+    void cambiarActivoTienda(boolean activo);
+
     PagedResult<List<ProductoResponseDto>> listarProductos(String nombre, int page, int perPage);
 
     ProductoResponseDto obtenerProducto(Long idProducto);
@@ -34,6 +37,9 @@ public interface MiTiendaService {
     ProductoResponseDto actualizarProducto(Long idProducto, MiProductoRequestDto request);
 
     void eliminarProducto(Long idProducto);
+
+    // Activar o desactivar es reversible, asi que tambien lo puede hacer el colaborador.
+    ProductoResponseDto cambiarActivoProducto(Long idProducto, boolean activo);
 
     List<ImagenProductoResponseDto> listarImagenes(Long idProducto);
 

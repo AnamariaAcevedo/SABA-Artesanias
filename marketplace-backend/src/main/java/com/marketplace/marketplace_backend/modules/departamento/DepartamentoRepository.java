@@ -21,4 +21,6 @@ public interface DepartamentoRepository extends JpaRepository<Departamento, Long
     Page<Departamento> findByPais_Id(Long idPais, Pageable pageable);
 
     Optional<Departamento> findByNombreIgnoreCaseAndPais_IdAndDeletedAtIsNull(String nombre, Long idPais);
+
+    long countByPais_Id(Long idPais);
 }

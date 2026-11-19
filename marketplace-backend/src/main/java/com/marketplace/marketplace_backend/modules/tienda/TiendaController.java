@@ -1,5 +1,6 @@
 package com.marketplace.marketplace_backend.modules.tienda;
 
+import org.springframework.security.core.Authentication;
 import com.marketplace.marketplace_backend.common.Pagination;
 import com.marketplace.marketplace_backend.common.StandardResponseDto;
 import com.marketplace.marketplace_backend.modules.tienda.dto.DatosPagoTiendaResponseDto;
@@ -22,6 +23,7 @@ import java.util.List;
 public class TiendaController {
 
     private final TiendaService tiendaService;
+    private final EstadoTiendaService estadoTiendaService;
 
     @PostMapping
     @PreAuthorize("hasAuthority('CREATE_TIENDAS')")
@@ -67,7 +69,12 @@ public class TiendaController {
     }
 
     @GetMapping
-    public ResponseEntity<StandardResponseDto<List<TiendaResponseDto>>> findAll(@ModelAttribute TiendaFilterDto filter) {
+    public ResponseEntity<StandardResponseDto<List<TiendaResponseDto>>> findAll(
+            @ModelAttribute TiendaFilterDto filter,
+            Authentication authentication) {
+        // El listado publico solo muestra tiendas activas; la administracion ve todas.
+        // Se fija aca para que no se pueda cambiar desde la URL.
+        filter.setSoloActivas(!tieneAlgunPermiso(authentication, "LIST_TIENDAS", "UPDATE_TIENDAS"));
         StandardResponseDto<List<TiendaResponseDto>> response = new StandardResponseDto<>();
         var result = tiendaService.findAll(filter);
         response.setSuccess(true);
@@ -77,13 +84,43 @@ public class TiendaController {
         return ResponseEntity.ok(response);
     }
 
+    @PutMapping("/{id}/activar")
+    @PreAuthorize("hasAuthority('UPDATE_TIENDAS')")
+    public ResponseEntity<StandardResponseDto<TiendaResponseDto>> activar(@PathVariable Long id) {
+        return ok(estadoTiendaService.cambiarActivo(id, true));
+    }
+
+    @PutMapping("/{id}/desactivar")
+    @PreAuthorize("hasAuthority('UPDATE_TIENDAS')")
+    public ResponseEntity<StandardResponseDto<TiendaResponseDto>> desactivar(@PathVariable Long id) {
+        return ok(estadoTiendaService.cambiarActivo(id, false));
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('DELETE_TIENDAS')")
     public ResponseEntity<StandardResponseDto<Void>> delete(@PathVariable Long id) {
         StandardResponseDto<Void> response = new StandardResponseDto<>();
-        tiendaService.delete(id);
+        estadoTiendaService.eliminar(id);
         response.setSuccess(true);
         response.setData(null);
+        response.setErrors(null);
+        response.setPagination(null);
+        return ResponseEntity.ok(response);
+    }
+
+    private static boolean tieneAlgunPermiso(Authentication authentication, String... permisos) {
+        if (authentication == null) {
+            return false;
+        }
+        List<String> buscados = List.of(permisos);
+        return authentication.getAuthorities().stream()
+                .anyMatch(autoridad -> buscados.contains(autoridad.getAuthority()));
+    }
+
+    private <T> ResponseEntity<StandardResponseDto<T>> ok(T data) {
+        StandardResponseDto<T> response = new StandardResponseDto<>();
+        response.setSuccess(true);
+        response.setData(data);
         response.setErrors(null);
         response.setPagination(null);
         return ResponseEntity.ok(response);

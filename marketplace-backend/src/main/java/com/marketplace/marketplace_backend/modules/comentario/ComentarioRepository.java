@@ -13,4 +13,6 @@ public interface ComentarioRepository extends JpaRepository<Comentario, Long> {
     Optional<Comentario> findByIdAndPublicacion_Id(Long id, Long idPublicacion);
 
     long countByPublicacion_Id(Long idPublicacion);
+
+    boolean existsByUsuario_Id(Long idUsuario);
 }

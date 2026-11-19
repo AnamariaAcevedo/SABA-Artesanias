@@ -28,6 +28,9 @@ public class ProductoResponseDto {
     private List<Long> idsSubcategorias;
     private List<String> nombresSubcategorias;
     private Long idImagenPrincipal;
+    private Boolean activo;
+    // Si la tienda esta inactiva el producto tampoco se puede comprar, aunque este activo.
+    private Boolean tiendaActiva;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

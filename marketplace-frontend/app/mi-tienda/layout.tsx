@@ -9,6 +9,7 @@ import miTiendaStyles from "@/components/mi-tienda/miTienda.module.css";
 import BotonInicio from "@/components/catalogo/BotonInicio";
 import { useSesion } from "@/components/auth/SesionProvider";
 import { ACCESO, cumplePermisos } from "@/lib/access";
+import { AvisoTiendaInactiva } from "@/components/mi-tienda/EstadoTienda";
 
 // Secciones de "Mi tienda": cada una se ve con cualquiera de sus permisos, que se
 // asignan al rol desde el panel. El backend vuelve a verificar el permiso y el
@@ -116,6 +117,7 @@ export default function MiTiendaLayout({
       </nav>
 
       <main className={styles.main}>
+        <AvisoTiendaInactiva />
         {autorizado ? (
           children
         ) : (

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import styles from "@/components/admin/admin.module.css";
 import ubicacionesStyles from "@/components/admin/ubicaciones.module.css";
 import ConPermiso from "@/components/auth/ConPermiso";
-import { avisar, confirmar } from "@/components/dialogos/Dialogos";
+import { avisar, avisarError, confirmar } from "@/components/dialogos/Dialogos";
 import { ACCESO } from "@/lib/access";
 import { ApiError } from "@/lib/api";
 import {
@@ -261,7 +261,11 @@ export default function UbicacionesPage() {
       if (filas.length === 1 && page > 1) setPage(page - 1);
       else recargar();
     } catch (cause) {
-      setError(mensajeError(cause, `No pudimos eliminar ${articulo(nivel)} ${config.singular}.`));
+      await avisarError(
+        `No se puede eliminar ${articulo(nivel)} ${config.singular}`,
+        cause,
+        mensajeError(cause, `No pudimos eliminar ${articulo(nivel)} ${config.singular}.`),
+      );
     } finally {
       setProcesandoId(null);
     }

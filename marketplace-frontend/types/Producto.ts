@@ -16,6 +16,11 @@ export interface Producto {
 
   idImagenPrincipal: number | null;
 
+  // Inactivo: no aparece en el catálogo ni se puede comprar; el dueño lo puede reactivar.
+  activo: boolean;
+  // Si la tienda está desactivada, el producto tampoco se puede comprar.
+  tiendaActiva: boolean;
+
   createdAt: string;
   updatedAt: string;
 }
