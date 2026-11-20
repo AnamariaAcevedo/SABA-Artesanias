@@ -16,6 +16,10 @@ import io.jsonwebtoken.security.Keys;
 // Genera y valida los JWT de acceso y refresh
 public class JwtUtil {
 
+    static final String CLAIM_TIPO = "typ";
+    static final String TIPO_ACCESS = "access";
+    static final String TIPO_REFRESH = "refresh";
+
     @Value("${jwt.secret.key}")
     private String secretKey;
 
@@ -29,6 +33,7 @@ public class JwtUtil {
         SecretKey key = getSigningKey();
         return Jwts.builder()
                 .subject(usuario)
+                .claim(CLAIM_TIPO, TIPO_ACCESS)
                 .claim("userId", userId)
                 .claim("rol", rol)
                 .issuedAt(new Date())
@@ -41,6 +46,7 @@ public class JwtUtil {
         SecretKey key = getSigningKey();
         return Jwts.builder()
                 .subject(usuario)
+                .claim(CLAIM_TIPO, TIPO_REFRESH)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + tiempoExpiracionRefresh * 60 * 1000))
                 .signWith(key)
@@ -77,7 +83,27 @@ public class JwtUtil {
 
     public boolean validateToken(String jwt, UserDetails userDetails) {
         final String usuario = extractUsuario(jwt);
-        return usuario.equals(userDetails.getUsername()) && !isTokenExpired(jwt);
+        return usuario.equals(userDetails.getUsername()) && isAccessToken(jwt) && !isTokenExpired(jwt);
+    }
+
+    public boolean isAccessToken(String jwt) {
+        return TIPO_ACCESS.equals(extractTipo(jwt));
+    }
+
+    public boolean isRefreshToken(String jwt) {
+        return TIPO_REFRESH.equals(extractTipo(jwt));
+    }
+
+    private String extractTipo(String jwt) {
+        try {
+            SecretKey key = getSigningKey();
+            Claims claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(jwt).getPayload();
+            return claims.get(CLAIM_TIPO, String.class);
+        } catch (ExpiredJwtException e) {
+            return e.getClaims().get(CLAIM_TIPO, String.class);
+        } catch (JwtException | IllegalArgumentException e) {
+            return null;
+        }
     }
 
     private boolean isTokenExpired(String jwt) {

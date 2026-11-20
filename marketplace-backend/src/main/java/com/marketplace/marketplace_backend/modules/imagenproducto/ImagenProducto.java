@@ -37,4 +37,7 @@ public class ImagenProducto extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "producto_id", nullable = false)
     private Producto producto;
+
+    @Column(name = "producto_id", insertable = false, updatable = false)
+    private Long productoId;
 }
