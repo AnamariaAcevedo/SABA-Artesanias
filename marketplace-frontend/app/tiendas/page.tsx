@@ -151,6 +151,14 @@ export default function TiendasPage() {
           <BotonBuscar />
         </form>
 
+        <Link href="/cupones" className={homeStyles.navButton}>
+          Cupones
+        </Link>
+
+        <Link href="/canal" className={homeStyles.navButton}>
+          Canal
+        </Link>
+
         {haySesion === undefined ? null : haySesion ? (
           <MenuUsuario />
         ) : (
@@ -163,7 +171,10 @@ export default function TiendasPage() {
       </header>
 
       <div className={styles.content}>
-        <h2 className={styles.pageTitle}>Tiendas</h2>
+        <header className={styles.encabezado}>
+          <p className={styles.eyebrow}>Nuestros artesanos</p>
+          <h2 className={styles.pageTitle}>Tiendas</h2>
+        </header>
 
         {cargando && <p className={styles.statusMessage}>Cargando tiendas...</p>}
         {!cargando && mensaje && <p className={styles.statusMessage}>{mensaje}</p>}
@@ -172,53 +183,69 @@ export default function TiendasPage() {
         )}
 
         {!cargando && tiendasFiltradas.length > 0 && (
-          <div className={styles.storeGrid}>
+          <div className={styles.tiendasGrid}>
             {tiendasFiltradas.map((tienda) => {
-              const recap = (productosPorTienda[tienda.id] ?? []).slice(0, CANTIDAD_RECAP);
+              const productosTienda = productosPorTienda[tienda.id] ?? [];
+              // Portada: mosaico con las fotos de hasta 4 productos de la tienda.
+              const fotos = productosTienda
+                .filter((producto) => producto.idImagenPrincipal !== null)
+                .slice(0, CANTIDAD_RECAP);
               const cupon = cuponPorTienda[tienda.id];
 
               return (
-                <Link key={tienda.id} href={`/tiendas/${tienda.id}`} className={styles.storeRow}>
-                  <div className={styles.storeCover} aria-hidden="true">
-                    <span>{tienda.nombre.charAt(0).toUpperCase()}</span>
+                <Link key={tienda.id} href={`/tiendas/${tienda.id}`} className={styles.tiendaCard}>
+                  <div className={styles.tiendaPortada} data-fotos={fotos.length} aria-hidden="true">
+                    {fotos.map((producto) => (
+                      // Imagen servida por el backend (URL dinámica): no pasa por el optimizador de next/image.
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        key={producto.id}
+                        src={`${API_URL}/imagenes/${producto.idImagenPrincipal}`}
+                        alt=""
+                        loading="lazy"
+                      />
+                    ))}
                   </div>
 
-                  <div className={styles.storeInfo}>
-                    <h3>{tienda.nombre}</h3>
-                    {tienda.descripcion && <p>{tienda.descripcion}</p>}
-                    <span className={styles.storeCardAddress}>{tienda.nombreDireccion}</span>
+                  <div className={styles.tiendaCuerpo}>
+                    <span className={styles.tiendaAvatar} aria-hidden="true">
+                      {tienda.nombre.charAt(0).toUpperCase()}
+                    </span>
 
-                    {recap.length > 0 && (
-                      <div className={styles.storeRecap}>
-                        {recap.map((producto) => (
-                          <div key={producto.id} className={styles.recapItem}>
-                            <div className={styles.recapImage}>
-                              {producto.idImagenPrincipal ? (
-                                <img
-                                  src={`${API_URL}/imagenes/${producto.idImagenPrincipal}`}
-                                  alt={producto.nombre}
-                                />
-                              ) : (
-                                <span>{producto.nombre}</span>
-                              )}
-                            </div>
-                            <span className={styles.recapName}>{producto.nombre}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    <h3 className={styles.tiendaNombre}>{tienda.nombre}</h3>
+                    {tienda.descripcion && <p className={styles.tiendaDescripcion}>{tienda.descripcion}</p>}
 
-                    {cupon && (
-                      <div className={styles.couponBlock}>
+                    <span className={styles.tiendaDireccion}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z" />
+                        <circle cx="12" cy="9.5" r="2.5" />
+                      </svg>
+                      {tienda.nombreDireccion}
+                    </span>
+
+                    <div className={styles.tiendaPie}>
+                      <span className={styles.tiendaPiezas}>
+                        {productosTienda.length} {productosTienda.length === 1 ? "pieza" : "piezas"}
+                      </span>
+
+                      {cupon && (
                         <button
                           type="button"
                           className={styles.obtenerButton}
                           onClick={(evento) => obtenerCupon(evento, cupon)}
                         >
-                          Obtener cupón (−{cupon.porcentaje}%)
+                          Cupón −{cupon.porcentaje}%
                         </button>
-                      </div>
-                    )}
+                      )}
+
+                      <span className={styles.tiendaVer}>
+                        Ver tienda
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <path d="M5 12h14" />
+                          <path d="m13 6 6 6-6 6" />
+                        </svg>
+                      </span>
+                    </div>
                   </div>
                 </Link>
               );

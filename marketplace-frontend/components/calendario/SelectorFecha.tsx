@@ -19,6 +19,9 @@ const NOMBRES_MES = [
 
 const DIAS_SEMANA = ["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sa"];
 
+// Alto aproximado del calendario desplegado, para decidir si entra arriba del campo.
+const ALTO_PANEL = 400;
+
 function aIso(anio: number, mes: number, dia: number): string {
   return `${anio}-${String(mes + 1).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
 }
@@ -43,6 +46,8 @@ export default function SelectorFecha({ id, valor, alCambiar, requerido, minimo 
   const seleccionada = desdeIso(valor);
 
   const [abierto, setAbierto] = useState(false);
+  // Se despliega hacia arriba, salvo que arriba no haya lugar en la pantalla.
+  const [haciaArriba, setHaciaArriba] = useState(true);
   const [anioVisible, setAnioVisible] = useState(seleccionada?.anio ?? hoy.getFullYear());
   const [mesVisible, setMesVisible] = useState(seleccionada?.mes ?? hoy.getMonth());
   const contenedorRef = useRef<HTMLDivElement>(null);
@@ -61,6 +66,8 @@ export default function SelectorFecha({ id, valor, alCambiar, requerido, minimo 
     const base = seleccionada ?? { anio: hoy.getFullYear(), mes: hoy.getMonth() };
     setAnioVisible(base.anio);
     setMesVisible(base.mes);
+    const caja = contenedorRef.current?.getBoundingClientRect();
+    setHaciaArriba(!caja || caja.top >= ALTO_PANEL);
     setAbierto(true);
   }
 
@@ -95,12 +102,11 @@ export default function SelectorFecha({ id, valor, alCambiar, requerido, minimo 
       lista.push({ anio: anioVisible, mes: mesVisible, dia, delMesActual: true });
     }
 
-    while (lista.length < 42) {
-      const ultimo = lista[lista.length - 1];
-      const mesSiguiente = ultimo.mes === 11 ? 0 : ultimo.mes + 1;
-      const anioSiguiente = ultimo.mes === 11 ? ultimo.anio + 1 : ultimo.anio;
-      const diaSiguiente = lista.filter((c) => c.mes === mesSiguiente && c.anio === anioSiguiente).length + 1;
-      lista.push({ anio: anioSiguiente, mes: mesSiguiente, dia: diaSiguiente, delMesActual: false });
+    // Días del mes siguiente para completar la grilla (1, 2, 3…).
+    const mesSiguiente = mesVisible === 11 ? 0 : mesVisible + 1;
+    const anioSiguiente = mesVisible === 11 ? anioVisible + 1 : anioVisible;
+    for (let dia = 1; lista.length < 42; dia++) {
+      lista.push({ anio: anioSiguiente, mes: mesSiguiente, dia, delMesActual: false });
     }
 
     return lista;
@@ -123,7 +129,6 @@ export default function SelectorFecha({ id, valor, alCambiar, requerido, minimo 
         onClick={() => (abierto ? setAbierto(false) : abrir())}
         aria-haspopup="dialog"
         aria-expanded={abierto}
-        aria-required={requerido}
       >
         <span className={valor ? undefined : styles.placeholder}>
           {valor ? formatearVisible(valor) : "dd/mm/aaaa"}
@@ -135,8 +140,21 @@ export default function SelectorFecha({ id, valor, alCambiar, requerido, minimo 
         </svg>
       </button>
 
+      {/* Input oculto: hace que el formulario exija la fecha cuando el campo es requerido
+          (el aviso nativo del navegador aparece junto al campo). */}
+      {requerido && (
+        <input
+          className={styles.validacion}
+          tabIndex={-1}
+          aria-hidden="true"
+          required
+          value={valor}
+          onChange={() => {}}
+        />
+      )}
+
       {abierto && (
-        <div className={styles.panel} role="dialog" aria-label="Elegir fecha">
+        <div className={`${styles.panel} ${haciaArriba ? styles.panelArriba : ""}`} role="dialog" aria-label="Elegir fecha">
           <div className={styles.cabecera}>
             <span className={styles.mesAnio}>
               {NOMBRES_MES[mesVisible]} de {anioVisible}

@@ -20,21 +20,41 @@ import Carrito from "@/components/carrito/Carrito";
 import BotonBuscar from "@/components/catalogo/BotonBuscar";
 import BuscadorConSugerencias, { type Sugerencia } from "@/components/buscador/BuscadorConSugerencias";
 import ProductoCard from "@/components/catalogo/ProductoCard";
+import SeccionCategoria from "@/components/catalogo/SeccionCategoria";
+import CarruselDestacados from "@/components/catalogo/CarruselDestacados";
+import IconoCategoria from "@/components/catalogo/IconoCategoria";
 import { useHaySesion } from "@/lib/auth";
+
+// Devuelve una copia de la lista en orden aleatorio (Fisher-Yates).
+function mezclar<T>(lista: T[]): T[] {
+  const copia = [...lista];
+  for (let i = copia.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copia[i], copia[j]] = [copia[j], copia[i]];
+  }
+  return copia;
+}
 
 export default function HomePage() {
   const router = useRouter();
   const haySesion = useHaySesion();
 
   const [productos, setProductos] = useState<Producto[]>([]);
+  // Piezas con foto para el carrusel "Conocé las artesanías" (no cambian con los filtros).
+  const [destacados, setDestacados] = useState<Producto[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [categoriaHover, setCategoriaHover] = useState<number | null>(null);
   const [subcategoriasPorCategoria, setSubcategoriasPorCategoria] = useState<
     Record<number, Subcategoria[]>
   >({});
 
+  const [categoriasListas, setCategoriasListas] = useState(false);
+  // Secciones sin categoría propia ("Otros") que se expanden en el lugar.
+  const [otrosExpandido, setOtrosExpandido] = useState(false);
+
   const [busqueda, setBusqueda] = useState("");
-  const [cargando, setCargando] = useState(false);
+  // Arranca en true: la primera carga la dispara el efecto inicial.
+  const [cargando, setCargando] = useState(true);
   const [mensaje, setMensaje] = useState("");
 
   const [menuFijado, setMenuFijado] = useState(false);
@@ -63,43 +83,91 @@ export default function HomePage() {
         idSubcategoria
       );
 
-      setProductos(respuesta.data);
-
-      if (respuesta.data.length === 0) {
-        setMensaje("No se encontraron productos.");
-      }
+      mostrarProductos(respuesta.data);
     } catch (error) {
-      console.error("Error cargando productos:", error);
-
-      setProductos([]);
-      setMensaje("No fue posible cargar los productos.");
+      mostrarErrorProductos(error);
     } finally {
       setCargando(false);
     }
   }
 
-async function cargarCategorias() {
-  try {
-    const respuesta = await obtenerCategorias();
-
-    console.log("RESPUESTA CATEGORIAS:", respuesta);
-    console.log("DATA CATEGORIAS:", respuesta.data);
-
-    setCategorias(respuesta.data);
-
-    // Precarga las subcategorías de todas las categorías para poder
-    // agrupar el catálogo completo por categoría (ver `productosPorCategoria`).
-    respuesta.data.forEach((categoria) => {
-      asegurarSubcategorias(categoria.id);
-    });
-  } catch (error) {
-    console.error("Error cargando categorías:", error);
+  function mostrarProductos(lista: Producto[]) {
+    setProductos(lista);
+    setMensaje(lista.length === 0 ? "No se encontraron productos." : "");
   }
-}
 
+  function mostrarErrorProductos(error: unknown) {
+    console.error("Error cargando productos:", error);
+    setProductos([]);
+    setMensaje("No fue posible cargar los productos.");
+  }
+
+  // Carga inicial: el estado se actualiza recién cuando llega cada respuesta
+  // (`cargando` ya empieza en true), sin setState sincrónico dentro del efecto.
   useEffect(() => {
-    cargarProductos();
+    let cancelado = false;
+
+    obtenerProductos()
+      .then((respuesta) => {
+        if (!cancelado) mostrarProductos(respuesta.data);
+      })
+      .catch((error) => {
+        if (!cancelado) mostrarErrorProductos(error);
+      })
+      .finally(() => {
+        if (!cancelado) setCargando(false);
+      });
+
+    async function cargarCategorias() {
+      try {
+        const respuesta = await obtenerCategorias();
+
+        // Precarga las subcategorías de todas las categorías antes de agrupar el
+        // catálogo; si se agrupara antes, los productos caerían en "Otros" y
+        // luego saltarían de sección.
+        const subcategorias = await Promise.all(
+          respuesta.data.map(async (categoria) => {
+            try {
+              const r = await obtenerSubcategoriasPorCategoria(categoria.id);
+              return [categoria.id, r.data] as const;
+            } catch (error) {
+              console.error("Error cargando subcategorías:", error);
+              return [categoria.id, [] as Subcategoria[]] as const;
+            }
+          })
+        );
+
+        if (cancelado) return;
+        setSubcategoriasPorCategoria(Object.fromEntries(subcategorias));
+        setCategorias(respuesta.data);
+      } catch (error) {
+        console.error("Error cargando categorías:", error);
+      } finally {
+        if (!cancelado) setCategoriasListas(true);
+      }
+    }
+
+    async function cargarDestacados() {
+      try {
+        const respuesta = await obtenerProductos();
+        const conFoto = respuesta.data.filter(
+          (producto) => producto.idImagenPrincipal !== null && producto.cantidadDisponible > 0
+        );
+
+        if (cancelado) return;
+        // Orden aleatorio para que el carrusel muestre piezas distintas en cada visita.
+        setDestacados(mezclar(conFoto).slice(0, 6));
+      } catch (error) {
+        console.error("Error cargando destacados:", error);
+      }
+    }
+
     cargarCategorias();
+    cargarDestacados();
+
+    return () => {
+      cancelado = true;
+    };
   }, []);
 
   function buscarProducto(evento: FormEvent<HTMLFormElement>) {
@@ -187,37 +255,37 @@ async function cargarCategorias() {
   const sinFiltro = categoriaSeleccionada === null;
 
   const productosPorCategoria = useMemo(() => {
-    if (!sinFiltro || categorias.length === 0) return [];
+    if (!sinFiltro) return [];
 
     const grupos = categorias.map((categoria) => ({
       categoria,
+      idsSubcategoria: new Set(
+        (subcategoriasPorCategoria[categoria.id] ?? []).map(
+          (subcategoria) => subcategoria.subcategoriaId
+        )
+      ),
       productos: [] as Producto[],
     }));
 
     const otros: Producto[] = [];
 
+    // Un producto aparece en cada categoría a la que pertenece (no solo en la primera).
     productos.forEach((producto) => {
-      const grupo = grupos.find(({ categoria }) => {
-        const idsSubcategoria =
-          subcategoriasPorCategoria[categoria.id]?.map(
-            (subcategoria) => subcategoria.subcategoriaId
-          ) ?? [];
+      let ubicado = false;
 
-        return producto.idsSubcategorias.some((id) =>
-          idsSubcategoria.includes(id)
-        );
+      grupos.forEach((grupo) => {
+        if (producto.idsSubcategorias.some((id) => grupo.idsSubcategoria.has(id))) {
+          grupo.productos.push(producto);
+          ubicado = true;
+        }
       });
 
-      if (grupo) {
-        grupo.productos.push(producto);
-      } else {
-        otros.push(producto);
-      }
+      if (!ubicado) otros.push(producto);
     });
 
-    const seccionesConProductos = grupos.filter(
-      (grupo) => grupo.productos.length > 0
-    );
+    const seccionesConProductos = grupos
+      .filter((grupo) => grupo.productos.length > 0)
+      .map(({ categoria, productos }) => ({ categoria, productos }));
 
     if (otros.length > 0) {
       seccionesConProductos.push({
@@ -306,6 +374,25 @@ async function cargarCategorias() {
           onMouseLeave={() => setMenuEnHover(false)}
         >
           <div className={styles.categoriesContent}>
+            <p className={styles.categoriesHeading}>Categorías</p>
+
+            <button
+              type="button"
+              className={
+                categoriaSeleccionada === null
+                  ? `${styles.categoryButton} ${styles.selectedCategory}`
+                  : styles.categoryButton
+              }
+              onClick={mostrarTodos}
+            >
+              <span className={styles.categoryIcon}>
+                <IconoCategoria todas />
+              </span>
+              <span className={styles.categoryName}>Todas las artesanías</span>
+            </button>
+
+            <div className={styles.categoriesDivider} />
+
             {categorias.map((categoria) => {
               const subcategoriasCategoria =
                 subcategoriasPorCategoria[categoria.id] ?? [];
@@ -337,8 +424,28 @@ async function cargarCategorias() {
                     onClick={() =>
                       seleccionarCategoria(categoria.id)
                     }
+                    aria-expanded={subcategoriasCategoria.length > 0 ? desplegada : undefined}
                   >
-                    {categoria.nombre}
+                    <span className={styles.categoryIcon}>
+                      <IconoCategoria nombre={categoria.nombre} />
+                    </span>
+                    <span className={styles.categoryName}>{categoria.nombre}</span>
+                    {subcategoriasCategoria.length > 0 && (
+                      <svg
+                        className={`${styles.categoryChevron} ${desplegada ? styles.categoryChevronOpen : ""}`}
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={1.8}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="m9 6 6 6-6 6" />
+                      </svg>
+                    )}
                   </button>
 
                   {desplegada && subcategoriasCategoria.length > 0 && (
@@ -378,16 +485,7 @@ async function cargarCategorias() {
         </aside>
 
         <section className={styles.mainContent}>
-          <section className={styles.banner}>
-            <h2>CONOCÉ LAS ARTESANÍAS</h2>
-          </section>
-
-          <div className={styles.dots}>
-            <span className={styles.activeDot}></span>
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
+          <CarruselDestacados productos={destacados} />
 
           <section className={styles.storeSection}>
             <div className={styles.storeTitle}>
@@ -427,21 +525,28 @@ async function cargarCategorias() {
             {!cargando &&
               productos.length > 0 &&
               (sinFiltro ? (
-                <div className={styles.categorySections}>
-                  {productosPorCategoria.map(({ categoria, productos: productosCategoria }) => (
-                    <section key={categoria.id} className={styles.categorySection}>
-                      <h4 className={styles.categorySectionTitle}>
-                        {categoria.nombre}
-                      </h4>
-
-                      <div className={styles.products}>
-                        {productosCategoria.map((producto) => (
-                          <ProductoCard key={producto.id} producto={producto} />
-                        ))}
-                      </div>
-                    </section>
-                  ))}
-                </div>
+                !categoriasListas ? (
+                  <p className={styles.statusMessage}>Cargando catálogo...</p>
+                ) : (
+                  <div className={styles.categorySections}>
+                    {productosPorCategoria.map(({ categoria, productos: productosCategoria }) => (
+                      <SeccionCategoria
+                        key={categoria.id}
+                        titulo={categoria.nombre}
+                        productos={productosCategoria}
+                        expandida={categoria.id === -1 && otrosExpandido}
+                        alVerTodos={() => {
+                          if (categoria.id === -1) {
+                            setOtrosExpandido(true);
+                            return;
+                          }
+                          seleccionarCategoria(categoria.id);
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
+                      />
+                    ))}
+                  </div>
+                )
               ) : (
                 <div className={styles.products}>
                   {productos.map((producto) => (

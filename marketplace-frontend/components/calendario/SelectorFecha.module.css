@@ -2,34 +2,59 @@
   position: relative;
 }
 
+/* Input invisible que solo sirve para la validación nativa de "requerido". */
+.validacion {
+  position: absolute;
+  left: 16px;
+  bottom: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Campo que abre el calendario: mismo aspecto que los demás campos (blanco, borde arcilla al enfocar). */
 .disparador {
   width: 100%;
-  min-height: 44px;
+  min-height: 42px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  border: 1px solid #b88b44;
-  border-radius: 18px;
-  padding: 8px 16px;
-  background: #f4ddba;
-  color: #291606;
-  font-family: Arial, sans-serif;
+  border: 1px solid #e3d3bd;
+  border-radius: 6px;
+  padding: 8px 14px;
+  background: #fff;
+  color: #3d1607;
+  font-family: var(--font-sans), Arial, sans-serif;
   font-size: 15px;
   cursor: pointer;
   text-align: left;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.disparador:hover {
+  border-color: #dcc7aa;
+}
+
+.disparador:focus-visible,
+.disparador[aria-expanded="true"] {
+  outline: none;
+  border-color: #b0714a;
+  box-shadow: 0 0 0 3px rgba(176, 113, 74, 0.15);
 }
 
 .placeholder {
-  color: #503715;
+  color: #8a6a52;
 }
 
 .icono {
   flex-shrink: 0;
   width: 16px;
   height: 16px;
-  color: #63240e;
-  opacity: 0.8;
+  color: #9a6446;
 }
 
 .panel {
@@ -37,25 +62,32 @@
   z-index: 20;
   top: calc(100% + 6px);
   left: 0;
-  width: 280px;
-  background: #fff6e6;
-  border: 1px solid #b88b44;
-  border-radius: 16px;
+  width: 290px;
+  background: #fffaf3;
+  border: 1px solid #ebdcc6;
+  border-radius: 10px;
   padding: 14px;
-  box-shadow: 0 10px 26px rgba(41, 22, 6, 0.25);
-  color: #63240e;
+  box-shadow: 0 16px 40px rgba(61, 22, 7, 0.16);
+  color: #3d1607;
+  font-family: var(--font-sans), Arial, sans-serif;
+}
+
+/* Desplegado hacia arriba del campo. */
+.panelArriba {
+  top: auto;
+  bottom: calc(100% + 6px);
 }
 
 .cabecera {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .mesAnio {
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 15px;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 17px;
   text-transform: capitalize;
 }
 
@@ -65,19 +97,20 @@
 }
 
 .navegacion button {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border: none;
-  border-radius: 999px;
+  border-radius: 50%;
   background: transparent;
   color: #63240e;
   font-size: 18px;
   line-height: 1;
   cursor: pointer;
+  transition: background 0.15s ease;
 }
 
 .navegacion button:hover {
-  background: rgba(99, 36, 14, 0.1);
+  background: #f6ead8;
 }
 
 .grillaDias {
@@ -87,10 +120,13 @@
 }
 
 .nombreDia {
+  padding-bottom: 6px;
   text-align: center;
-  font-size: 11px;
-  color: #7a5b34;
-  padding-bottom: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #8a6a52;
 }
 
 .celda {
@@ -99,54 +135,67 @@
   align-items: center;
   justify-content: center;
   border: none;
-  border-radius: 999px;
+  border-radius: 50%;
   background: transparent;
-  color: #63240e;
+  color: #3d1607;
   font-size: 13px;
   cursor: pointer;
+  transition: background 0.12s ease;
 }
 
 .celda:hover:not(:disabled) {
-  background: rgba(99, 36, 14, 0.12);
+  background: #f6ead8;
 }
 
 .celda:disabled {
-  color: #c6ad84;
+  color: #d8c6ae;
   cursor: not-allowed;
 }
 
 .celdaOtroMes {
-  color: #c6ad84;
+  color: #c9b49a;
 }
 
+/* Hoy: anillo arcilla. */
 .celdaHoy {
-  border: 1px solid #63240e;
+  box-shadow: inset 0 0 0 1.5px #b0714a;
+  font-weight: 600;
 }
 
-.celdaSeleccionada {
+.celdaSeleccionada,
+.celdaSeleccionada:hover:not(:disabled) {
   background: #63240e;
-  color: #fff6e6;
-  font-weight: bold;
+  color: #fbf1e2;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.celda:focus-visible,
+.navegacion button:focus-visible,
+.enlace:focus-visible {
+  outline: 2px solid #b0714a;
+  outline-offset: 1px;
 }
 
 .pie {
   display: flex;
   justify-content: space-between;
-  margin-top: 10px;
+  margin-top: 12px;
   padding-top: 10px;
-  border-top: 1px solid rgba(184, 139, 68, 0.4);
+  border-top: 1px solid #f1e6d6;
 }
 
 .enlace {
+  padding: 2px;
   border: none;
   background: transparent;
-  color: #63240e;
-  font-size: 13px;
-  text-decoration: underline;
+  color: #9a6446;
+  font: 500 13px var(--font-sans), Arial, sans-serif;
+  text-decoration: none;
   cursor: pointer;
-  padding: 2px;
 }
 
 .enlace:hover {
-  opacity: 0.75;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }

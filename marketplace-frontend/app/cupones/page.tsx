@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
 import homeStyles from "@/app/home/home.module.css";
+import tiendasStyles from "@/app/tiendas/tiendas.module.css";
 import styles from "./cupones.module.css";
 
 import type { CuponPublico } from "@/types/cupon";
@@ -110,6 +111,14 @@ export default function CuponesPage() {
           <BotonBuscar />
         </form>
 
+        <Link href="/tiendas" className={homeStyles.navButton}>
+          Tiendas
+        </Link>
+
+        <Link href="/canal" className={homeStyles.navButton}>
+          Canal
+        </Link>
+
         {haySesion === undefined ? null : haySesion ? (
           <MenuUsuario />
         ) : (
@@ -122,7 +131,10 @@ export default function CuponesPage() {
       </header>
 
       <div className={styles.content}>
-        <h2 className={styles.pageTitle}>Cupones</h2>
+        <header className={tiendasStyles.encabezado}>
+          <p className={tiendasStyles.eyebrow}>Descuentos de las tiendas</p>
+          <h2 className={tiendasStyles.pageTitle}>Cupones</h2>
+        </header>
 
         {cargando && <p className={styles.statusMessage}>Cargando cupones...</p>}
         {!cargando && mensaje && <p className={styles.statusMessage}>{mensaje}</p>}
@@ -133,19 +145,24 @@ export default function CuponesPage() {
         {!cargando && cuponesFiltrados.length > 0 && (
           <div className={styles.couponGrid}>
             {cuponesFiltrados.map((cupon) => (
-              <div key={cupon.id} className={styles.couponCard}>
-                <div className={styles.couponHeader}>
-                  <div>
-                    <h3>{cupon.nombre}</h3>
-                    <p className={styles.couponStore}>{cupon.nombreTienda}</p>
-                  </div>
-                  <span className={styles.couponDiscount}>−{cupon.porcentaje}%</span>
+              <article key={cupon.id} className={styles.couponCard}>
+                {/* Talón del vale con el porcentaje. */}
+                <div className={styles.couponStub}>
+                  <span className={styles.couponDiscount}>{cupon.porcentaje}%</span>
+                  <span className={styles.couponOff}>de descuento</span>
                 </div>
 
-                <button type="button" className={styles.obtenerButton} onClick={() => obtenerCupon(cupon)}>
-                  Obtener
-                </button>
-              </div>
+                <div className={styles.couponBody}>
+                  <h3 className={styles.couponName}>{cupon.nombre}</h3>
+                  <Link href={`/tiendas/${cupon.idTienda}`} className={styles.couponStore}>
+                    {cupon.nombreTienda}
+                  </Link>
+
+                  <button type="button" className={styles.obtenerButton} onClick={() => obtenerCupon(cupon)}>
+                    Obtener cupón
+                  </button>
+                </div>
+              </article>
             ))}
           </div>
         )}

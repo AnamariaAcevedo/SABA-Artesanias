@@ -29,6 +29,10 @@ export default function CanalPage() {
           Tiendas
         </Link>
 
+        <Link href="/cupones" className={homeStyles.navButton}>
+          Cupones
+        </Link>
+
         {haySesion === undefined ? null : haySesion ? (
           <MenuUsuario />
         ) : (
@@ -41,7 +45,10 @@ export default function CanalPage() {
       </header>
 
       <div className={tiendasStyles.content}>
-        <h2 className={tiendasStyles.pageTitle}>Canal</h2>
+        <header className={`${tiendasStyles.encabezado} ${tiendasStyles.encabezadoCentrado}`}>
+          <p className={tiendasStyles.eyebrow}>Novedades de las tiendas</p>
+          <h2 className={tiendasStyles.pageTitle}>Canal</h2>
+        </header>
         <FeedPublicaciones textoVacio="Todavía no hay publicaciones disponibles." />
       </div>
     </main>

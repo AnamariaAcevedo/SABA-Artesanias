@@ -14,6 +14,11 @@ export interface ItemCarrito {
   idProducto: number;
   nombre: string;
   precioUnitario: number;
+  // Precio sin el descuento del producto y su porcentaje, para mostrar el ahorro.
+  // Opcionales: los carritos guardados antes de este cambio no los tienen hasta
+  // que se vuelven a sincronizar con el servidor.
+  precioLista?: number;
+  descuento?: number | null;
   cantidad: number;
   cantidadDisponible: number;
   idTienda: number;
@@ -124,6 +129,11 @@ export function precioFinalProducto(producto: Producto): number {
   return producto.precioFinal ?? producto.precio;
 }
 
+// Precio de lista de la línea (sin descuento); si no se conoce, el precio que se paga.
+export function precioListaItem(item: ItemCarrito): number {
+  return item.precioLista && item.precioLista > item.precioUnitario ? item.precioLista : item.precioUnitario;
+}
+
 // Agrega `cantidad` unidades sin superar el stock disponible. Devuelve cuántas
 // unidades se agregaron realmente (0 si no hay stock o ya estaba todo en el carrito).
 export function agregarAlCarrito(producto: Producto, cantidad: number): number {
@@ -137,6 +147,8 @@ export function agregarAlCarrito(producto: Producto, cantidad: number): number {
     idProducto: producto.id,
     nombre: producto.nombre,
     precioUnitario: precioFinalProducto(producto),
+    precioLista: producto.precio,
+    descuento: producto.descuento,
     cantidad: enCarrito + agregadas,
     cantidadDisponible: producto.cantidadDisponible,
     idTienda: producto.idTienda,
@@ -186,6 +198,8 @@ export function sincronizarCarrito(productos: Producto[], idsEliminados: number[
           ...item,
           nombre: actual.nombre,
           precioUnitario: precioFinalProducto(actual),
+          precioLista: actual.precio,
+          descuento: actual.descuento,
           cantidadDisponible: actual.cantidadDisponible,
           disponible: actual.activo !== false && actual.tiendaActiva !== false,
         };

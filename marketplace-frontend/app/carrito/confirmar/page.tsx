@@ -1,11 +1,12 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import homeStyles from "@/app/home/home.module.css";
 import styles from "./confirmar.module.css";
+import ZonaSubida from "@/components/archivos/ZonaSubida";
 
 import type { Pedido, PedidoCreateInput } from "@/types/pedido";
 import type { DatosPagoTienda } from "@/types/Tienda";
@@ -30,6 +31,7 @@ import {
   quitarVariosDelCarrito,
   verificarCarrito,
   useCarrito,
+  precioListaItem,
   type ItemCarrito,
 } from "@/lib/carrito";
 
@@ -128,9 +130,19 @@ export default function ConfirmarCompraPage() {
     return cupon ? subtotal - subtotal * (cupon.porcentaje / 100) : subtotal;
   }
 
+  // Desglose de lo que se ahorra en una tienda: descuentos de productos y cupón.
+  function ahorrosDeTienda(idTienda: number, lineas: ItemCarrito[]) {
+    const lista = lineas.reduce((suma, item) => suma + precioListaItem(item) * item.cantidad, 0);
+    const subtotal = subtotalDeTienda(lineas);
+    const cupon = cuponesPorTienda[idTienda];
+    const descuentoCupon = cupon ? subtotal * (cupon.porcentaje / 100) : 0;
+    return { lista, descuentoProductos: lista - subtotal, descuentoCupon, total: subtotal - descuentoCupon };
+  }
+
   function quitarCupon(idTienda: number) {
     setCuponesPorTienda((actuales) => {
-      const { [idTienda]: _quitado, ...resto } = actuales;
+      const resto = { ...actuales };
+      delete resto[idTienda];
       return resto;
     });
   }
@@ -141,6 +153,11 @@ export default function ConfirmarCompraPage() {
   const totalIncluido = Object.entries(porTienda).reduce((suma, [idTienda, lineas]) => {
     if (excluidas.includes(Number(idTienda))) return suma;
     return suma + totalDeTienda(Number(idTienda), lineas);
+  }, 0);
+  const ahorroTotal = Object.entries(porTienda).reduce((suma, [idTienda, lineas]) => {
+    if (excluidas.includes(Number(idTienda))) return suma;
+    const ahorro = ahorrosDeTienda(Number(idTienda), lineas);
+    return suma + ahorro.descuentoProductos + ahorro.descuentoCupon;
   }, 0);
   // Productos que ya no están a la venta: hay que quitarlos para poder confirmar.
   const noDisponibles = incluidos.filter((item) => item.disponible === false);
@@ -165,10 +182,9 @@ export default function ConfirmarCompraPage() {
     router.push("/home");
   }
 
-  function elegirComprobante(idTienda: number, evento: ChangeEvent<HTMLInputElement>) {
-    const archivo = evento.target.files?.[0];
+  // Devuelve false si el archivo no es válido, para que la zona de subida lo descarte.
+  function elegirComprobante(idTienda: number, archivo: File | undefined): boolean {
     const invalido = archivo ? errorDeComprobante(archivo) : null;
-    if (invalido) evento.target.value = "";
     setErrorComprobante(invalido ?? "");
     setComprobantes((actuales) => {
       const siguientes = { ...actuales };
@@ -176,6 +192,7 @@ export default function ConfirmarCompraPage() {
       else delete siguientes[idTienda];
       return siguientes;
     });
+    return !invalido;
   }
 
   // Cancela un pedido ya registrado (solo con sesión y mientras siga pendiente).
@@ -284,7 +301,10 @@ export default function ConfirmarCompraPage() {
       </header>
 
       <div className={styles.content}>
-        <h2 className={styles.titulo}>Confirmar compra</h2>
+        <header className={styles.encabezado}>
+          <p className={styles.eyebrow}>Último paso</p>
+          <h2 className={styles.titulo}>Confirmar compra</h2>
+        </header>
 
         {creados.length > 0 && (
           <section className={styles.exito} role="status">
@@ -338,6 +358,9 @@ export default function ConfirmarCompraPage() {
         {items.length > 0 && (
           <div className={styles.columnas}>
             <section className={styles.resumen} aria-label="Resumen del carrito">
+              <h3 className={styles.seccionTitulo}>
+                Tu pedido
+              </h3>
               {Object.entries(porTienda).map(([idTienda, lineas]) => {
                 const excluida = excluidas.includes(Number(idTienda));
                 return (
@@ -375,8 +398,20 @@ export default function ConfirmarCompraPage() {
                     {lineas.map((item) => (
                       <li key={item.idProducto} className={styles.linea}>
                         <div>
-                          <Link href={`/productos/${item.idProducto}`}>{item.nombre}</Link>
-                          <span>{formatearPrecio(item.precioUnitario)} c/u</span>
+                          <span className={styles.lineaNombre}>
+                            <Link href={`/productos/${item.idProducto}`}>{item.nombre}</Link>
+                            {precioListaItem(item) > item.precioUnitario && (
+                              <span className={styles.etiquetaDescuento}>
+                                −{item.descuento ?? Math.round((1 - item.precioUnitario / precioListaItem(item)) * 100)}%
+                              </span>
+                            )}
+                          </span>
+                          <span className={styles.precioUnidad}>
+                            {formatearPrecio(item.precioUnitario)} c/u
+                            {precioListaItem(item) > item.precioUnitario && (
+                              <s>{formatearPrecio(precioListaItem(item))}</s>
+                            )}
+                          </span>
                           <div className={styles.cantidad} role="group" aria-label={`Cantidad de ${item.nombre}`}>
                             <button
                               type="button"
@@ -410,7 +445,12 @@ export default function ConfirmarCompraPage() {
                             )
                           )}
                         </div>
-                        <strong>{formatearPrecio(item.precioUnitario * item.cantidad)}</strong>
+                        <span className={styles.precioLinea}>
+                          <strong>{formatearPrecio(item.precioUnitario * item.cantidad)}</strong>
+                          {precioListaItem(item) > item.precioUnitario && (
+                            <s>{formatearPrecio(precioListaItem(item) * item.cantidad)}</s>
+                          )}
+                        </span>
                         <button
                           type="button"
                           className={styles.quitar}
@@ -451,6 +491,31 @@ export default function ConfirmarCompraPage() {
                       )}
                     </p>
                   )}
+                  {!excluida && (() => {
+                    const ahorro = ahorrosDeTienda(Number(idTienda), lineas);
+                    if (ahorro.descuentoProductos <= 0 && ahorro.descuentoCupon <= 0) return null;
+                    const cupon = cuponesPorTienda[Number(idTienda)];
+                    return (
+                      <dl className={styles.desglose}>
+                        <dt>Precio sin descuentos</dt>
+                        <dd>{formatearPrecio(ahorro.lista)}</dd>
+                        {ahorro.descuentoProductos > 0 && (
+                          <>
+                            <dt>Descuento en productos</dt>
+                            <dd className={styles.desgloseAhorro}>−{formatearPrecio(ahorro.descuentoProductos)}</dd>
+                          </>
+                        )}
+                        {cupon && ahorro.descuentoCupon > 0 && (
+                          <>
+                            <dt>Cupón {cupon.codigo} (−{cupon.porcentaje}%)</dt>
+                            <dd className={styles.desgloseAhorro}>−{formatearPrecio(ahorro.descuentoCupon)}</dd>
+                          </>
+                        )}
+                        <dt className={styles.desgloseTotal}>Subtotal</dt>
+                        <dd className={styles.desgloseTotal}>{formatearPrecio(ahorro.total)}</dd>
+                      </dl>
+                    );
+                  })()}
                 </div>
                 );
               })}
@@ -459,6 +524,15 @@ export default function ConfirmarCompraPage() {
                 <span>Total</span>
                 <strong>{formatearPrecio(totalIncluido)}</strong>
               </p>
+              {ahorroTotal > 0 && (
+                <p className={styles.ahorroTotal}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M20 12 12 20 4 12V4h8z" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                  </svg>
+                  Ahorrás {formatearPrecio(ahorroTotal)} en esta compra
+                </p>
+              )}
               {Object.keys(porTienda).length - excluidas.length > 1 && (
                 <p className={styles.nota}>
                   Tu carrito tiene productos de varias tiendas: se va a registrar un pedido por tienda.
@@ -467,7 +541,9 @@ export default function ConfirmarCompraPage() {
             </section>
 
             <form className={styles.formulario} onSubmit={confirmar}>
-              <h3>Datos de entrega</h3>
+              <h3 className={styles.seccionTitulo}>
+                Datos de entrega
+              </h3>
 
               {haySesion === undefined && <p>Verificando tu sesión...</p>}
 
@@ -552,7 +628,9 @@ export default function ConfirmarCompraPage() {
 
               {haySesion !== undefined && (
                 <fieldset className={styles.comprobantes}>
-                  <legend>Pago</legend>
+                  <legend className={styles.seccionTitulo}>
+                    Pago
+                  </legend>
                   <p className={styles.nota}>
                     Transferí el total a la cuenta de la tienda y adjuntá el comprobante. PNG, JPG o PDF de hasta 5 MB.
                   </p>
@@ -592,16 +670,19 @@ export default function ConfirmarCompraPage() {
                                 </>
                               )}
                             </dl>
-                            <label className={styles.comprobante}>
-                              Comprobante de pago
-                              <input
-                                type="file"
-                                required
+                            <div className={styles.comprobante}>
+                              <span className={styles.comprobanteTitulo}>Comprobante de pago</span>
+                              <ZonaSubida
+                                onArchivos={(archivos) => elegirComprobante(idTienda, archivos[0])}
                                 accept="image/png,image/jpeg,application/pdf"
-                                onChange={(evento) => elegirComprobante(idTienda, evento)}
+                                required
+                                conservarSeleccion
                                 disabled={enviando}
+                                titulo="Arrastrá el comprobante acá"
+                                ayuda="Foto o captura (PNG, JPG) o PDF de la transferencia."
+                                archivoSeleccionado={comprobantes[idTienda] ?? null}
                               />
-                            </label>
+                            </div>
                           </>
                         )}
                       </div>

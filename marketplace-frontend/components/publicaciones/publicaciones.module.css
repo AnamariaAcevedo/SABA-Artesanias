@@ -3,17 +3,19 @@
 .feed {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
   width: 100%;
   max-width: 680px;
   margin: 0 auto;
 }
 
 .publicacion {
-  padding: 22px 26px;
-  background: rgba(244, 221, 186, 0.8);
-  border-radius: 20px;
-  color: #63240e;
+  padding: 24px 28px;
+  background: #fffaf3;
+  border: 1px solid #ebdcc6;
+  border-radius: 10px;
+  color: #3d1607;
+  box-shadow: 0 4px 16px rgba(99, 36, 14, 0.04);
 }
 
 .cabecera {
@@ -28,14 +30,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  border: 1px solid #b88b44;
+  width: 46px;
+  height: 46px;
+  border: none;
   border-radius: 50%;
-  background: #f4ddba;
-  color: #7a5b34;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 22px;
+  background: #e3cba6;
+  color: #3d1607;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 21px;
   text-decoration: none;
 }
 
@@ -45,9 +47,9 @@
 
 .autor a {
   display: block;
-  color: #63240e;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 18px;
+  color: #3d1607;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 17px;
   text-decoration: none;
   overflow-wrap: anywhere;
 }
@@ -58,23 +60,25 @@
 
 .fecha {
   display: block;
+  margin-top: 2px;
   font-size: 12px;
-  color: #63240e;
-  opacity: 0.75;
+  color: #8a6a52;
 }
 
 .titulo {
-  margin: 0 0 6px;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 22px;
-  font-weight: normal;
+  margin: 4px 0 8px;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.2;
+  color: #3d1607;
   overflow-wrap: anywhere;
 }
 
 /* pre-wrap conserva los saltos de línea que escribió la tienda. */
 .texto {
   margin: 0;
-  color: #5f4638;
+  color: #6b5444;
   font-size: 15px;
   line-height: 1.5;
   white-space: pre-wrap;
@@ -84,16 +88,17 @@
 .fotos {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  margin-top: 14px;
+  gap: 6px;
+  margin: 18px -28px 0;
 }
 
 .fotos a {
   display: block;
   overflow: hidden;
-  border: 1px solid #b88b44;
-  border-radius: 12px;
-  background: #fff6e6;
+  border: none;
+  border-radius: 0;
+  /* Mismo fondo que la tarjeta, para que la foto se integre. */
+  background: transparent;
 }
 
 .fotos a:focus-visible {
@@ -115,23 +120,28 @@
 
 .fotos a:only-child img {
   height: auto;
-  max-height: 460px;
+  max-height: 520px;
   object-fit: contain;
 }
 
 .vigencia {
-  display: block;
-  margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+  margin-top: 14px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: #f6ead8;
   font-size: 12px;
-  color: #63240e;
-  opacity: 0.75;
+  font-weight: 500;
+  color: #9a6446;
 }
 
 .mensaje {
   margin: 0;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 20px;
-  color: #63240e;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 19px;
+  color: #6b5444;
+  text-align: center;
 }
 
 .alerta {
@@ -142,20 +152,21 @@
 
 .verMas {
   align-self: center;
-  height: 36px;
-  padding: 0 22px;
-  border: 1px solid #63240e;
-  border-radius: 999px;
-  background: transparent;
+  height: 40px;
+  padding: 0 24px;
+  border: none;
+  border-radius: 6px;
+  background: #f1e2c9;
+  font-weight: 500;
   color: #63240e;
-  font-family: Arial, sans-serif;
+  font-family: var(--font-sans), Arial, sans-serif;
   font-size: 14px;
   cursor: pointer;
   transition: background 0.15s ease;
 }
 
 .verMas:hover:not(:disabled) {
-  background: rgba(99, 36, 14, 0.08);
+  background: #ead6b6;
 }
 
 .verMas:disabled {
@@ -168,9 +179,9 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-top: 14px;
+  margin-top: 18px;
   padding-top: 12px;
-  border-top: 1px solid #e0c48f;
+  border-top: 1px solid #efe2cf;
 }
 
 .acciones {
@@ -186,22 +197,23 @@
   gap: 6px;
   min-height: 34px;
   padding: 0 14px;
-  border-radius: 999px;
+  border-radius: 6px;
   color: #63240e;
-  font-family: Arial, sans-serif;
+  font-family: var(--font-sans), Arial, sans-serif;
   font-size: 14px;
   text-decoration: none;
 }
 
 .accion {
-  border: 1px solid #63240e;
+  border: none;
   background: transparent;
+  font-weight: 500;
   cursor: pointer;
   transition: background 0.15s ease;
 }
 
 .accion:hover:not(:disabled) {
-  background: rgba(99, 36, 14, 0.08);
+  background: #f6ead8;
 }
 
 .accion:disabled {
@@ -213,13 +225,13 @@
 .enviar:focus-visible,
 .eliminarComentario:focus-visible,
 .nuevoComentario textarea:focus-visible {
-  outline: 3px solid #63240e;
+  outline: 2px solid #b0714a;
   outline-offset: 2px;
 }
 
 .accion[aria-pressed="true"] {
-  background: #63240e;
-  color: #f7dfb9;
+  background: #f6ead8;
+  color: #9a6446;
 }
 
 .comentarios {
@@ -239,21 +251,21 @@
   width: 100%;
   resize: vertical;
   padding: 10px 16px;
-  border: 1px solid #b88b44;
-  border-radius: 16px;
-  background: #fff6e6;
-  color: #291606;
-  font: 14px/1.4 Arial, sans-serif;
+  border: 1px solid #e3d3bd;
+  border-radius: 6px;
+  background: #fbf5ec;
+  color: #3d1607;
+  font: 14px/1.4 var(--font-sans), Arial, sans-serif;
 }
 
 .enviar {
   height: 34px;
   padding: 0 18px;
   border: none;
-  border-radius: 999px;
+  border-radius: 6px;
   background: #63240e;
-  color: #f7dfb9;
-  font-family: Arial, sans-serif;
+  color: #fbf1e2;
+  font-family: var(--font-sans), Arial, sans-serif;
   font-size: 14px;
   cursor: pointer;
 }
@@ -265,12 +277,13 @@
 
 .invitacion {
   margin: 0;
-  color: #5f4638;
+  color: #6b5444;
   font-size: 14px;
 }
 
 .invitacion a {
-  color: #63240e;
+  color: #9a6446;
+  font-weight: 500;
 }
 
 .listaComentarios {
@@ -284,13 +297,13 @@
 
 .comentario {
   padding: 10px 14px;
-  border-radius: 14px;
-  background: rgba(255, 246, 230, 0.8);
+  border-radius: 8px;
+  background: #f8efe2;
 }
 
 .comentario p {
   margin: 4px 0 0;
-  color: #5f4638;
+  color: #6b5444;
   font-size: 14px;
   line-height: 1.4;
   white-space: pre-wrap;
@@ -307,9 +320,8 @@
 }
 
 .comentarioCabecera time {
-  color: #63240e;
+  color: #8a6a52;
   font-size: 12px;
-  opacity: 0.75;
 }
 
 .eliminarComentario {
@@ -340,6 +352,10 @@
 @media (max-width: 700px) {
   .publicacion {
     padding: 18px 20px;
+  }
+
+  .fotos {
+    margin: 14px -20px 0;
   }
 
   .fotos img {

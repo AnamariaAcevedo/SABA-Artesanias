@@ -81,6 +81,12 @@ const CONFIGURACIONES: Configuracion[] = [
   },
 ];
 
+// El estado no viaja en el POST/PUT: se aplica con los endpoints /activar y /desactivar.
+const OPCIONES_ESTADO: Opcion[] = [
+  { value: "true", label: "Activo" },
+  { value: "false", label: "Inactivo" },
+];
+
 async function obtenerTodos<T>(ruta: string): Promise<T[]> {
   const elementos: T[] = [];
   let pagina = 1;
@@ -123,6 +129,8 @@ export default function AdministracionGeneralPage() {
   const [aviso, setAviso] = useState("");
   const [formulario, setFormulario] = useState<Record<string, string> | null>(null);
   const [idEditando, setIdEditando] = useState<number | null>(null);
+  // Estado del registro al abrir el formulario, para saber si hay que cambiarlo al guardar.
+  const [activoOriginal, setActivoOriginal] = useState(true);
 
   useEffect(() => {
     let vigente = true;
@@ -198,11 +206,13 @@ export default function AdministracionGeneralPage() {
         { name: "descuento", label: "Descuento (%)", type: "number", min: 0, max: 100, step: "0.01" },
         { name: "cantidadDisponible", label: "Cantidad disponible", type: "number", required: true, min: 0, step: "1" },
         { name: "idTienda", label: "Tienda", type: "select", required: true, options: tiendas },
+        { name: "activo", label: "Estado", type: "select", required: true, options: OPCIONES_ESTADO },
       ];
       case "tiendas": return [
         { name: "nombre", label: "Nombre", required: true },
         { name: "descripcion", label: "Descripción", type: "textarea", required: true },
         { name: "idDireccion", label: "Dirección", type: "select", required: true, options: direcciones },
+        { name: "activo", label: "Estado", type: "select", required: true, options: OPCIONES_ESTADO },
       ];
       case "contactos": return [
         { name: "enlace", label: "Enlace", type: "url", required: true },
@@ -220,6 +230,7 @@ export default function AdministracionGeneralPage() {
     const inicial: Record<string, string> = {};
     campos().forEach((campo) => { inicial[campo.name] = ""; });
     if (config?.id === "productos") Object.assign(inicial, { puntuacion: "0", descuento: "0", cantidadDisponible: "0" });
+    if (config?.id === "productos" || config?.id === "tiendas") inicial.activo = "true";
     setFormulario(inicial);
     setIdEditando(null);
     setError("");
@@ -229,8 +240,10 @@ export default function AdministracionGeneralPage() {
   function editar(entidad: Entidad) {
     const inicial: Record<string, string> = {};
     campos().forEach((campo) => { inicial[campo.name] = valor(entidad, campo.name as keyof Entidad); });
+    if ("activo" in inicial) inicial.activo = entidad.activo === false ? "false" : "true";
     setFormulario(inicial);
     setIdEditando(entidad.id);
+    setActivoOriginal(entidad.activo !== false);
     setError("");
     setAviso("");
   }
@@ -239,6 +252,7 @@ export default function AdministracionGeneralPage() {
     const datos = formulario ?? {};
     const resultado: Record<string, string | number | null> = {};
     for (const campo of campos()) {
+      if (campo.name === "activo") continue;
       const actual = (datos[campo.name] ?? "").trim();
       if (campo.type === "number" || campo.name.startsWith("id")) {
         resultado[campo.name] = actual === "" ? null : Number(actual);
@@ -256,10 +270,21 @@ export default function AdministracionGeneralPage() {
     setError("");
     setAviso("");
     try {
-      await apiFetch(idEditando === null ? config.endpoint : `${config.endpoint}/${idEditando}`, {
+      const guardado = await apiFetch<Entidad>(idEditando === null ? config.endpoint : `${config.endpoint}/${idEditando}`, {
         method: idEditando === null ? "POST" : "PUT",
         body: JSON.stringify(payload()),
       });
+
+      // Productos y tiendas: si se eligió otro estado, se aplica después de guardar los datos.
+      if ("activo" in formulario) {
+        const activoElegido = formulario.activo !== "false";
+        const activoActual = idEditando === null ? true : activoOriginal;
+        const id = guardado?.id ?? idEditando;
+        if (activoElegido !== activoActual && id !== null && id !== undefined) {
+          await apiFetch(`${config.endpoint}/${id}/${activoElegido ? "activar" : "desactivar"}`, { method: "PUT" });
+        }
+      }
+
       setAviso(`${config.singular[0].toUpperCase()}${config.singular.slice(1)} ${idEditando === null ? "creado" : "actualizado"} correctamente.`);
       setFormulario(null);
       setIdEditando(null);
@@ -324,8 +349,8 @@ export default function AdministracionGeneralPage() {
 
   function detalle(entidad: Entidad): string {
     switch (config?.id) {
-      case "productos": return `Gs. ${(entidad.precio ?? 0).toLocaleString("es-PY")} · Stock: ${entidad.cantidadDisponible ?? 0}${entidad.activo === false ? " · Inactivo" : ""}`;
-      case "tiendas": return `${entidad.direccionCompleta ?? "Sin dirección"}${entidad.activo === false ? " · Inactiva" : ""}`;
+      case "productos": return `Gs. ${(entidad.precio ?? 0).toLocaleString("es-PY")} · Stock: ${entidad.cantidadDisponible ?? 0}`;
+      case "tiendas": return entidad.direccionCompleta ?? "Sin dirección";
       case "contactos": return `${entidad.nombreTipoContacto ?? "Sin tipo"} · ${entidad.nombreTienda ?? "Sin tienda"}`;
       default: return `ID ${entidad.id}`;
     }
@@ -339,6 +364,8 @@ export default function AdministracionGeneralPage() {
   const totalPaginas = Math.max(1, Math.ceil(total / 10));
   const direccionRequerida = config.id === "tiendas" && direcciones.length === 0;
   const muestraTienda = config.id === "productos";
+  const muestraEstado = config.id === "productos" || config.id === "tiendas";
+  const columnas = 3 + (muestraTienda ? 1 : 0) + (muestraEstado ? 1 : 0);
 
   return (
     <div className={styles.card}>
@@ -350,10 +377,10 @@ export default function AdministracionGeneralPage() {
         {puedeCrear && !direccionRequerida && <button type="button" className={styles.buttonPrimary} onClick={nuevo}>Crear {config.singular}</button>}
       </div>
 
-      <div className={styles.toolbar} role="tablist" aria-label="Módulos de administración general">
+      <div className={styles.tabs} role="tablist" aria-label="Módulos de administración general">
         {configuracionesVisibles.map((item) => (
           <button key={item.id} type="button" role="tab" aria-selected={item.id === config.id}
-            className={item.id === config.id ? styles.buttonPrimary : styles.buttonOutline}
+            className={item.id === config.id ? `${styles.tab} ${styles.tabActive}` : styles.tab}
             onClick={() => cambiarModulo(item.id)}>{item.titulo}</button>
         ))}
       </div>
@@ -407,15 +434,22 @@ export default function AdministracionGeneralPage() {
 
           <div className={styles.tableWrap}>
             <table className={styles.table}>
-              <thead><tr><th>Registro</th>{muestraTienda && <th>Tienda</th>}<th>Detalle</th><th>Acciones</th></tr></thead>
+              <thead><tr><th>Registro</th>{muestraTienda && <th>Tienda</th>}<th>Detalle</th>{muestraEstado && <th>Estado</th>}<th>Acciones</th></tr></thead>
               <tbody>
-                {cargando && <tr><td colSpan={muestraTienda ? 4 : 3} className={styles.emptyRow}>Cargando…</td></tr>}
-                {!cargando && elementos.length === 0 && <tr><td colSpan={muestraTienda ? 4 : 3} className={styles.emptyRow}>No hay registros.</td></tr>}
+                {cargando && <tr><td colSpan={columnas} className={styles.emptyRow}>Cargando…</td></tr>}
+                {!cargando && elementos.length === 0 && <tr><td colSpan={columnas} className={styles.emptyRow}>No hay registros.</td></tr>}
                 {!cargando && elementos.map((entidad) => (
                   <tr key={entidad.id}>
                     <td><strong>{entidad.nombre ?? entidad.usuario ?? `Registro ${entidad.id}`}</strong>{entidad.descripcion && <small className={styles.tableDescription}>{entidad.descripcion}</small>}</td>
                     {muestraTienda && <td>{entidad.nombreTienda ?? "Sin tienda asignada"}</td>}
                     <td>{detalle(entidad)}{entidad.enlace && <small className={styles.tableDescription}>{entidad.enlace}</small>}</td>
+                    {muestraEstado && (
+                      <td>
+                        <span className={`${styles.badge} ${entidad.activo === false ? styles.badgeInactivo : styles.badgeActivo}`}>
+                          {entidad.activo === false ? (config.id === "tiendas" ? "Inactiva" : "Inactivo") : (config.id === "tiendas" ? "Activa" : "Activo")}
+                        </span>
+                      </td>
+                    )}
                     <td><div className={styles.rowActions}>
                       {puedeEditar && !(config.id === "tiendas" && direccionRequerida) && <button type="button" className={styles.linkAction} onClick={() => editar(entidad)}>Editar</button>}
                       {puedeEditar && (config.id === "productos" || config.id === "tiendas") && <button type="button" className={styles.linkAction} onClick={() => void cambiarActivo(entidad)}>{entidad.activo === false ? "Activar" : "Desactivar"}</button>}
