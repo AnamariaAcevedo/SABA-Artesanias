@@ -107,6 +107,7 @@ export default function CategoriasPage() {
   const permisos = sesion?.permisos ?? [];
   const puedeRenombrar = cumplePermisos(permisos, ACCESO.editarCategorias);
   const puedeAsociar = cumplePermisos(permisos, ACCESO.asignarSubcategorias);
+  const puedeCrear = cumplePermisos(permisos, ACCESO.crearCategorias);
 
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [categoriaSeleccionada, setCategoriaSeleccionada] =
@@ -308,6 +309,7 @@ export default function CategoriasPage() {
         },
       ]);
       setSubcategoriaAAsociar("");
+      setFormularioActivo(null);
       setAviso(
         `Subcategoría "${subcategoria.nombre}" asociada a "${categoria.nombre}".`
       );
@@ -479,32 +481,52 @@ export default function CategoriasPage() {
       return;
     }
 
+    // Si ya existe una subcategoría con ese nombre se reutiliza en vez de
+    // intentar crearla de nuevo (el backend rechaza nombres repetidos).
+    const normalizar = (texto: string) => texto.trim().toLocaleLowerCase("es");
+    const existente = todasSubcategorias.find(
+      (actual) => normalizar(actual.nombre) === normalizar(nombre)
+    );
+
+    if (
+      existente &&
+      subcategorias.some((asociada) => asociada.subcategoriaId === existente.id)
+    ) {
+      setError(
+        `"${existente.nombre}" ya está asociada a "${categoriaSeleccionada.nombre}".`
+      );
+      return;
+    }
+
     setGuardandoSubcategoria(true);
     setError("");
     setAviso("");
 
     try {
-      const subcategoriaCreada = await apiFetch<{ id: number }>(
-        "/subcategorias",
-        {
-          method: "POST",
-          body: JSON.stringify({ nombre }),
-        }
-      );
+      const subcategoriaId =
+        existente?.id ??
+        (
+          await apiFetch<{ id: number }>("/subcategorias", {
+            method: "POST",
+            body: JSON.stringify({ nombre }),
+          })
+        ).id;
 
       await apiFetch(
         `/categorias/${categoriaSeleccionada.id}/subcategorias`,
         {
           method: "POST",
-          body: JSON.stringify({
-            subcategoriaId: subcategoriaCreada.id,
-          }),
+          body: JSON.stringify({ subcategoriaId }),
         }
       );
 
       setNombreNuevaSubcategoria("");
       setFormularioActivo(null);
-      setAviso("Subcategoría creada y asignada correctamente.");
+      setAviso(
+        existente
+          ? `La subcategoría "${existente.nombre}" ya existía: se asignó a "${categoriaSeleccionada.nombre}".`
+          : "Subcategoría creada y asignada correctamente."
+      );
       recargar();
     } catch (cause) {
       setError(mensajeError(cause));
@@ -940,7 +962,7 @@ export default function CategoriasPage() {
                                 }`}
                           </span>
 
-                          <ConPermiso permisos={ACCESO.crearCategorias}>
+                          {puedeAsociar && (
                             <button
                               type="button"
                               className={styles.buttonPrimary}
@@ -948,23 +970,89 @@ export default function CategoriasPage() {
                                 setError("");
                                 setAviso("");
                                 cancelarEdiciones();
+                                setSubcategoriaAAsociar("");
                                 setFormularioActivo("subcategoria");
                               }}
                             >
-                              + Nueva subcategoría
+                              + Agregar subcategoría
                             </button>
-                          </ConPermiso>
+                          )}
                         </div>
 
-                        {formularioActivo === "subcategoria" && (
-                          <ConPermiso permisos={ACCESO.crearCategorias}>
+                        {formularioActivo === "subcategoria" && puedeAsociar && (
+                          <>
+                            {/* Opción 1: elegir una subcategoría que ya existe. */}
+                            {subcategoriasParaAsociar.length === 0 ? (
+                              <p className="association-status">
+                                Ya están asociadas todas las subcategorías
+                                existentes.
+                              </p>
+                            ) : (
+                              <form
+                                className={styles.form}
+                                onSubmit={(event) =>
+                                  void asociarSubcategoria(event, categoria)
+                                }
+                              >
+                                <div className={styles.field}>
+                                  <label
+                                    htmlFor={`existente-subcategoria-${categoria.id}`}
+                                  >
+                                    Elegir una subcategoría existente
+                                  </label>
+                                  <select
+                                    id={`existente-subcategoria-${categoria.id}`}
+                                    value={subcategoriaAAsociar}
+                                    onChange={(event) =>
+                                      setSubcategoriaAAsociar(event.target.value)
+                                    }
+                                    disabled={asociando}
+                                  >
+                                    <option value="">
+                                      Seleccioná una subcategoría
+                                    </option>
+                                    {subcategoriasParaAsociar.map(
+                                      (subcategoria) => (
+                                        <option
+                                          key={subcategoria.id}
+                                          value={subcategoria.id}
+                                        >
+                                          {subcategoria.nombre}
+                                        </option>
+                                      )
+                                    )}
+                                  </select>
+                                </div>
+
+                                <button
+                                  type="submit"
+                                  className={styles.buttonPrimary}
+                                  disabled={!subcategoriaAAsociar || asociando}
+                                >
+                                  {asociando ? "Asignando…" : "Asignar"}
+                                </button>
+                                {!puedeCrear && (
+                                  <button
+                                    type="button"
+                                    className={styles.buttonGhost}
+                                    disabled={asociando}
+                                    onClick={() => setFormularioActivo(null)}
+                                  >
+                                    Cancelar
+                                  </button>
+                                )}
+                              </form>
+                            )}
+
+                          {/* Opción 2: crear una nueva (si el nombre ya existe, se reutiliza). */}
+                          {puedeCrear && (
                             <form
                               onSubmit={crearSubcategoria}
                               className={styles.form}
                             >
                               <div className={styles.field}>
                                 <label htmlFor="nueva-subcategoria">
-                                  Nombre de la subcategoría
+                                  O crear una nueva
                                 </label>
                                 <input
                                   id="nueva-subcategoria"
@@ -996,7 +1084,8 @@ export default function CategoriasPage() {
                                 Cancelar
                               </button>
                             </form>
-                          </ConPermiso>
+                          )}
+                          </>
                         )}
 
                         {cargandoSubcategorias && (
