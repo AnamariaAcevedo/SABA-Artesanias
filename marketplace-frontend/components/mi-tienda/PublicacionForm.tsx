@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import styles from "@/components/admin/admin.module.css";
 import { avisar, confirmar } from "@/components/dialogos/Dialogos";
+import ZonaSubida from "@/components/archivos/ZonaSubida";
 import miTiendaStyles from "@/components/mi-tienda/miTienda.module.css";
 import { errorDeImagen, VistaPreviaImagen } from "@/components/mi-tienda/ProductoForm";
 import { ApiError } from "@/lib/api";
@@ -44,9 +45,7 @@ export default function PublicacionForm({ modo, publicacion }: PublicacionFormPr
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState("");
 
-  async function elegirFotos(event: ChangeEvent<HTMLInputElement>) {
-    const archivos = Array.from(event.target.files ?? []);
-    event.target.value = "";
+  async function elegirFotos(archivos: File[]) {
     setErrorFotos("");
     if (archivos.length === 0) return;
 
@@ -201,11 +200,13 @@ export default function PublicacionForm({ modo, publicacion }: PublicacionFormPr
                 <img src={urlFotoPublicacion(idArchivo)} alt={`Foto ${indice + 1} de la publicación`} />
                 <button
                   type="button"
-                  className={`${styles.linkAction} ${styles.linkActionDanger} ${miTiendaStyles.quitarImagen}`}
+                  className={miTiendaStyles.quitarImagen}
+                  aria-label="Quitar imagen"
+                  title="Quitar"
                   onClick={() => void quitarFoto(idArchivo)}
                   disabled={ocupado}
                 >
-                  Quitar
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
                 </button>
               </div>
             ))}
@@ -221,10 +222,15 @@ export default function PublicacionForm({ modo, publicacion }: PublicacionFormPr
             ))}
         </div>
 
-        <label className={miTiendaStyles.subirImagen}>
-          <span>{procesandoFoto ? "Procesando foto…" : "Agregar fotos:"}</span>
-          <input type="file" accept="image/png,image/jpeg" multiple onChange={elegirFotos} disabled={ocupado} />
-        </label>
+        <ZonaSubida
+          onArchivos={(archivos) => void elegirFotos(archivos)}
+          accept="image/png,image/jpeg"
+          multiple
+          disabled={ocupado}
+          cargando={procesandoFoto}
+          titulo="Arrastrá las fotos de la publicación acá"
+          ayuda={`PNG o JPG de hasta 5 MB cada una. Máximo ${MAXIMO_FOTOS} fotos.`}
+        />
 
         {errorFotos && (
           <p role="alert" className={styles.error}>

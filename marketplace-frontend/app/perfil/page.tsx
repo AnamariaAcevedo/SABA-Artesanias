@@ -103,14 +103,13 @@ function PerfilContenido({
   const [vista, setVista] = useState<"datos" | "editar" | "contrasenha" | "pedidos">("datos");
   const [mensajeExito, setMensajeExito] = useState("");
 
-  // Volver a tocar el botón de la vista abierta regresa a los datos.
-  function abrir(destino: "editar" | "contrasenha" | "pedidos") {
+  function abrir(destino: "datos" | "editar" | "contrasenha" | "pedidos") {
     setMensajeExito("");
-    setVista((actual) => (actual === destino ? "datos" : destino));
+    setVista(destino);
   }
 
-  function claseBoton(destino: "editar" | "contrasenha" | "pedidos") {
-    return vista === destino ? styles.buttonPrimary : styles.buttonOutline;
+  function clasePestana(destino: "datos" | "editar" | "contrasenha" | "pedidos") {
+    return vista === destino ? `${styles.tab} ${styles.tabActive}` : styles.tab;
   }
 
   useEffect(() => {
@@ -143,52 +142,52 @@ function PerfilContenido({
 
   return (
     <>
-      <div className={perfilStyles.encabezado}>
-        <AvatarUsuario nombre={perfil.nombre} apellido={perfil.apellido} className={perfilStyles.foto} />
-        <div className={perfilStyles.encabezadoTexto}>
-          <h2 className={styles.title}>
-            {perfil.nombre} {perfil.apellido}
-          </h2>
-          <div className={perfilStyles.acciones}>
-            <button
-              type="button"
-              className={claseBoton("editar")}
-              aria-pressed={vista === "editar"}
-              onClick={() => abrir("editar")}
-            >
-              Editar perfil
-            </button>
-            <ConPermiso permisos={ACCESO.verMisCompras}>
-              <button
-                type="button"
-                className={claseBoton("pedidos")}
-                aria-pressed={vista === "pedidos"}
-                onClick={() => abrir("pedidos")}
-              >
-                Mis pedidos
-              </button>
-            </ConPermiso>
-            <button
-              type="button"
-              className={claseBoton("contrasenha")}
-              aria-pressed={vista === "contrasenha"}
-              onClick={() => abrir("contrasenha")}
-            >
-              Cambiar contraseña
-            </button>
-            {/* Mismo destino que el link del login: la página decide según el estado de la solicitud. */}
-            {puedeSolicitarVendedor && (
-              <Link href="/solicitar-vendedor" className={styles.buttonOutline}>
-                Solicitar ser vendedor
-              </Link>
-            )}
-            {accedeAlPanel && (
-              <Link href="/admin" className={styles.buttonOutline}>
-                Panel de administración
-              </Link>
-            )}
+      <section className={perfilStyles.tarjetaPerfil}>
+        <div className={perfilStyles.portada} aria-hidden="true" />
+        <div className={perfilStyles.encabezado}>
+          <AvatarUsuario nombre={perfil.nombre} apellido={perfil.apellido} className={perfilStyles.foto} />
+          <div className={perfilStyles.encabezadoTexto}>
+            <h2 className={perfilStyles.nombre}>
+              {perfil.nombre} {perfil.apellido}
+            </h2>
+            <p className={perfilStyles.usuario}>
+              @{perfil.usuario} · {perfil.email}
+            </p>
           </div>
+
+          {(puedeSolicitarVendedor || accedeAlPanel) && (
+            <div className={perfilStyles.enlaces}>
+              {/* Mismo destino que el link del login: la página decide según el estado de la solicitud. */}
+              {puedeSolicitarVendedor && (
+                <Link href="/solicitar-vendedor" className={styles.buttonOutline}>
+                  Solicitar ser vendedor
+                </Link>
+              )}
+              {accedeAlPanel && (
+                <Link href="/admin" className={styles.buttonOutline}>
+                  Panel de administración
+                </Link>
+              )}
+            </div>
+          )}
         </div>
+      </section>
+
+      <div className={styles.tabs} role="tablist" aria-label="Secciones del perfil">
+        <button type="button" role="tab" className={clasePestana("datos")} aria-selected={vista === "datos"} onClick={() => abrir("datos")}>
+          Mis datos
+        </button>
+        <button type="button" role="tab" className={clasePestana("editar")} aria-selected={vista === "editar"} onClick={() => abrir("editar")}>
+          Editar perfil
+        </button>
+        <ConPermiso permisos={ACCESO.verMisCompras}>
+          <button type="button" role="tab" className={clasePestana("pedidos")} aria-selected={vista === "pedidos"} onClick={() => abrir("pedidos")}>
+            Mis pedidos
+          </button>
+        </ConPermiso>
+        <button type="button" role="tab" className={clasePestana("contrasenha")} aria-selected={vista === "contrasenha"} onClick={() => abrir("contrasenha")}>
+          Cambiar contraseña
+        </button>
       </div>
 
       {mensajeExito && (
@@ -212,41 +211,56 @@ function PerfilContenido({
       ) : vista === "pedidos" ? (
         <HistorialPedidos onVolver={() => setVista("datos")} />
       ) : (
-        <div className={styles.card}>
-          <dl className={perfilStyles.datos}>
-            <div className={perfilStyles.dato}>
-              <dt>Nombre</dt>
-              <dd>{perfil.nombre}</dd>
-            </div>
-            <div className={perfilStyles.dato}>
-              <dt>Apellido</dt>
-              <dd>{perfil.apellido}</dd>
-            </div>
-            <div className={perfilStyles.dato}>
-              <dt>Nombre de usuario</dt>
-              <dd>{perfil.usuario}</dd>
-            </div>
-            <div className={perfilStyles.dato}>
-              <dt>Correo electrónico</dt>
-              <dd>{perfil.email}</dd>
-            </div>
-            <div className={perfilStyles.dato}>
-              <dt>Teléfono</dt>
-              <dd>{perfil.telefono}</dd>
-            </div>
-            <div className={perfilStyles.dato}>
-              <dt>Dirección</dt>
-              <dd>{etiquetaDireccionPerfil(perfil)}</dd>
-            </div>
-            <div className={perfilStyles.dato}>
-              <dt>Número de casa / departamento</dt>
-              <dd>{etiquetaNumeroPerfil(perfil)}</dd>
-            </div>
-            <div className={`${perfilStyles.dato} ${perfilStyles.datoAncho}`}>
-              <dt>Ubicación</dt>
-              <dd>{etiquetaUbicacionPerfil(perfil)}</dd>
-            </div>
-          </dl>
+        <div className={`${styles.card} ${perfilStyles.tarjetaDatos}`}>
+          <section className={perfilStyles.grupo}>
+            <h3 className={perfilStyles.grupoTitulo}>Datos personales</h3>
+            <dl className={perfilStyles.datos}>
+              <div className={perfilStyles.dato}>
+                <dt>Nombre</dt>
+                <dd>{perfil.nombre}</dd>
+              </div>
+              <div className={perfilStyles.dato}>
+                <dt>Apellido</dt>
+                <dd>{perfil.apellido}</dd>
+              </div>
+              <div className={perfilStyles.dato}>
+                <dt>Nombre de usuario</dt>
+                <dd>{perfil.usuario}</dd>
+              </div>
+            </dl>
+          </section>
+
+          <section className={perfilStyles.grupo}>
+            <h3 className={perfilStyles.grupoTitulo}>Contacto</h3>
+            <dl className={perfilStyles.datos}>
+              <div className={perfilStyles.dato}>
+                <dt>Correo electrónico</dt>
+                <dd>{perfil.email}</dd>
+              </div>
+              <div className={perfilStyles.dato}>
+                <dt>Teléfono</dt>
+                <dd>{perfil.telefono}</dd>
+              </div>
+            </dl>
+          </section>
+
+          <section className={perfilStyles.grupo}>
+            <h3 className={perfilStyles.grupoTitulo}>Dirección</h3>
+            <dl className={perfilStyles.datos}>
+              <div className={perfilStyles.dato}>
+                <dt>Calle</dt>
+                <dd>{etiquetaDireccionPerfil(perfil)}</dd>
+              </div>
+              <div className={perfilStyles.dato}>
+                <dt>Número de casa / departamento</dt>
+                <dd>{etiquetaNumeroPerfil(perfil)}</dd>
+              </div>
+              <div className={`${perfilStyles.dato} ${perfilStyles.datoAncho}`}>
+                <dt>Ubicación</dt>
+                <dd>{etiquetaUbicacionPerfil(perfil)}</dd>
+              </div>
+            </dl>
+          </section>
         </div>
       )}
     </>

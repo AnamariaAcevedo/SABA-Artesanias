@@ -105,15 +105,6 @@ export default function MiTiendaLayout({
             {seccion.label}
           </Link>
         ))}
-        {/* Vista pública de la tienda, tal como la ven los clientes, en otra pestaña. */}
-        <Link
-          href={`/tiendas/${sesion.idTienda}`}
-          className={styles.navLink}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Ver tienda ↗<span className={styles.visuallyHidden}> (se abre en otra pestaña)</span>
-        </Link>
       </nav>
 
       <main className={styles.main}>

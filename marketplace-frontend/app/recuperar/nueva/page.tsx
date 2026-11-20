@@ -1,23 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useRef, useState, useSyncExternalStore, type FormEvent } from "react";
 import AuthShell from "@/components/auth/AuthShell";
 import styles from "@/components/auth/auth.module.css";
 import { ApiError, apiFetch } from "@/lib/api";
 
+// La URL no cambia mientras se está en esta pantalla: no hay a qué suscribirse.
+function suscribirseSinCambios() {
+  return () => {};
+}
+
 export default function RecuperarNuevaPage() {
   const busy = useRef(false);
-  const [token, setToken] = useState<string | null>(null);
+  // null en el servidor y en la hidratación (no hay URL); después, el token de la URL ("" si falta).
+  const token = useSyncExternalStore(
+    suscribirseSinCambios,
+    () => new URLSearchParams(window.location.search).get("token") ?? "",
+    () => null,
+  );
   const [nueva, setNueva] = useState("");
   const [repetir, setRepetir] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [listo, setListo] = useState(false);
-
-  useEffect(() => {
-    setToken(new URLSearchParams(window.location.search).get("token"));
-  }, []);
 
   async function confirmar(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

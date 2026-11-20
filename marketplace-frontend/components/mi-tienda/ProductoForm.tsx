@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import styles from "@/components/admin/admin.module.css";
+import ZonaSubida from "@/components/archivos/ZonaSubida";
 import miTiendaStyles from "@/components/mi-tienda/miTienda.module.css";
 import { avisar, confirmar } from "@/components/dialogos/Dialogos";
 import { ApiError, apiFetch } from "@/lib/api";
@@ -116,9 +117,7 @@ export default function ProductoForm({ modo, producto }: ProductoFormProps) {
     });
   }
 
-  async function elegirImagenes(event: ChangeEvent<HTMLInputElement>) {
-    const archivos = Array.from(event.target.files ?? []);
-    event.target.value = "";
+  async function elegirImagenes(archivos: File[]) {
     setErrorImagenes("");
     if (archivos.length === 0) return;
 
@@ -360,7 +359,7 @@ export default function ProductoForm({ modo, producto }: ProductoFormProps) {
 
         <h3 className={styles.sectionSubtitle}>Imágenes</h3>
         <p className={miTiendaStyles.ayuda}>
-          PNG o JPG de hasta 5 MB. La primera imagen es la que se muestra en el catálogo.
+          La primera imagen es la que se muestra en el catálogo.
         </p>
 
         <div className={miTiendaStyles.galeria}>
@@ -372,11 +371,13 @@ export default function ProductoForm({ modo, producto }: ProductoFormProps) {
                 {indice === 0 && <span className={miTiendaStyles.imagenPrincipal}>Principal</span>}
                 <button
                   type="button"
-                  className={`${styles.linkAction} ${styles.linkActionDanger} ${miTiendaStyles.quitarImagen}`}
+                  className={miTiendaStyles.quitarImagen}
+                  aria-label="Quitar imagen"
+                  title="Quitar"
                   onClick={() => quitarImagen(imagen)}
                   disabled={ocupado}
                 >
-                  Quitar
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
                 </button>
               </div>
             ))}
@@ -392,10 +393,15 @@ export default function ProductoForm({ modo, producto }: ProductoFormProps) {
             ))}
         </div>
 
-        <label className={miTiendaStyles.subirImagen}>
-          <span>{procesandoImagen ? "Procesando imagen…" : "Agregar imágenes:"}</span>
-          <input type="file" accept="image/png,image/jpeg" multiple onChange={elegirImagenes} disabled={ocupado} />
-        </label>
+        <ZonaSubida
+          onArchivos={(archivos) => void elegirImagenes(archivos)}
+          accept="image/png,image/jpeg"
+          multiple
+          disabled={ocupado}
+          cargando={procesandoImagen}
+          titulo="Arrastrá las fotos del producto acá"
+          ayuda="PNG o JPG de hasta 5 MB cada una."
+        />
 
         {errorImagenes && (
           <p role="alert" className={styles.error}>
@@ -444,11 +450,13 @@ export function VistaPreviaImagen({
       {principal && <span className={miTiendaStyles.imagenPrincipal}>Principal</span>}
       <button
         type="button"
-        className={`${styles.linkAction} ${styles.linkActionDanger} ${miTiendaStyles.quitarImagen}`}
+        className={miTiendaStyles.quitarImagen}
+        aria-label="Quitar imagen"
+        title="Quitar"
         onClick={onQuitar}
         disabled={deshabilitado}
       >
-        Quitar
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
       </button>
     </div>
   );
