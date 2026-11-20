@@ -73,6 +73,8 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponseDto generateRefreshToken(String refreshToken, String accessToken) {
         if (!jwtUtil.isSignedByUs(refreshToken)
                 || !jwtUtil.isSignedByUs(accessToken)
+                || !jwtUtil.isRefreshToken(refreshToken)
+                || !jwtUtil.isAccessToken(accessToken)
                 || !refreshTokenService.validateRefreshToken(refreshToken)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token inválido");
         }
