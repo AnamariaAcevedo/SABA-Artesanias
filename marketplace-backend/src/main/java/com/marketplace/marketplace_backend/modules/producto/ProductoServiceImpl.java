@@ -4,14 +4,15 @@ import com.marketplace.marketplace_backend.modules.pedido.ProductoPedidoReposito
 import com.marketplace.marketplace_backend.modules.pedido.EstadoPedido;
 import com.marketplace.marketplace_backend.common.PagedResult;
 import com.marketplace.marketplace_backend.modules.categoriasubcategoria.CategoriaSubcategoriaRepository;
-import com.marketplace.marketplace_backend.modules.imagenproducto.ImagenProducto;
 import com.marketplace.marketplace_backend.modules.imagenproducto.ImagenProductoRepository;
+import com.marketplace.marketplace_backend.modules.imagenproducto.ImagenResumenView;
 import com.marketplace.marketplace_backend.modules.producto.dto.ProductoCreateRequestDto;
 import com.marketplace.marketplace_backend.modules.producto.dto.ProductoFilterDto;
 import com.marketplace.marketplace_backend.modules.producto.dto.ProductoResponseDto;
 import com.marketplace.marketplace_backend.modules.producto.dto.ProductoUpdateRequestDto;
 import com.marketplace.marketplace_backend.modules.productosubcategoria.ProductoSubcategoria;
 import com.marketplace.marketplace_backend.modules.productosubcategoria.ProductoSubcategoriaRepository;
+import com.marketplace.marketplace_backend.modules.subcategoria.Subcategoria;
 import com.marketplace.marketplace_backend.modules.tienda.Tienda;
 import com.marketplace.marketplace_backend.modules.tienda.TiendaRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -23,7 +24,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Service
@@ -184,9 +188,7 @@ public class ProductoServiceImpl implements ProductoService {
                 !Boolean.FALSE.equals(filter.getSoloActivos()),
                 pageable);
 
-        List<ProductoResponseDto> data = result.getContent().stream()
-                .map(this::toResponse)
-                .toList();
+        List<ProductoResponseDto> data = toResponses(result.getContent());
 
         return new PagedResult<>(data, page, perPage, (int) result.getTotalElements());
     }
@@ -237,17 +239,38 @@ public class ProductoServiceImpl implements ProductoService {
     }
 
     private ProductoResponseDto toResponse(Producto producto) {
-        List<ProductoSubcategoria> subcategorias = productoSubcategoriaRepository.findByProducto_Id(producto.getId());
-        List<Long> idsSubcategorias = subcategorias.stream()
-                .map(ps -> ps.getSubcategoria().getId())
-                .toList();
-        List<String> nombresSubcategorias = subcategorias.stream()
-                .map(ps -> ps.getSubcategoria().getNombre())
-                .toList();
+        return toResponses(List.of(producto)).getFirst();
+    }
 
-        Long idImagenPrincipal = imagenProductoRepository.findFirstByProducto_IdOrderByIdAsc(producto.getId())
-                .map(ImagenProducto::getId)
-                .orElse(null);
+    private List<ProductoResponseDto> toResponses(List<Producto> productos) {
+        if (productos.isEmpty()) {
+            return List.of();
+        }
+        List<Long> ids = productos.stream().map(Producto::getId).toList();
+
+        Map<Long, List<Subcategoria>> subcategoriasPorProducto = productoSubcategoriaRepository.findByProducto_IdIn(ids)
+                .stream()
+                .filter(ps -> ps.getSubcategoria() != null)
+                .collect(Collectors.groupingBy(
+                        ps -> ps.getProducto().getId(),
+                        Collectors.mapping(ProductoSubcategoria::getSubcategoria, Collectors.toList())));
+
+        Map<Long, Long> imagenPrincipalPorProducto = new HashMap<>();
+        for (ImagenResumenView imagen : imagenProductoRepository.findByProductoIdInOrderByIdAsc(ids)) {
+            imagenPrincipalPorProducto.putIfAbsent(imagen.getProductoId(), imagen.getId());
+        }
+
+        return productos.stream()
+                .map(producto -> toResponse(
+                        producto,
+                        subcategoriasPorProducto.getOrDefault(producto.getId(), List.of()),
+                        imagenPrincipalPorProducto.get(producto.getId())))
+                .toList();
+    }
+
+    private ProductoResponseDto toResponse(Producto producto, List<Subcategoria> subcategorias, Long idImagenPrincipal) {
+        List<Long> idsSubcategorias = subcategorias.stream().map(Subcategoria::getId).toList();
+        List<String> nombresSubcategorias = subcategorias.stream().map(Subcategoria::getNombre).toList();
 
         return new ProductoResponseDto(
                 producto.getId(),
