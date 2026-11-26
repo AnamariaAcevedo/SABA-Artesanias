@@ -1,0 +1,107 @@
+/* Complementa components/admin/admin.module.css con lo propio de la vista de perfil. */
+
+/* Header: botón de inicio, logo y subtítulo centrados verticalmente. */
+header.header { align-items: center; }
+.marca { display: flex; align-items: center; gap: 14px; min-width: 0; }
+
+.contenedor { max-width: 880px; margin: 0 auto; }
+
+/* Tarjeta de presentación: banda de portada con trama y avatar montado encima. */
+.tarjetaPerfil {
+  margin-bottom: 8px;
+  overflow: hidden;
+  background: #fffaf3;
+  border: 1px solid #ebdcc6;
+  border-radius: 10px;
+}
+
+.portada {
+  height: 110px;
+  background:
+    repeating-linear-gradient(135deg, rgba(99, 36, 14, 0.045) 0 10px, transparent 10px 20px),
+    linear-gradient(90deg, #f1e2c9, #ead6b6);
+  border-bottom: 1px solid #ebdcc6;
+}
+
+.encabezado {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 18px 22px;
+  padding: 0 28px 24px;
+}
+
+/* Tamaño de la foto grande; el resto del estilo viene de AvatarUsuario. */
+.encabezado .foto {
+  width: 108px;
+  height: 108px;
+  margin-top: -54px;
+  border: 4px solid #fffaf3;
+  background: #e3cba6;
+  color: #3d1607;
+  font-size: 38px;
+  box-shadow: 0 6px 18px rgba(99, 36, 14, 0.14);
+}
+
+.encabezadoTexto { display: flex; flex: 1; flex-direction: column; gap: 4px; min-width: 200px; }
+
+.nombre {
+  margin: 0;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1.15;
+  color: #3d1607;
+}
+
+.usuario {
+  margin: 0;
+  font: 14px var(--font-sans), Arial, sans-serif;
+  color: #8a6a52;
+  overflow-wrap: anywhere;
+}
+
+.enlaces { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* Datos agrupados por tema. */
+.tarjetaDatos { display: flex; flex-direction: column; gap: 0; padding-top: 8px; padding-bottom: 8px; }
+
+.grupo { padding: 20px 0; border-top: 1px solid #f1e6d6; }
+.grupo:first-child { border-top: none; }
+
+.grupo .grupoTitulo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 16px;
+  font: 600 11px var(--font-sans), Arial, sans-serif;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #9a6446;
+}
+
+.grupo .grupoTitulo::before { content: ""; width: 20px; height: 1.5px; background: #b0714a; }
+
+.datos { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 28px; margin: 0; font-family: var(--font-sans), Arial, sans-serif; }
+.dato { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.datoAncho { grid-column: 1 / -1; }
+.dato dt { font-size: 12px; color: #8a6a52; }
+.dato dd { margin: 0; font-size: 16px; color: #3d1607; overflow-wrap: anywhere; }
+
+.ayuda { font: 13px/1.4 var(--font-sans), Arial, sans-serif; color: #8a6a52; }
+
+.ubicacionActual { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; font-family: var(--font-sans), Arial, sans-serif; font-size: 15px; color: #3d1607; }
+
+
+.exito { font: 14px/1.6 var(--font-sans), Arial, sans-serif; padding: 12px 14px; border-radius: 6px; background: #eaf0e2; color: #3f6b2a; margin-bottom: 16px; }
+
+.acciones { display: flex; flex-wrap: wrap; gap: 12px; }
+
+@media (max-width: 640px) {
+  .datos { grid-template-columns: 1fr; }
+  .encabezado { flex-direction: column; align-items: center; text-align: center; padding: 0 20px 22px; }
+  .encabezadoTexto { align-items: center; min-width: 0; }
+  .encabezado .foto { width: 92px; height: 92px; margin-top: -46px; font-size: 32px; }
+  .enlaces { justify-content: center; }
+  .portada { height: 90px; }
+}

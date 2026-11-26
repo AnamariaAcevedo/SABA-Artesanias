@@ -1,5 +1,7 @@
 package com.marketplace.marketplace_backend.modules.permiso;
 
+import com.marketplace.marketplace_backend.modules.rolpermiso.RolPermisoRepository;
+import com.marketplace.marketplace_backend.modules.rolpermiso.RolPermiso;
 import com.marketplace.marketplace_backend.common.PagedResult;
 import com.marketplace.marketplace_backend.modules.permiso.dto.PermisoCreateRequestDto;
 import com.marketplace.marketplace_backend.modules.permiso.dto.PermisoFilterDto;
@@ -22,6 +24,7 @@ import java.util.List;
 public class PermisoServiceImpl implements PermisoService {
 
     private final PermisoRepository permisoRepository;
+    private final RolPermisoRepository rolPermisoRepository;
 
     @Override
     @Transactional
@@ -73,9 +76,14 @@ public class PermisoServiceImpl implements PermisoService {
         Permiso permiso = permisoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Permiso no encontrado con ID: " + id));
 
-        // Cuando exista el módulo rolPermiso (SABA-54), validar que el permiso
-        // no esté asignado a ningún rol antes de permitir el borrado.
-        permiso.setDeletedAt(LocalDateTime.now());
+        // Se quita de los roles que lo tienen: si no, esos roles apuntarian a un permiso
+        // borrado y sus usuarios no podrian iniciar sesion.
+        LocalDateTime ahora = LocalDateTime.now();
+        List<RolPermiso> asignaciones = rolPermisoRepository.findByPermiso_Id(id);
+        asignaciones.forEach(asignacion -> asignacion.setDeletedAt(ahora));
+        rolPermisoRepository.saveAll(asignaciones);
+
+        permiso.setDeletedAt(ahora);
         permisoRepository.save(permiso);
     }
 

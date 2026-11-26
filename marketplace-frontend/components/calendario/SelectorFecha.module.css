@@ -1,0 +1,201 @@
+.contenedor {
+  position: relative;
+}
+
+/* Input invisible que solo sirve para la validación nativa de "requerido". */
+.validacion {
+  position: absolute;
+  left: 16px;
+  bottom: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Campo que abre el calendario: mismo aspecto que los demás campos (blanco, borde arcilla al enfocar). */
+.disparador {
+  width: 100%;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid #e3d3bd;
+  border-radius: 6px;
+  padding: 8px 14px;
+  background: #fff;
+  color: #3d1607;
+  font-family: var(--font-sans), Arial, sans-serif;
+  font-size: 15px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.disparador:hover {
+  border-color: #dcc7aa;
+}
+
+.disparador:focus-visible,
+.disparador[aria-expanded="true"] {
+  outline: none;
+  border-color: #b0714a;
+  box-shadow: 0 0 0 3px rgba(176, 113, 74, 0.15);
+}
+
+.placeholder {
+  color: #8a6a52;
+}
+
+.icono {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  color: #9a6446;
+}
+
+.panel {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 290px;
+  background: #fffaf3;
+  border: 1px solid #ebdcc6;
+  border-radius: 10px;
+  padding: 14px;
+  box-shadow: 0 16px 40px rgba(61, 22, 7, 0.16);
+  color: #3d1607;
+  font-family: var(--font-sans), Arial, sans-serif;
+}
+
+/* Desplegado hacia arriba del campo. */
+.panelArriba {
+  top: auto;
+  bottom: calc(100% + 6px);
+}
+
+.cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.mesAnio {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 17px;
+  text-transform: capitalize;
+}
+
+.navegacion {
+  display: flex;
+  gap: 4px;
+}
+
+.navegacion button {
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #63240e;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.navegacion button:hover {
+  background: #f6ead8;
+}
+
+.grillaDias {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.nombreDia {
+  padding-bottom: 6px;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #8a6a52;
+}
+
+.celda {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #3d1607;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.celda:hover:not(:disabled) {
+  background: #f6ead8;
+}
+
+.celda:disabled {
+  color: #d8c6ae;
+  cursor: not-allowed;
+}
+
+.celdaOtroMes {
+  color: #c9b49a;
+}
+
+/* Hoy: anillo arcilla. */
+.celdaHoy {
+  box-shadow: inset 0 0 0 1.5px #b0714a;
+  font-weight: 600;
+}
+
+.celdaSeleccionada,
+.celdaSeleccionada:hover:not(:disabled) {
+  background: #63240e;
+  color: #fbf1e2;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.celda:focus-visible,
+.navegacion button:focus-visible,
+.enlace:focus-visible {
+  outline: 2px solid #b0714a;
+  outline-offset: 1px;
+}
+
+.pie {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #f1e6d6;
+}
+
+.enlace {
+  padding: 2px;
+  border: none;
+  background: transparent;
+  color: #9a6446;
+  font: 500 13px var(--font-sans), Arial, sans-serif;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.enlace:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

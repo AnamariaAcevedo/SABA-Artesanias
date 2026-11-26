@@ -1,0 +1,23 @@
+/* Menú de usuario de los headers (misma paleta que home y admin). */
+
+.contenedor { position: relative; margin-left: auto; font-family: var(--font-sans), Arial, sans-serif; }
+
+.disparador { display: inline-flex; align-items: center; gap: 10px; min-height: 42px; max-width: 240px; padding: 4px 10px 4px 4px; border: none; border-radius: 8px; background: transparent; color: inherit; font: 500 14px var(--font-sans), Arial, sans-serif; cursor: pointer; transition: background 0.15s ease; }
+.disparador:hover, .disparador[aria-expanded="true"] { background: color-mix(in srgb, currentColor 8%, transparent); }
+.disparador:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+
+.nombreUsuario { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.flecha { font-size: 10px; opacity: 0.7; }
+
+.avatar { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: #efdfc6; border: 2px solid #e3d3bd; color: #63240e; font-family: var(--font-serif), Georgia, serif; letter-spacing: 1px; overflow: hidden; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+.avatarMiniatura { width: 32px; height: 32px; font-size: 13px; border: none; background: #e3cba6; color: #3d1607; }
+
+.menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 50; min-width: 180px; margin: 0; padding: 6px; list-style: none; background: #fbf5ec; border: 1px solid rgba(99, 36, 14, 0.14); border-radius: 10px; box-shadow: 0 12px 32px rgba(61, 22, 7, 0.14); }
+
+.opcion { display: block; width: 100%; padding: 10px 14px; border: none; border-radius: 8px; background: transparent; color: #63240e; font: 15px var(--font-sans), Arial, sans-serif; text-align: left; text-decoration: none; cursor: pointer; }
+.opcion:hover:not(:disabled) { background: rgba(99, 36, 14, 0.06); }
+.opcion:focus-visible { outline: 3px solid #63240e; outline-offset: -3px; }
+.opcion:disabled { opacity: .6; cursor: not-allowed; }
+
+.error { position: absolute; right: 0; top: calc(100% + 6px); max-width: 280px; margin: 0; padding: 10px 12px; border-radius: 10px; background: #f6ead8; color: #63240e; font-size: 13px; }

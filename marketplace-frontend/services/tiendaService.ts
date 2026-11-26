@@ -1,0 +1,63 @@
+import { apiFetch } from "@/lib/api";
+import { ApiResponse } from "@/types/ApiResponse";
+import { DatosPagoTienda, Tienda } from "@/types/Tienda";
+
+const API_URL = (process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:8080").replace(/\/+$/, "");
+
+function obtenerToken() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  return localStorage.getItem("accessToken");
+}
+
+export async function obtenerTiendas(): Promise<
+  ApiResponse<Tienda[]>
+> {
+  const token = obtenerToken();
+
+  const respuesta = await fetch(
+    `${API_URL}/tiendas?page=1&perPage=100`,
+    {
+      method: "GET",
+      headers: token
+        ? {
+            Authorization: `Bearer ${token}`,
+          }
+        : {},
+    }
+  );
+
+  if (!respuesta.ok) {
+    throw new Error(`Error ${respuesta.status}`);
+  }
+
+  return respuesta.json();
+}
+
+// Null si la tienda todavía no cargó sus datos de cuenta.
+export function obtenerDatosPagoTienda(id: number): Promise<DatosPagoTienda | null> {
+  return apiFetch<DatosPagoTienda | null>(`/tiendas/${id}/datos-pago`);
+}
+
+export async function obtenerTiendaPorId(
+  id: number
+): Promise<ApiResponse<Tienda>> {
+  const token = obtenerToken();
+
+  const respuesta = await fetch(`${API_URL}/tiendas/${id}`, {
+    method: "GET",
+    headers: token
+      ? {
+          Authorization: `Bearer ${token}`,
+        }
+      : {},
+  });
+
+  if (!respuesta.ok) {
+    throw new Error(`Error ${respuesta.status}`);
+  }
+
+  return respuesta.json();
+}

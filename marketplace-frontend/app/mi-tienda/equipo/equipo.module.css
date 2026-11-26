@@ -1,0 +1,14 @@
+.exito {
+  font: 14px/1.6 var(--font-sans), Arial, sans-serif;
+  padding: 12px 14px;
+  border-radius: 6px;
+  background: #eaf0e2;
+  color: #3f6b2a;
+  margin-bottom: 16px;
+}
+
+.secundario {
+  display: block;
+  font-size: 13px;
+  color: #8a6a52;
+}

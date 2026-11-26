@@ -1,0 +1,199 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useId, useRef, useState } from "react";
+import {
+  precioListaItem,
+  formatearPrecio,
+  limpiarCarrito,
+  quitarDelCarrito,
+  useCarrito,
+  verificarCarrito,
+} from "@/lib/carrito";
+import { confirmar } from "@/components/dialogos/Dialogos";
+import styles from "./carrito.module.css";
+
+const API_URL =
+  (process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:8080").replace(/\/+$/, "");
+
+// Botón del carrito para los headers del catálogo. Al hacer clic despliega la
+// lista de productos agregados, cada uno con una ✕ para quitarlo, el total y
+// las acciones "Realizar compra" y "Limpiar carrito".
+export default function Carrito() {
+  const router = useRouter();
+  const { items, cantidadTotal, total } = useCarrito();
+  // Diferencia entre el precio de lista y lo que se paga (descuentos de productos).
+  const ahorro = items.reduce((suma, item) => suma + (precioListaItem(item) - item.precioUnitario) * item.cantidad, 0);
+  const [abierto, setAbierto] = useState(false);
+  const contenedor = useRef<HTMLDivElement>(null);
+  const boton = useRef<HTMLButtonElement>(null);
+  const id = useId();
+
+  // Al abrirlo se revisa que lo guardado siga a la venta (pudo desactivarse o eliminarse).
+  useEffect(() => {
+    if (abierto) void verificarCarrito();
+  }, [abierto]);
+
+  useEffect(() => {
+    if (!abierto) return;
+
+    function cerrarFuera(event: PointerEvent) {
+      if (!contenedor.current?.contains(event.target as Node)) {
+        setAbierto(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", cerrarFuera);
+    return () => document.removeEventListener("pointerdown", cerrarFuera);
+  }, [abierto]);
+
+  async function limpiar() {
+    const confirmado = await confirmar({
+      titulo: "¿Vaciar el carrito?",
+      mensaje: "Se van a quitar todos los productos que agregaste.",
+      textoConfirmar: "Vaciar carrito",
+      peligro: true,
+    });
+    if (!confirmado) return;
+    limpiarCarrito();
+  }
+
+  function realizarCompra() {
+    setAbierto(false);
+    router.push("/carrito/confirmar");
+  }
+
+  return (
+    <div
+      ref={contenedor}
+      className={styles.contenedor}
+      onKeyDown={(event) => {
+        if (event.key === "Escape" && abierto) {
+          event.preventDefault();
+          setAbierto(false);
+          boton.current?.focus();
+        }
+      }}
+    >
+      <button
+        ref={boton}
+        type="button"
+        className={styles.disparador}
+        aria-expanded={abierto}
+        aria-controls={`${id}-panel`}
+        aria-label={`Carrito, ${cantidadTotal} ${cantidadTotal === 1 ? "producto" : "productos"}`}
+        onClick={() => setAbierto((valor) => !valor)}
+      >
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path
+            d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.76L20.5 8H6.2"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <circle cx="9.5" cy="19.5" r="1.4" fill="currentColor" />
+          <circle cx="17" cy="19.5" r="1.4" fill="currentColor" />
+        </svg>
+        {cantidadTotal > 0 && <span className={styles.contador}>{cantidadTotal}</span>}
+      </button>
+
+      {abierto && (
+        <div id={`${id}-panel`} className={styles.panel} role="region" aria-label="Carrito de compras">
+          <h2 className={styles.titulo}>
+            Tu carrito
+            {cantidadTotal > 0 && (
+              <small>
+                {cantidadTotal} {cantidadTotal === 1 ? "pieza" : "piezas"}
+              </small>
+            )}
+          </h2>
+
+          {items.length === 0 ? (
+            <div className={styles.vacio}>
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M3 4h2l2.2 10.5a1.5 1.5 0 0 0 1.5 1.2h8.6a1.5 1.5 0 0 0 1.5-1.1L21 8H6.2" />
+                <circle cx="9.5" cy="19.5" r="1.2" />
+                <circle cx="17" cy="19.5" r="1.2" />
+              </svg>
+              <p>Todavía no agregaste productos.</p>
+            </div>
+          ) : (
+            <>
+              <ul className={styles.lista}>
+                {items.map((item) => (
+                  <li key={item.idProducto} className={styles.item}>
+                    <div className={styles.miniatura}>
+                      {item.idImagenPrincipal ? (
+                        // Imagen servida por el backend (URL dinámica): no pasa por el optimizador de next/image.
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={`${API_URL}/imagenes/${item.idImagenPrincipal}`} alt="" />
+                      ) : (
+                        <span aria-hidden="true">{item.nombre.charAt(0).toUpperCase()}</span>
+                      )}
+                    </div>
+
+                    <div className={styles.detalle}>
+                      <Link
+                        href={`/productos/${item.idProducto}`}
+                        className={styles.nombre}
+                        onClick={() => setAbierto(false)}
+                      >
+                        {item.nombre}
+                      </Link>
+                      <small>{item.nombreTienda}</small>
+                      {item.disponible === false && <small className={styles.noDisponible}>Ya no está a la venta</small>}
+                      <span className={styles.precioLinea}>
+                        {item.cantidad} × {formatearPrecio(item.precioUnitario)}
+                        {precioListaItem(item) > item.precioUnitario && (
+                          <>
+                            <s>{formatearPrecio(precioListaItem(item))}</s>
+                            <span className={styles.etiquetaDescuento}>
+                              −{item.descuento ?? Math.round((1 - item.precioUnitario / precioListaItem(item)) * 100)}%
+                            </span>
+                          </>
+                        )}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      className={styles.quitar}
+                      aria-label={`Quitar ${item.nombre} del carrito`}
+                      title="Quitar del carrito"
+                      onClick={() => quitarDelCarrito(item.idProducto)}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true">
+                        <path d="M6 6l12 12M18 6 6 18" />
+                      </svg>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+
+              <p className={styles.total}>
+                <span>Total</span>
+                <strong>{formatearPrecio(total)}</strong>
+              </p>
+              {ahorro > 0 && <p className={styles.ahorro}>Ahorrás {formatearPrecio(ahorro)} con los descuentos</p>}
+
+              <div className={styles.acciones}>
+                <button type="button" className={styles.botonPrincipal} onClick={realizarCompra}>
+                  Realizar compra
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M5 12h14" />
+                    <path d="m13 6 6 6-6 6" />
+                  </svg>
+                </button>
+                <button type="button" className={styles.botonSecundario} onClick={limpiar}>
+                  Limpiar carrito
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

@@ -1,0 +1,594 @@
+package com.marketplace.marketplace_backend.modules.mitienda;
+
+import com.marketplace.marketplace_backend.modules.tienda.EstadoTiendaService;
+import com.marketplace.marketplace_backend.common.PagedResult;
+import com.marketplace.marketplace_backend.modules.archivopublicacion.ArchivoPublicacion;
+import com.marketplace.marketplace_backend.modules.archivopublicacion.ArchivoPublicacionRepository;
+import com.marketplace.marketplace_backend.modules.archivopublicacion.ArchivoPublicacionService;
+import com.marketplace.marketplace_backend.modules.archivopublicacion.dto.ArchivoPublicacionResponseDto;
+import com.marketplace.marketplace_backend.modules.barrio.Barrio;
+import com.marketplace.marketplace_backend.modules.barrio.BarrioRepository;
+import com.marketplace.marketplace_backend.modules.comentario.ComentarioService;
+import com.marketplace.marketplace_backend.modules.contacto.Contacto;
+import com.marketplace.marketplace_backend.modules.contacto.ContactoRepository;
+import com.marketplace.marketplace_backend.modules.contacto.ContactoService;
+import com.marketplace.marketplace_backend.modules.contacto.dto.ContactoCreateRequestDto;
+import com.marketplace.marketplace_backend.modules.contacto.dto.ContactoFilterDto;
+import com.marketplace.marketplace_backend.modules.contacto.dto.ContactoResponseDto;
+import com.marketplace.marketplace_backend.modules.cupon.CuponService;
+import com.marketplace.marketplace_backend.modules.cupon.dto.CuponRequestDto;
+import com.marketplace.marketplace_backend.modules.cupon.dto.CuponResponseDto;
+import com.marketplace.marketplace_backend.modules.direccion.Direccion;
+import com.marketplace.marketplace_backend.modules.direccion.DireccionRepository;
+import com.marketplace.marketplace_backend.modules.imagenproducto.ImagenProducto;
+import com.marketplace.marketplace_backend.modules.imagenproducto.ImagenProductoRepository;
+import com.marketplace.marketplace_backend.modules.imagenproducto.ImagenProductoService;
+import com.marketplace.marketplace_backend.modules.imagenproducto.dto.ImagenProductoResponseDto;
+import com.marketplace.marketplace_backend.modules.mitienda.dto.MiContactoRequestDto;
+import com.marketplace.marketplace_backend.modules.mitienda.dto.MiProductoRequestDto;
+import com.marketplace.marketplace_backend.modules.mitienda.dto.MiTiendaResponseDto;
+import com.marketplace.marketplace_backend.modules.mitienda.dto.MiTiendaUpdateRequestDto;
+import com.marketplace.marketplace_backend.modules.pedido.ComprobantePedido;
+import com.marketplace.marketplace_backend.modules.pedido.PedidoService;
+import com.marketplace.marketplace_backend.modules.pedido.dto.PedidoResponseDto;
+import com.marketplace.marketplace_backend.modules.producto.Producto;
+import com.marketplace.marketplace_backend.modules.producto.ProductoRepository;
+import com.marketplace.marketplace_backend.modules.producto.ProductoService;
+import com.marketplace.marketplace_backend.modules.producto.dto.ProductoCreateRequestDto;
+import com.marketplace.marketplace_backend.modules.producto.dto.ProductoFilterDto;
+import com.marketplace.marketplace_backend.modules.producto.dto.ProductoResponseDto;
+import com.marketplace.marketplace_backend.modules.producto.dto.ProductoUpdateRequestDto;
+import com.marketplace.marketplace_backend.modules.publicacion.Publicacion;
+import com.marketplace.marketplace_backend.modules.publicacion.PublicacionRepository;
+import com.marketplace.marketplace_backend.modules.publicacion.PublicacionService;
+import com.marketplace.marketplace_backend.modules.publicacion.dto.PublicacionRequestDto;
+import com.marketplace.marketplace_backend.modules.publicacion.dto.PublicacionResponseDto;
+import com.marketplace.marketplace_backend.modules.productosubcategoria.ProductoSubcategoria;
+import com.marketplace.marketplace_backend.modules.productosubcategoria.ProductoSubcategoriaRepository;
+import com.marketplace.marketplace_backend.modules.productosubcategoria.ProductoSubcategoriaService;
+import com.marketplace.marketplace_backend.modules.subcategoria.SubcategoriaRepository;
+import com.marketplace.marketplace_backend.modules.tienda.Tienda;
+import com.marketplace.marketplace_backend.modules.tienda.TiendaRepository;
+import com.marketplace.marketplace_backend.modules.tiendausuario.TiendaUsuario;
+import com.marketplace.marketplace_backend.modules.tiendausuario.TiendaUsuarioRepository;
+import com.marketplace.marketplace_backend.modules.tiendausuario.TipoVinculoTienda;
+import com.marketplace.marketplace_backend.modules.tipocontacto.TipoContacto;
+import com.marketplace.marketplace_backend.modules.tipocontacto.TipoContactoRepository;
+import com.marketplace.marketplace_backend.modules.usuario.Usuario;
+import com.marketplace.marketplace_backend.modules.usuario.UsuarioRepository;
+import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+@AllArgsConstructor
+@Service
+// Implementación de la gestión de la propia tienda. La tienda se obtiene siempre
+// del vinculo del usuario autenticado (tienda_usuario), nunca de un id recibido,
+// y cada producto, imagen o contacto se verifica contra esa tienda antes de
+// delegar en los servicios existentes. Que puede hacer cada usuario lo deciden los
+// permisos de su rol, en MiTiendaController; aca solo importa a que tienda pertenece.
+public class MiTiendaServiceImpl implements MiTiendaService {
+
+    private static final Set<String> TIPOS_IMAGEN_PERMITIDOS = Set.of("image/png", "image/jpeg");
+    private static final int DIGITOS_NRO_CUENTA = 9;
+
+    private final UsuarioRepository usuarioRepository;
+    private final TiendaUsuarioRepository tiendaUsuarioRepository;
+    private final EstadoTiendaService estadoTiendaService;
+    private final TiendaRepository tiendaRepository;
+    private final DireccionRepository direccionRepository;
+    private final BarrioRepository barrioRepository;
+    private final ProductoRepository productoRepository;
+    private final ProductoService productoService;
+    private final ProductoSubcategoriaRepository productoSubcategoriaRepository;
+    private final ProductoSubcategoriaService productoSubcategoriaService;
+    private final SubcategoriaRepository subcategoriaRepository;
+    private final ImagenProductoRepository imagenProductoRepository;
+    private final ImagenProductoService imagenProductoService;
+    private final ContactoRepository contactoRepository;
+    private final ContactoService contactoService;
+    private final TipoContactoRepository tipoContactoRepository;
+    private final PedidoService pedidoService;
+    private final CuponService cuponService;
+    private final PublicacionService publicacionService;
+    private final PublicacionRepository publicacionRepository;
+    private final ArchivoPublicacionRepository archivoPublicacionRepository;
+    private final ArchivoPublicacionService archivoPublicacionService;
+    private final ComentarioService comentarioService;
+
+    // ---------------------------------------------------------------- Tienda
+
+    @Override
+    @Transactional(readOnly = true)
+    public MiTiendaResponseDto obtenerTienda() {
+        TiendaUsuario vinculo = vinculoActual();
+        return toResponse(vinculo.getTienda(), vinculo.getTipo());
+    }
+
+    @Override
+    @Transactional
+    public MiTiendaResponseDto actualizarTienda(MiTiendaUpdateRequestDto request) {
+        TiendaUsuario vinculo = vinculoActual();
+        Tienda tienda = vinculo.getTienda();
+
+        boolean hayEdificio = request.getNombreEdificio() != null && !request.getNombreEdificio().isBlank();
+
+        if (!hayEdificio && request.getNroCasa() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El número de casa es obligatorio si no se indica un edificio");
+        }
+
+        if (hayEdificio && (request.getNroDepartamento() == null || request.getNroDepartamento().isBlank())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El número de departamento es obligatorio si se indica un edificio");
+        }
+
+        Direccion direccionActual = tienda.getDireccion();
+        Barrio barrio = request.getIdBarrio() == null
+                ? direccionActual.getBarrio()
+                : barrioRepository.findById(request.getIdBarrio())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Barrio no encontrado"));
+
+        // La direccion se edita en el lugar solo si es exclusiva de esta tienda;
+        // si la comparte con un usuario u otra tienda, se crea una nueva para no
+        // modificar datos ajenos.
+        boolean direccionExclusiva = tiendaRepository.countByDireccion_Id(direccionActual.getId()) == 1
+                && usuarioRepository.countByDireccion_Id(direccionActual.getId()) == 0;
+        Direccion direccion = direccionExclusiva ? direccionActual : new Direccion();
+        direccion.setCalle(request.getCalle().trim());
+        direccion.setNombreEdificio(hayEdificio ? request.getNombreEdificio().trim() : null);
+        direccion.setNroCasa(hayEdificio ? null : request.getNroCasa());
+        direccion.setNroDepartamento(hayEdificio ? request.getNroDepartamento().trim() : null);
+        direccion.setBarrio(barrio);
+
+        tienda.setDireccion(direccionRepository.save(direccion));
+        tienda.setNombre(request.getNombre().trim());
+        tienda.setDescripcion(request.getDescripcion().trim());
+        tienda.setBanco(request.getBanco().trim());
+        tienda.setTitularCuenta(request.getTitularCuenta().trim());
+        tienda.setDocumentoTitular(request.getDocumentoTitular().trim());
+        tienda.setNroCuenta(completarNroCuenta(request.getNroCuenta()));
+        tienda.setAliasCuenta(request.getAliasCuenta() == null || request.getAliasCuenta().isBlank() ? null : request.getAliasCuenta().trim());
+
+        return toResponse(tiendaRepository.save(tienda), vinculo.getTipo());
+    }
+
+    // El numero de cuenta local tiene 9 digitos: si es mas corto, se completa con ceros a la izquierda.
+    static String completarNroCuenta(String nroCuenta) {
+        return "0".repeat(DIGITOS_NRO_CUENTA - nroCuenta.length()) + nroCuenta;
+    }
+
+    @Override
+    @Transactional
+    public void cambiarActivoTienda(boolean activo) {
+        TiendaUsuario vinculo = exigirDueno(activo
+                ? "Solo el dueño de la tienda puede activarla."
+                : "Solo el dueño de la tienda puede desactivarla.");
+        estadoTiendaService.cambiarActivo(vinculo.getTienda().getId(), activo);
+    }
+
+    // ------------------------------------------------------------- Productos
+
+    @Override
+    public PagedResult<List<ProductoResponseDto>> listarProductos(String nombre, int page, int perPage) {
+        ProductoFilterDto filtro = new ProductoFilterDto();
+        filtro.setIdTienda(vinculoActual().getTienda().getId());
+        filtro.setNombre(nombre);
+        filtro.setPage(Math.max(page, 1));
+        filtro.setPerPage(Math.min(Math.max(perPage, 1), 100));
+        // El dueño y los colaboradores ven tambien los inactivos, para poder reactivarlos.
+        filtro.setSoloActivos(false);
+        return productoService.findAll(filtro);
+    }
+
+    @Override
+    @Transactional
+    public ProductoResponseDto cambiarActivoProducto(Long idProducto, boolean activo) {
+        productoDeMiTienda(idProducto);
+        return productoService.cambiarActivo(idProducto, activo);
+    }
+
+    @Override
+    public ProductoResponseDto obtenerProducto(Long idProducto) {
+        productoDeMiTienda(idProducto);
+        return productoService.get(idProducto);
+    }
+
+    @Override
+    @Transactional
+    public ProductoResponseDto crearProducto(MiProductoRequestDto request) {
+        Long idTienda = vinculoActual().getTienda().getId();
+
+        ProductoCreateRequestDto datos = new ProductoCreateRequestDto();
+        datos.setNombre(request.getNombre().trim());
+        datos.setDescripcion(request.getDescripcion().trim());
+        datos.setPrecio(request.getPrecio());
+        datos.setDescuento(request.getDescuento() == null ? 0.0 : request.getDescuento());
+        datos.setCantidadDisponible(request.getCantidadDisponible());
+        datos.setIdTienda(idTienda);
+
+        ProductoResponseDto creado = productoService.create(datos);
+        sincronizarSubcategorias(creado.getId(), request.getIdsSubcategorias());
+        return productoService.get(creado.getId());
+    }
+
+    @Override
+    @Transactional
+    public ProductoResponseDto actualizarProducto(Long idProducto, MiProductoRequestDto request) {
+        productoDeMiTienda(idProducto);
+
+        // No se envian puntuacion ni idTienda: el vendedor no puede cambiarlos.
+        ProductoUpdateRequestDto datos = new ProductoUpdateRequestDto();
+        datos.setNombre(request.getNombre().trim());
+        datos.setDescripcion(request.getDescripcion().trim());
+        datos.setPrecio(request.getPrecio());
+        datos.setDescuento(request.getDescuento() == null ? 0.0 : request.getDescuento());
+        datos.setCantidadDisponible(request.getCantidadDisponible());
+
+        productoService.update(idProducto, datos);
+        sincronizarSubcategorias(idProducto, request.getIdsSubcategorias());
+        return productoService.get(idProducto);
+    }
+
+    @Override
+    @Transactional
+    public void eliminarProducto(Long idProducto) {
+        exigirDueno("Solo el dueño de la tienda puede eliminar productos.");
+        productoDeMiTienda(idProducto);
+
+        // Las imagenes tambien se dan de baja para no dejarlas huerfanas.
+        LocalDateTime ahora = LocalDateTime.now();
+        List<ImagenProducto> imagenes = imagenProductoRepository.findByProducto_IdOrderByIdAsc(idProducto);
+        imagenes.forEach(imagen -> imagen.setDeletedAt(ahora));
+        imagenProductoRepository.saveAll(imagenes);
+
+        productoService.delete(idProducto);
+    }
+
+    // Reemplaza las subcategorias del producto por las recibidas (null = no cambiar).
+    private void sincronizarSubcategorias(Long idProducto, List<Long> idsSubcategorias) {
+        if (idsSubcategorias == null) {
+            return;
+        }
+
+        Set<Long> deseadas = new HashSet<>(idsSubcategorias);
+        for (Long idSubcategoria : deseadas) {
+            if (idSubcategoria == null || !subcategoriaRepository.existsById(idSubcategoria)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Subcategoría no encontrada: " + idSubcategoria);
+            }
+        }
+
+        Set<Long> actuales = new HashSet<>(productoSubcategoriaRepository.findByProducto_Id(idProducto).stream()
+                .map(ProductoSubcategoria::getSubcategoria)
+                .map(subcategoria -> subcategoria.getId())
+                .toList());
+
+        for (Long idSubcategoria : actuales) {
+            if (!deseadas.contains(idSubcategoria)) {
+                productoSubcategoriaService.delete(idProducto, idSubcategoria);
+            }
+        }
+
+        for (Long idSubcategoria : deseadas) {
+            if (!actuales.contains(idSubcategoria)) {
+                productoSubcategoriaService.create(idProducto, idSubcategoria);
+            }
+        }
+    }
+
+    // -------------------------------------------------------------- Imagenes
+
+    @Override
+    public List<ImagenProductoResponseDto> listarImagenes(Long idProducto) {
+        productoDeMiTienda(idProducto);
+        return imagenProductoService.listByProducto(idProducto);
+    }
+
+    @Override
+    @Transactional
+    public ImagenProductoResponseDto subirImagen(Long idProducto, MultipartFile archivo) {
+        productoDeMiTienda(idProducto);
+
+        if (archivo == null || archivo.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El archivo no puede estar vacío");
+        }
+
+        if (!TIPOS_IMAGEN_PERMITIDOS.contains(archivo.getContentType())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Solo se permiten imágenes PNG o JPG");
+        }
+
+        return imagenProductoService.create(idProducto, archivo);
+    }
+
+    @Override
+    @Transactional
+    public void eliminarImagen(Long idProducto, Long idImagen) {
+        productoDeMiTienda(idProducto);
+
+        ImagenProducto imagen = imagenProductoRepository.findById(idImagen)
+                .filter(encontrada -> encontrada.getProducto().getId().equals(idProducto))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Imagen no encontrada"));
+
+        imagenProductoService.delete(imagen.getId());
+    }
+
+    // ------------------------------------------------------------- Contactos
+
+    @Override
+    public List<ContactoResponseDto> listarContactos() {
+        ContactoFilterDto filtro = new ContactoFilterDto();
+        filtro.setIdTienda(tiendaActual().getId());
+        filtro.setPage(1);
+        filtro.setPerPage(100);
+        return contactoService.findAll(filtro).data();
+    }
+
+    @Override
+    @Transactional
+    public ContactoResponseDto crearContacto(MiContactoRequestDto request) {
+        ContactoCreateRequestDto datos = new ContactoCreateRequestDto();
+        datos.setEnlace(request.getEnlace().trim());
+        datos.setUsuario(request.getUsuario().trim());
+        datos.setNroTelefono(normalizarTelefono(request.getNroTelefono()));
+        datos.setIdTipoContacto(request.getIdTipoContacto());
+        datos.setIdTienda(tiendaActual().getId());
+        return contactoService.create(datos);
+    }
+
+    @Override
+    @Transactional
+    public ContactoResponseDto actualizarContacto(Long idContacto, MiContactoRequestDto request) {
+        Contacto contacto = contactoDeMiTienda(idContacto);
+
+        TipoContacto tipoContacto = tipoContactoRepository.findById(request.getIdTipoContacto())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tipo de contacto no encontrado"));
+
+        // Se actualiza directo (no via ContactoService.update) para permitir
+        // borrar el telefono, que en el update general null significa "no cambiar".
+        contacto.setEnlace(request.getEnlace().trim());
+        contacto.setUsuario(request.getUsuario().trim());
+        contacto.setNroTelefono(normalizarTelefono(request.getNroTelefono()));
+        contacto.setTipoContacto(tipoContacto);
+        contactoRepository.save(contacto);
+
+        return contactoService.get(idContacto);
+    }
+
+    @Override
+    @Transactional
+    public void eliminarContacto(Long idContacto) {
+        contactoDeMiTienda(idContacto);
+        contactoService.delete(idContacto);
+    }
+
+    private String normalizarTelefono(String nroTelefono) {
+        return nroTelefono == null || nroTelefono.isBlank() ? null : nroTelefono.trim();
+    }
+
+    // --------------------------------------------------------------- Pedidos
+
+    @Override
+    public PagedResult<List<PedidoResponseDto>> listarPedidos(Integer numero, int page, int perPage) {
+        return pedidoService.listarDeTienda(vinculoActual().getTienda().getId(), numero, page, perPage);
+    }
+
+    @Override
+    public List<PedidoResponseDto> sugerirPedidos(String prefijoNumero, int limite) {
+        return pedidoService.sugerirDeTienda(vinculoActual().getTienda().getId(), prefijoNumero, limite);
+    }
+
+    @Override
+    public PedidoResponseDto obtenerPedido(Long idPedido) {
+        return pedidoService.obtenerDeTienda(vinculoActual().getTienda().getId(), idPedido);
+    }
+
+    @Override
+    public ComprobantePedido obtenerComprobantePedido(Long idPedido) {
+        return pedidoService.obtenerComprobanteDeTienda(vinculoActual().getTienda().getId(), idPedido);
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponseDto confirmarPedido(Long idPedido) {
+        return pedidoService.confirmar(vinculoActual().getTienda().getId(), idPedido);
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponseDto enviarPedido(Long idPedido) {
+        return pedidoService.enviar(vinculoActual().getTienda().getId(), idPedido);
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponseDto entregarPedido(Long idPedido) {
+        return pedidoService.entregar(vinculoActual().getTienda().getId(), idPedido);
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponseDto cancelarPedido(Long idPedido) {
+        return pedidoService.cancelarDeTienda(vinculoActual().getTienda().getId(), idPedido);
+    }
+
+    // --------------------------------------------------------------- Cupones
+
+    @Override
+    @Transactional
+    public CuponResponseDto crearCupon(CuponRequestDto request) {
+        return cuponService.crear(tiendaActual().getId(), request);
+    }
+
+    @Override
+    public PagedResult<List<CuponResponseDto>> listarCupones(int page, int perPage) {
+        return cuponService.listarDeTienda(vinculoActual().getTienda().getId(), page, perPage);
+    }
+
+    @Override
+    public CuponResponseDto obtenerCupon(Long idCupon) {
+        return cuponService.obtenerDeTienda(vinculoActual().getTienda().getId(), idCupon);
+    }
+
+    @Override
+    @Transactional
+    public void eliminarCupon(Long idCupon) {
+        cuponService.eliminarDeTienda(tiendaActual().getId(), idCupon);
+    }
+
+    // --------------------------------------------------------- Publicaciones
+
+    @Override
+    public PagedResult<List<PublicacionResponseDto>> listarPublicaciones(int page, int perPage) {
+        return publicacionService.listarDeTienda(vinculoActual().getTienda().getId(), page, perPage);
+    }
+
+    @Override
+    public PublicacionResponseDto obtenerPublicacion(Long idPublicacion) {
+        return publicacionService.obtenerDeTienda(vinculoActual().getTienda().getId(), idPublicacion);
+    }
+
+    @Override
+    @Transactional
+    public PublicacionResponseDto crearPublicacion(PublicacionRequestDto request) {
+        return publicacionService.crear(vinculoActual().getTienda().getId(), request);
+    }
+
+    @Override
+    @Transactional
+    public PublicacionResponseDto actualizarPublicacion(Long idPublicacion, PublicacionRequestDto request) {
+        return publicacionService.actualizar(vinculoActual().getTienda().getId(), idPublicacion, request);
+    }
+
+    @Override
+    @Transactional
+    public void eliminarPublicacion(Long idPublicacion) {
+        TiendaUsuario vinculo = exigirDueno("Solo el dueño de la tienda puede eliminar publicaciones.");
+        publicacionService.eliminarDeTienda(vinculo.getTienda().getId(), idPublicacion);
+    }
+
+    @Override
+    public List<ArchivoPublicacionResponseDto> listarArchivosPublicacion(Long idPublicacion) {
+        publicacionDeMiTienda(idPublicacion);
+        return archivoPublicacionService.listByPublicacion(idPublicacion);
+    }
+
+    @Override
+    @Transactional
+    public ArchivoPublicacionResponseDto subirArchivoPublicacion(Long idPublicacion, MultipartFile archivo) {
+        publicacionDeMiTienda(idPublicacion);
+
+        if (archivo == null || archivo.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El archivo no puede estar vacío");
+        }
+
+        if (!TIPOS_IMAGEN_PERMITIDOS.contains(archivo.getContentType())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Solo se permiten imágenes PNG o JPG");
+        }
+
+        return archivoPublicacionService.create(idPublicacion, archivo);
+    }
+
+    @Override
+    @Transactional
+    public void eliminarArchivoPublicacion(Long idPublicacion, Long idArchivo) {
+        publicacionDeMiTienda(idPublicacion);
+
+        ArchivoPublicacion archivo = archivoPublicacionRepository.findById(idArchivo)
+                .filter(encontrado -> encontrado.getPublicacion().getId().equals(idPublicacion))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Archivo no encontrado"));
+
+        archivoPublicacionService.delete(archivo.getId());
+    }
+
+    @Override
+    @Transactional
+    public void eliminarComentarioPublicacion(Long idPublicacion, Long idComentario) {
+        publicacionDeMiTienda(idPublicacion);
+        comentarioService.eliminarDePublicacion(idPublicacion, idComentario);
+    }
+
+    private Publicacion publicacionDeMiTienda(Long idPublicacion) {
+        Long idTienda = vinculoActual().getTienda().getId();
+        return publicacionRepository.findById(idPublicacion)
+                .filter(publicacion -> publicacion.getTienda().getId().equals(idTienda))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Publicación no encontrada"));
+    }
+
+    // ------------------------------------------------------- Verificaciones
+
+    private TiendaUsuario vinculoActual() {
+        String nombreUsuario = SecurityContextHolder.getContext().getAuthentication().getName();
+        Usuario usuario = usuarioRepository.findByUsuarioIgnoreCase(nombreUsuario)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no encontrado"));
+
+        return tiendaUsuarioRepository.findFirstByUsuario_Id(usuario.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "No gestionás ninguna tienda"));
+    }
+
+    // Acciones que no se pueden deshacer desde la aplicacion: ademas del permiso del rol,
+    // se exige el vinculo PRINCIPAL, por si desde el panel se le asigna el permiso a otro rol.
+    private TiendaUsuario exigirDueno(String mensaje) {
+        TiendaUsuario vinculo = vinculoActual();
+        if (vinculo.getTipo() != TipoVinculoTienda.PRINCIPAL) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, mensaje);
+        }
+        return vinculo;
+    }
+
+    private Tienda tiendaActual() {
+        return vinculoActual().getTienda();
+    }
+
+    private Producto productoDeMiTienda(Long idProducto) {
+        Long idTienda = vinculoActual().getTienda().getId();
+        return productoRepository.findById(idProducto)
+                .filter(producto -> producto.getTienda().getId().equals(idTienda))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado"));
+    }
+
+    private Contacto contactoDeMiTienda(Long idContacto) {
+        Long idTienda = tiendaActual().getId();
+        return contactoRepository.findById(idContacto)
+                .filter(contacto -> contacto.getTienda().getId().equals(idTienda))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Contacto no encontrado"));
+    }
+
+    private MiTiendaResponseDto toResponse(Tienda tienda, TipoVinculoTienda tipoVinculo) {
+        Direccion direccion = tienda.getDireccion();
+        Barrio barrio = direccion.getBarrio();
+        var ciudad = barrio.getCiudad();
+        var departamento = ciudad.getDepartamento();
+        var pais = departamento.getPais();
+
+        return new MiTiendaResponseDto(
+                tienda.getId(),
+                tienda.getNombre(),
+                tienda.getDescripcion(),
+                tipoVinculo,
+                direccion.getCalle(),
+                direccion.getNombreEdificio(),
+                direccion.getNroCasa(),
+                direccion.getNroDepartamento(),
+                barrio.getId(),
+                barrio.getNombre(),
+                ciudad.getId(),
+                ciudad.getNombre(),
+                departamento.getId(),
+                departamento.getNombre(),
+                pais.getId(),
+                pais.getNombre(),
+                tienda.getBanco(),
+                tienda.getTitularCuenta(),
+                tienda.getDocumentoTitular(),
+                tienda.getNroCuenta(),
+                tienda.getAliasCuenta()
+        );
+    }
+}

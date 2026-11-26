@@ -3,6 +3,7 @@ package com.marketplace.marketplace_backend.modules.rol;
 import java.util.List;
 
 import com.marketplace.marketplace_backend.common.PagedResult;
+import com.marketplace.marketplace_backend.modules.rol.dto.RolConPermisosRequestDto;
 import com.marketplace.marketplace_backend.modules.rol.dto.RolCreateRequestDto;
 import com.marketplace.marketplace_backend.modules.rol.dto.RolFilterDto;
 import com.marketplace.marketplace_backend.modules.rol.dto.RolResponseDto;
@@ -21,4 +22,8 @@ public interface RolService {
     PagedResult<List<RolResponseDto>> findAll(RolFilterDto filter);
 
     List<RolResponseDto> findAllOptions();
+
+    RolResponseDto crearConPermisos(RolConPermisosRequestDto request);
+
+    RolResponseDto actualizarConPermisos(Long id, RolConPermisosRequestDto request);
 }

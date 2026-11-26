@@ -1,0 +1,59 @@
+/* Desplegable del carrito en los headers (misma paleta que home y el menú de usuario). */
+
+.contenedor { position: relative; flex-shrink: 0; font-family: var(--font-sans), Arial, sans-serif; }
+
+.disparador { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px; border: none; border-radius: 8px; background: transparent; color: inherit; cursor: pointer; transition: background 0.15s ease; }
+.disparador:hover, .disparador[aria-expanded="true"] { background: color-mix(in srgb, currentColor 8%, transparent); }
+.disparador:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+
+.contador { position: absolute; top: 2px; right: 0; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: #63240e; color: #fbf1e2; font-size: 11px; font-weight: 600; line-height: 18px; text-align: center; }
+
+.panel { position: absolute; right: 0; top: calc(100% + 8px); z-index: 50; width: 380px; max-width: calc(100vw - 32px); padding: 18px 18px 16px; background: #fffaf3; border: 1px solid #ebdcc6; border-radius: 10px; box-shadow: 0 16px 40px rgba(61, 22, 7, 0.16); color: #3d1607; }
+
+.titulo { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 0 14px; padding-bottom: 12px; border-bottom: 1px solid #ebdcc6; font-family: var(--font-serif), Georgia, serif; font-size: 20px; font-weight: 400; }
+.titulo small { font: 600 11px var(--font-sans), Arial, sans-serif; letter-spacing: 1.5px; text-transform: uppercase; color: #9a6446; }
+
+.vacio { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 18px 0 8px; color: #b0714a; text-align: center; }
+.vacio p { margin: 0; color: #6b5444; font-size: 14px; }
+
+.lista { margin: 0; padding: 0; list-style: none; max-height: 320px; overflow-y: auto; }
+
+.item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f1e6d6; }
+.item:first-child { padding-top: 0; }
+
+.miniatura { flex-shrink: 0; display: flex; align-items: center; justify-content: center; width: 56px; height: 56px; overflow: hidden; border-radius: 6px; background: #f1e2cb; color: #8a6a52; font-family: var(--font-serif), Georgia, serif; font-size: 20px; }
+.miniatura img { width: 100%; height: 100%; object-fit: cover; }
+
+.detalle { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; font-size: 13px; }
+.detalle small { color: #8a6a52; }
+
+.nombre { overflow: hidden; color: #2a1408; font-family: var(--font-serif), Georgia, serif; font-size: 15px; text-decoration: none; text-overflow: ellipsis; white-space: nowrap; }
+.nombre:hover { text-decoration: underline; }
+
+.quitar { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; border: none; border-radius: 50%; background: transparent; color: #8a6a52; cursor: pointer; transition: background 0.15s ease, color 0.15s ease; }
+.quitar:hover { background: #f6e1dc; color: #a3261b; }
+.quitar:focus-visible { outline: 2px solid #b0714a; outline-offset: 1px; }
+
+.total { display: flex; align-items: baseline; justify-content: space-between; margin: 14px 0 0; font-size: 14px; color: #6b5444; }
+.total strong { font-family: var(--font-serif), Georgia, serif; font-size: 22px; font-weight: 400; color: #2a1408; }
+.ahorro { margin: 4px 0 0; color: #4a6b34; font-size: 12px; font-weight: 600; text-align: right; }
+.precioLinea { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.precioLinea s { color: #9a8170; font-size: 12px; }
+.etiquetaDescuento { padding: 0 6px; border-radius: 4px; background: #b0714a; color: #fff; font-size: 10px; font-weight: 600; line-height: 16px; }
+
+.acciones { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+
+.botonPrincipal,
+.botonSecundario { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 42px; border-radius: 6px; font: 500 14px var(--font-sans), Arial, sans-serif; cursor: pointer; transition: background 0.15s ease, color 0.15s ease; }
+
+.botonPrincipal { border: none; background: #63240e; color: #fbf1e2; }
+.botonPrincipal:hover { background: #7a3216; }
+
+/* "Limpiar carrito": acción secundaria discreta, en texto. */
+.botonSecundario { height: 34px; border: none; background: transparent; color: #8a6a52; }
+.botonSecundario:hover { background: transparent; color: #a3261b; text-decoration: underline; text-underline-offset: 3px; }
+
+.botonPrincipal:focus-visible,
+.botonSecundario:focus-visible { outline: 2px solid #b0714a; outline-offset: 2px; }
+
+.detalle small.noDisponible { color: #a3261b; font-weight: 600; }

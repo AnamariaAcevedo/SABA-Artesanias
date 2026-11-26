@@ -1,0 +1,75 @@
+package com.marketplace.marketplace_backend.modules.auth;
+
+import com.marketplace.marketplace_backend.common.StandardResponseDto;
+import com.marketplace.marketplace_backend.modules.auth.dto.AuthResponseDto;
+import com.marketplace.marketplace_backend.modules.auth.dto.LoginRequestDto;
+import com.marketplace.marketplace_backend.modules.auth.dto.LogoutRequestDto;
+import com.marketplace.marketplace_backend.modules.auth.dto.RefreshRequestDto;
+import com.marketplace.marketplace_backend.modules.auth.dto.RegistroRequestDto;
+import com.marketplace.marketplace_backend.modules.auth.dto.SesionActualResponseDto;
+import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@AllArgsConstructor
+// Endpoints REST de autenticación: login, refresh de tokens, registro, logout y sesión actual
+public class AuthController {
+
+    private final AuthService authService;
+
+    @PostMapping("/login")
+    public ResponseEntity<StandardResponseDto<AuthResponseDto>> login(@Valid @RequestBody LoginRequestDto request) {
+        StandardResponseDto<AuthResponseDto> response = new StandardResponseDto<>();
+        response.setSuccess(true);
+        response.setData(authService.authenticateAndGenerateToken(request.getUsuario(), request.getContrasenha()));
+        response.setErrors(null);
+        response.setPagination(null);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<StandardResponseDto<AuthResponseDto>> refresh(@Valid @RequestBody RefreshRequestDto request) {
+        StandardResponseDto<AuthResponseDto> response = new StandardResponseDto<>();
+        response.setSuccess(true);
+        response.setData(authService.generateRefreshToken(request.getRefreshToken(), request.getAccessToken()));
+        response.setErrors(null);
+        response.setPagination(null);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/registro")
+    public ResponseEntity<StandardResponseDto<AuthResponseDto>> registrar(@Valid @RequestBody RegistroRequestDto request) {
+        StandardResponseDto<AuthResponseDto> response = new StandardResponseDto<>();
+        response.setSuccess(true);
+        response.setData(authService.registrar(request));
+        response.setErrors(null);
+        response.setPagination(null);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<StandardResponseDto<Void>> logout(@Valid @RequestBody LogoutRequestDto request) {
+        StandardResponseDto<Void> response = new StandardResponseDto<>();
+        authService.logout(request.getRefreshToken());
+        response.setSuccess(true);
+        response.setData(null);
+        response.setErrors(null);
+        response.setPagination(null);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<StandardResponseDto<SesionActualResponseDto>> sesionActual() {
+        StandardResponseDto<SesionActualResponseDto> response = new StandardResponseDto<>();
+        response.setSuccess(true);
+        response.setData(authService.obtenerSesionActual());
+        response.setErrors(null);
+        response.setPagination(null);
+        return ResponseEntity.ok(response);
+    }
+}

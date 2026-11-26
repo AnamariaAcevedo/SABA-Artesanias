@@ -1,0 +1,529 @@
+.content {
+  padding: 24px 45px 64px;
+}
+
+.statusMessage {
+  margin: 0 0 20px;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 19px;
+  color: #6b5444;
+}
+
+/* Ruta de navegación: Catálogo › Tienda › Producto */
+.migas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  max-width: 1160px;
+  margin: 0 auto 24px;
+  font-size: 13px;
+  color: #8a6a52;
+}
+
+.migas a {
+  color: #9a6446;
+  text-decoration: none;
+}
+
+.migas a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.migas [aria-current="page"] {
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #3d1607;
+}
+
+/* ========================================
+   DETALLE DEL PRODUCTO
+======================================== */
+
+.detalle {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 56px;
+  max-width: 1160px;
+  margin: 0 auto;
+}
+
+.galeria {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.imagenPrincipal {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: #f1e2cb;
+  border-radius: 10px;
+}
+
+.imagenPrincipal img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sinFoto {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: #8a6a52;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.etiquetaDescuento {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  padding: 5px 11px;
+  border-radius: 4px;
+  background: #b0714a;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.flecha {
+  position: absolute;
+  top: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 250, 243, 0.9);
+  color: #3d1607;
+  box-shadow: 0 4px 12px rgba(61, 22, 7, 0.15);
+  cursor: pointer;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: opacity 0.2s ease, background 0.15s ease;
+}
+
+.imagenPrincipal:hover .flecha,
+.flecha:focus-visible {
+  opacity: 1;
+}
+
+.flecha:hover {
+  background: #fff;
+}
+
+.flechaAnterior { left: 14px; }
+.flechaSiguiente { right: 14px; }
+
+.miniaturas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.miniatura {
+  width: 76px;
+  height: 76px;
+  padding: 0;
+  overflow: hidden;
+  background: #f1e2cb;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.15s ease, border-color 0.15s ease;
+}
+
+.miniatura:hover {
+  opacity: 1;
+}
+
+.miniatura[aria-pressed="true"] {
+  border-color: #b0714a;
+  opacity: 1;
+}
+
+.miniatura img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ---- Información ---- */
+
+.info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  color: #3d1607;
+}
+
+.tienda {
+  color: #9a6446;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.tienda:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.nombre {
+  margin: -6px 0 0;
+  color: #2a1408;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 40px;
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.puntuacion {
+  margin: -4px 0 0;
+  color: #9a6446;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.precio {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.precio strong {
+  color: #2a1408;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 32px;
+  font-weight: 400;
+}
+
+.precio s {
+  color: #9a8170;
+  font-size: 16px;
+}
+
+.ahorro {
+  margin: -8px 0 0;
+  color: #4a6b34;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Estado del stock */
+.estadoStock {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.estadoStock::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.estadoDisponible { background: #eaf0e2; color: #4a6b34; }
+.estadoPocas { background: #f8eccf; color: #8a6416; }
+.estadoAgotado { background: #f6e1dc; color: #9a3b2a; }
+
+.bloque {
+  width: 100%;
+  padding-top: 16px;
+  border-top: 1px solid #ebdcc6;
+}
+
+.bloque h3 {
+  margin: 0 0 8px;
+  color: #8a6a52;
+  font-family: var(--font-sans), Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.bloque p {
+  margin: 0;
+  color: #6b5444;
+  font-size: 15px;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+/* ---- Compra ---- */
+
+.compra {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.cantidad {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #e3d3bd;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.cantidad button {
+  width: 44px;
+  height: 48px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #63240e;
+  font-size: 18px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.cantidad button:hover:not(:disabled) {
+  background: #fbf5ec;
+}
+
+.cantidad button:disabled {
+  color: #c9b49a;
+  cursor: not-allowed;
+}
+
+.cantidad span {
+  min-width: 36px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.botonAgregar {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 50px;
+  border: none;
+  border-radius: 6px;
+  background: #63240e;
+  color: #fbf1e2;
+  font: 500 15px var(--font-sans), Arial, sans-serif;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.botonAgregar:hover:not(:disabled) {
+  background: #7a3216;
+}
+
+.botonAgregar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.botonAgregar:focus-visible,
+.cantidad button:focus-visible,
+.miniatura:focus-visible,
+.flecha:focus-visible,
+.fichaTienda:focus-visible {
+  outline: 2px solid #b0714a;
+  outline-offset: 2px;
+}
+
+.enCarrito {
+  margin: -4px 0 0;
+  color: #6b5444;
+  font-size: 13px;
+}
+
+.enCarrito a {
+  color: #9a6446;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.enCarrito a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.aviso {
+  width: 100%;
+  margin: 0;
+  padding: 10px 14px;
+  border-left: 3px solid #b0714a;
+  border-radius: 6px;
+  background: #f6ead8;
+  color: #63240e;
+  font-size: 14px;
+}
+
+.avisoExito {
+  border-left: none;
+  background: #eaf0e2;
+  color: #3f6b2a;
+}
+
+/* Ficha de la tienda */
+.fichaTienda {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 14px 16px;
+  border: 1px solid #ebdcc6;
+  border-radius: 10px;
+  background: #fffaf3;
+  color: #3d1607;
+  text-decoration: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.fichaTienda:hover {
+  border-color: #dcc7aa;
+  box-shadow: 0 8px 20px rgba(99, 36, 14, 0.08);
+}
+
+.fichaAvatar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #e3cba6;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 20px;
+}
+
+.fichaTexto {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.fichaTexto small {
+  color: #8a6a52;
+  font-size: 12px;
+}
+
+.fichaTexto strong {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 18px;
+  font-weight: 400;
+}
+
+.fichaVer {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #63240e;
+  font-size: 13px;
+  font-weight: 500;
+  transition: gap 0.15s ease;
+}
+
+.fichaTienda:hover .fichaVer {
+  gap: 10px;
+}
+
+/* ---- Más de esta tienda ---- */
+
+.relacionados {
+  max-width: 1160px;
+  margin: 64px auto 0;
+}
+
+.relacionadosCabecera {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(99, 36, 14, 0.12);
+}
+
+.relacionadosCabecera::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 48px;
+  height: 2px;
+  background: #b0714a;
+}
+
+.relacionadosCabecera h3 {
+  margin: 0;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 26px;
+  font-weight: 400;
+  color: #3d1607;
+}
+
+.relacionadosCabecera a {
+  color: #63240e;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.relacionadosCabecera a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 850px) {
+  .detalle {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .content {
+    padding: 20px 20px 48px;
+  }
+
+  .nombre {
+    font-size: 32px;
+  }
+
+  /* En pantallas táctiles no hay hover: las flechas se ven siempre. */
+  .flecha {
+    opacity: 1;
+  }
+}

@@ -1,0 +1,244 @@
+"use client";
+
+import { useSyncExternalStore } from "react";
+import type { Producto } from "@/types/Producto";
+import { obtenerProductoPorId } from "@/services/productoService";
+
+// Carrito de compras del navegador. Se guarda en localStorage para que sobreviva
+// a recargas y se comparte entre pestañas (evento "storage"). Cada usuario tiene
+// el suyo y los invitados comparten uno aparte, que pasa a la cuenta al iniciar
+// sesión. Cada línea guarda una copia del producto al momento de agregarlo; el
+// stock y el precio se vuelven a consultar al confirmar la compra.
+
+export interface ItemCarrito {
+  idProducto: number;
+  nombre: string;
+  precioUnitario: number;
+  // Precio sin el descuento del producto y su porcentaje, para mostrar el ahorro.
+  // Opcionales: los carritos guardados antes de este cambio no los tienen hasta
+  // que se vuelven a sincronizar con el servidor.
+  precioLista?: number;
+  descuento?: number | null;
+  cantidad: number;
+  cantidadDisponible: number;
+  idTienda: number;
+  nombreTienda: string;
+  idImagenPrincipal: number | null;
+  // false si el producto ya no se puede comprar (desactivado, eliminado o de una tienda
+  // desactivada). Se actualiza al verificar el carrito; ausente = disponible.
+  disponible?: boolean;
+}
+
+const CLAVE_INVITADO = "carrito";
+const VACIO: ItemCarrito[] = [];
+
+// Usuario dueño del carrito: su id, null si es invitado, o undefined mientras no se sepa.
+// Sin saberlo no se toca Storage, para no mostrar ni pisar el carrito de otra cuenta.
+let dueno: number | null | undefined = undefined;
+let cache: ItemCarrito[] | null = null;
+const oyentes = new Set<() => void>();
+
+function claveDe(usuario: number | null): string {
+  return usuario === null ? CLAVE_INVITADO : `carrito:${usuario}`;
+}
+
+function leerGuardado(clave: string): ItemCarrito[] {
+  try {
+    const guardado = JSON.parse(localStorage.getItem(clave) ?? "[]");
+    return Array.isArray(guardado) ? guardado : [];
+  } catch {
+    return [];
+  }
+}
+
+function leer(): ItemCarrito[] {
+  if (cache) return cache;
+  if (dueno === undefined) return VACIO;
+  cache = leerGuardado(claveDe(dueno));
+  return cache;
+}
+
+function guardar(items: ItemCarrito[]) {
+  cache = items;
+  if (dueno !== undefined) {
+    try {
+      localStorage.setItem(claveDe(dueno), JSON.stringify(items));
+    } catch {
+      // Sin Storage el carrito igualmente funciona mientras la pestaña siga abierta.
+    }
+  }
+  oyentes.forEach((oyente) => oyente());
+}
+
+// Suma las líneas de `extras` a `base`, sin superar el stock de cada producto.
+function combinar(base: ItemCarrito[], extras: ItemCarrito[]): ItemCarrito[] {
+  return extras.reduce((resultado, extra) => {
+    const existente = resultado.find((item) => item.idProducto === extra.idProducto);
+    if (!existente) return [...resultado, extra];
+    const cantidad = Math.min(existente.cantidad + extra.cantidad, extra.cantidadDisponible);
+    return resultado.map((item) => (item === existente ? { ...extra, cantidad } : item));
+  }, base);
+}
+
+// La sesión avisa quién es el usuario actual (null = invitado). Lo que se armó sin
+// sesión pasa a la cuenta: si no, se perdería al iniciar sesión durante la compra.
+export function fijarDuenoCarrito(usuario: number | null) {
+  if (usuario === dueno) return;
+
+  const pendientes = dueno === undefined ? (cache ?? VACIO) : VACIO;
+  dueno = usuario;
+  cache = null;
+
+  const delInvitado = usuario === null ? VACIO : leerGuardado(CLAVE_INVITADO);
+  const traidos = combinar(delInvitado, pendientes);
+
+  if (traidos.length > 0) {
+    guardar(combinar(leer(), traidos));
+  } else {
+    oyentes.forEach((oyente) => oyente());
+  }
+
+  if (delInvitado.length > 0) {
+    try {
+      localStorage.removeItem(CLAVE_INVITADO);
+    } catch {
+      // Sin Storage no quedó nada guardado que limpiar.
+    }
+  }
+}
+
+function suscribir(oyente: () => void) {
+  oyentes.add(oyente);
+
+  function alCambiarStorage(event: StorageEvent) {
+    if (dueno === undefined) return;
+    if (event.key === claveDe(dueno) || event.key === null) {
+      cache = null;
+      oyente();
+    }
+  }
+
+  window.addEventListener("storage", alCambiarStorage);
+  return () => {
+    oyentes.delete(oyente);
+    window.removeEventListener("storage", alCambiarStorage);
+  };
+}
+
+export function precioFinalProducto(producto: Producto): number {
+  return producto.precioFinal ?? producto.precio;
+}
+
+// Precio de lista de la línea (sin descuento); si no se conoce, el precio que se paga.
+export function precioListaItem(item: ItemCarrito): number {
+  return item.precioLista && item.precioLista > item.precioUnitario ? item.precioLista : item.precioUnitario;
+}
+
+// Agrega `cantidad` unidades sin superar el stock disponible. Devuelve cuántas
+// unidades se agregaron realmente (0 si no hay stock o ya estaba todo en el carrito).
+export function agregarAlCarrito(producto: Producto, cantidad: number): number {
+  const items = leer();
+  const existente = items.find((item) => item.idProducto === producto.id);
+  const enCarrito = existente?.cantidad ?? 0;
+  const agregadas = Math.max(0, Math.min(cantidad, producto.cantidadDisponible - enCarrito));
+  if (agregadas === 0) return 0;
+
+  const linea: ItemCarrito = {
+    idProducto: producto.id,
+    nombre: producto.nombre,
+    precioUnitario: precioFinalProducto(producto),
+    precioLista: producto.precio,
+    descuento: producto.descuento,
+    cantidad: enCarrito + agregadas,
+    cantidadDisponible: producto.cantidadDisponible,
+    idTienda: producto.idTienda,
+    nombreTienda: producto.nombreTienda,
+    idImagenPrincipal: producto.idImagenPrincipal,
+  };
+
+  guardar(
+    existente
+      ? items.map((item) => (item.idProducto === producto.id ? linea : item))
+      : [...items, linea],
+  );
+  return agregadas;
+}
+
+// Fija la cantidad de una línea entre 1 y el stock disponible.
+export function cambiarCantidadCarrito(idProducto: number, cantidad: number) {
+  guardar(
+    leer().map((item) =>
+      item.idProducto === idProducto
+        ? { ...item, cantidad: Math.max(1, Math.min(cantidad, item.cantidadDisponible)) }
+        : item,
+    ),
+  );
+}
+
+export function quitarDelCarrito(idProducto: number) {
+  guardar(leer().filter((item) => item.idProducto !== idProducto));
+}
+
+export function quitarVariosDelCarrito(idsProducto: number[]) {
+  guardar(leer().filter((item) => !idsProducto.includes(item.idProducto)));
+}
+
+export function limpiarCarrito() {
+  guardar([]);
+}
+
+// Actualiza precio y stock de las líneas con los datos vigentes del servidor.
+// `idsEliminados`: productos que el backend ya no encuentra (se eliminaron).
+export function sincronizarCarrito(productos: Producto[], idsEliminados: number[] = []) {
+  guardar(
+    leer().map((item) => {
+      const actual = productos.find((producto) => producto.id === item.idProducto);
+      if (actual) {
+        return {
+          ...item,
+          nombre: actual.nombre,
+          precioUnitario: precioFinalProducto(actual),
+          precioLista: actual.precio,
+          descuento: actual.descuento,
+          cantidadDisponible: actual.cantidadDisponible,
+          disponible: actual.activo !== false && actual.tiendaActiva !== false,
+        };
+      }
+      return idsEliminados.includes(item.idProducto) ? { ...item, disponible: false } : item;
+    }),
+  );
+}
+
+// Consulta precio, stock y disponibilidad actuales de lo que hay en el carrito y lo
+// actualiza. Un 404 es un producto eliminado; otros errores (p. ej. sin conexión) no
+// cambian nada. La usan el carrito desplegable al abrirse y la pantalla de confirmar.
+export async function verificarCarrito(): Promise<void> {
+  const ids = leer().map((item) => item.idProducto);
+  if (ids.length === 0) return;
+  const idsEliminados: number[] = [];
+  const respuestas = await Promise.all(
+    ids.map((id) =>
+      obtenerProductoPorId(id)
+        .then((respuesta) => respuesta.data)
+        .catch((cause) => {
+          if (cause instanceof Error && cause.message === "Error 404") idsEliminados.push(id);
+          return null;
+        }),
+    ),
+  );
+  sincronizarCarrito(
+    respuestas.filter((producto): producto is Producto => producto !== null),
+    idsEliminados,
+  );
+}
+
+export function useCarrito() {
+  const items = useSyncExternalStore(suscribir, leer, () => VACIO);
+  const cantidadTotal = items.reduce((suma, item) => suma + item.cantidad, 0);
+  const total = items.reduce((suma, item) => suma + item.precioUnitario * item.cantidad, 0);
+  return { items, cantidadTotal, total };
+}
+
+export function formatearPrecio(valor: number): string {
+  return `${Math.round(valor).toLocaleString("es-PY")} GS`;
+}

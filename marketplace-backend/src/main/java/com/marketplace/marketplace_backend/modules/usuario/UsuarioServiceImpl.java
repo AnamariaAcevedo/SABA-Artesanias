@@ -1,0 +1,285 @@
+package com.marketplace.marketplace_backend.modules.usuario;
+
+import org.springframework.security.core.context.SecurityContextHolder;
+import com.marketplace.marketplace_backend.modules.recuperacion.TokenRecuperacionRepository;
+import com.marketplace.marketplace_backend.modules.refreshtoken.RefreshTokenRepository;
+import com.marketplace.marketplace_backend.modules.solicitudvendedor.SolicitudVendedorRepository;
+import com.marketplace.marketplace_backend.modules.reaccion.ReaccionRepository;
+import com.marketplace.marketplace_backend.modules.comentario.ComentarioRepository;
+import com.marketplace.marketplace_backend.modules.pedido.PedidoRepository;
+import com.marketplace.marketplace_backend.common.PagedResult;
+import com.marketplace.marketplace_backend.modules.barrio.Barrio;
+import com.marketplace.marketplace_backend.modules.barrio.BarrioRepository;
+import com.marketplace.marketplace_backend.modules.direccion.Direccion;
+import com.marketplace.marketplace_backend.modules.direccion.DireccionRepository;
+import com.marketplace.marketplace_backend.modules.rol.Rol;
+import com.marketplace.marketplace_backend.modules.rol.RolRepository;
+import com.marketplace.marketplace_backend.modules.tiendausuario.TiendaUsuarioRepository;
+import com.marketplace.marketplace_backend.modules.tiendausuario.TipoVinculoTienda;
+import com.marketplace.marketplace_backend.modules.usuario.dto.UsuarioCreateRequestDto;
+import com.marketplace.marketplace_backend.modules.usuario.dto.UsuarioFilterDto;
+import com.marketplace.marketplace_backend.modules.usuario.dto.UsuarioResponseDto;
+import com.marketplace.marketplace_backend.modules.usuario.dto.UsuarioUpdateRequestDto;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@AllArgsConstructor
+@Service
+// Implementación de la lógica de negocio para gestionar usuarios
+public class UsuarioServiceImpl implements UsuarioService {
+
+    private static final String ROL_VENDEDOR_SECUNDARIO = "VendedorSecundario";
+
+    private final UsuarioRepository usuarioRepository;
+    private final RolRepository rolRepository;
+    private final TiendaUsuarioRepository tiendaUsuarioRepository;
+    private final PedidoRepository pedidoRepository;
+    private final ComentarioRepository comentarioRepository;
+    private final ReaccionRepository reaccionRepository;
+    private final SolicitudVendedorRepository solicitudVendedorRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final TokenRecuperacionRepository tokenRecuperacionRepository;
+    private final DireccionRepository direccionRepository;
+    private final BarrioRepository barrioRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    @Override
+    @Transactional
+    public UsuarioResponseDto create(UsuarioCreateRequestDto request) {
+        String email = request.getEmail().trim();
+        String nombreUsuario = request.getUsuario().trim();
+
+        if (usuarioRepository.existsByEmailIgnoreCase(email)) {
+            throw new IllegalStateException("Ya existe un usuario con ese email");
+        }
+
+        if (usuarioRepository.existsByUsuarioIgnoreCase(nombreUsuario)) {
+            throw new IllegalStateException("Ya existe un usuario con ese nombre de usuario");
+        }
+
+        Rol rol = rolRepository.findById(request.getIdRol())
+                .orElseThrow(() -> new EntityNotFoundException("Rol no encontrado con ID: " + request.getIdRol()));
+
+        Barrio barrio = barrioRepository.findById(request.getIdBarrio())
+                .orElseThrow(() -> new EntityNotFoundException("Barrio no encontrado"));
+
+        boolean hayEdificio = request.getNombreEdificio() != null && !request.getNombreEdificio().isBlank();
+
+        if (!hayEdificio && request.getNroCasa() == null) {
+            throw new IllegalArgumentException("El número de casa es obligatorio si no se indica un edificio");
+        }
+
+        if (hayEdificio && (request.getNroDepartamento() == null || request.getNroDepartamento().isBlank())) {
+            throw new IllegalArgumentException("El número de departamento es obligatorio si se indica un edificio");
+        }
+
+        Direccion direccion = new Direccion();
+        direccion.setCalle(request.getCalle());
+        direccion.setNombreEdificio(request.getNombreEdificio());
+        direccion.setNroCasa(request.getNroCasa());
+        direccion.setNroDepartamento(request.getNroDepartamento());
+        direccion.setBarrio(barrio);
+        Direccion direccionGuardada = direccionRepository.save(direccion);
+
+        Usuario usuario = new Usuario();
+        usuario.setNombre(request.getNombre());
+        usuario.setApellido(request.getApellido());
+        usuario.setContrasenha(passwordEncoder.encode(request.getContrasenha()));
+        usuario.setEmail(email);
+        usuario.setUsuario(nombreUsuario);
+        usuario.setTelefono(normalizarTelefono(request.getTelefono()));
+        usuario.setRol(rol);
+        usuario.setDireccion(direccionGuardada);
+        usuario.setActivo(true);
+
+        Usuario saved = usuarioRepository.save(usuario);
+        return toResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public UsuarioResponseDto update(Long id, UsuarioUpdateRequestDto request) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + id));
+
+        if (request.getNombre() != null) {
+            usuario.setNombre(request.getNombre().trim());
+        }
+
+        if (request.getApellido() != null) {
+            usuario.setApellido(request.getApellido().trim());
+        }
+
+        if (request.getEmail() != null) {
+            String email = request.getEmail().trim();
+            if (usuarioRepository.existsByEmailIgnoreCaseAndIdNot(email, id)) {
+                throw new IllegalStateException("Ya existe un usuario con ese email");
+            }
+            usuario.setEmail(email);
+        }
+
+        if (request.getUsuario() != null) {
+            String nombreUsuario = request.getUsuario().trim();
+            if (usuarioRepository.existsByUsuarioIgnoreCaseAndIdNot(nombreUsuario, id)) {
+                throw new IllegalStateException("Ya existe un usuario con ese nombre de usuario");
+            }
+            usuario.setUsuario(nombreUsuario);
+        }
+
+        if (request.getTelefono() != null) {
+            usuario.setTelefono(normalizarTelefono(request.getTelefono()));
+        }
+
+        if (request.getActivo() != null) {
+            usuario.setActivo(request.getActivo());
+        }
+
+        if (request.getIdRol() != null) {
+            Rol rol = rolRepository.findById(request.getIdRol())
+                    .orElseThrow(() -> new EntityNotFoundException("Rol no encontrado con ID: " + request.getIdRol()));
+            quitarDelEquipoSiDejaDeSerColaborador(usuario, rol);
+            usuario.setRol(rol);
+        }
+
+        if (request.getIdDireccion() != null) {
+            Direccion direccion = direccionRepository.findById(request.getIdDireccion())
+                    .orElseThrow(() -> new EntityNotFoundException("Dirección no encontrada"));
+            usuario.setDireccion(direccion);
+        }
+
+        Usuario updated = usuarioRepository.save(usuario);
+        return toResponse(updated);
+    }
+
+    // Si un colaborador de una tienda (vinculo SECUNDARIO) pasa a otro rol, deja de ser
+    // colaborador: se borra el vinculo para que no quede en el equipo sin sus permisos.
+    // El vinculo del dueño (PRINCIPAL) no se toca.
+    private void quitarDelEquipoSiDejaDeSerColaborador(Usuario usuario, Rol nuevoRol) {
+        if (ROL_VENDEDOR_SECUNDARIO.equalsIgnoreCase(nuevoRol.getNombre())) {
+            return;
+        }
+        tiendaUsuarioRepository.findFirstByUsuario_Id(usuario.getId())
+                .filter(vinculo -> vinculo.getTipo() == TipoVinculoTienda.SECUNDARIO)
+                .ifPresent(vinculo -> {
+                    vinculo.setDeletedAt(LocalDateTime.now());
+                    tiendaUsuarioRepository.save(vinculo);
+                });
+    }
+
+    @Override
+    public UsuarioResponseDto get(Long id) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + id));
+        return toResponse(usuario);
+    }
+
+    @Override
+    @Transactional
+    public void delete(Long id) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + id));
+
+        String autenticado = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (usuario.getUsuario().equalsIgnoreCase(autenticado)) {
+            throw new IllegalStateException("No podés eliminar tu propia cuenta.");
+        }
+        // Lo que hizo el usuario apunta a el y dejaria de cargarse. Eliminar queda solo para
+        // cuentas sin uso (de prueba o creadas por error); las demas se desactivan.
+        if (tieneActividad(id)) {
+            throw new IllegalStateException(
+                    "Este usuario tiene actividad registrada (pedidos, tienda, comentarios, reacciones o solicitudes). "
+                            + "Desactivalo en lugar de eliminarlo.");
+        }
+
+        // Sus sesiones abiertas y enlaces de recuperacion dejan de servir.
+        refreshTokenRepository.deleteByUsuario_Id(id);
+        tokenRecuperacionRepository.deleteByUsuario_Id(id);
+
+        usuario.setDeletedAt(LocalDateTime.now());
+        usuarioRepository.save(usuario);
+    }
+
+    private boolean tieneActividad(Long idUsuario) {
+        return tiendaUsuarioRepository.existsByUsuario_Id(idUsuario)
+                || pedidoRepository.existsByUsuario_Id(idUsuario)
+                || comentarioRepository.existsByUsuario_Id(idUsuario)
+                || reaccionRepository.existsByUsuario_Id(idUsuario)
+                || solicitudVendedorRepository.existsByUsuario_Id(idUsuario);
+    }
+
+    @Override
+    public PagedResult<List<UsuarioResponseDto>> findAll(UsuarioFilterDto filter) {
+        int page = filter.getPage();
+        int perPage = filter.getPerPage();
+
+        Pageable pageable = PageRequest.of(page - 1, perPage);
+
+        String nombre = filter.getNombre();
+        if (nombre != null) {
+            nombre = nombre.trim();
+            if (nombre.isEmpty()) nombre = null;
+        }
+
+        Boolean activo = filter.getActivo();
+
+        boolean hasNombre = nombre != null;
+        boolean hasActivo = activo != null;
+
+        Page<Usuario> result;
+
+        if (!hasNombre && !hasActivo) {
+            result = usuarioRepository.findAllByOrderByIdAsc(pageable);
+        } else if (hasNombre && hasActivo) {
+            result = usuarioRepository.findByNombreContainingIgnoreCaseAndActivo(nombre, activo, pageable);
+        } else if (hasNombre) {
+            result = usuarioRepository.findByNombreContainingIgnoreCase(nombre, pageable);
+        } else {
+            result = usuarioRepository.findByActivo(activo, pageable);
+        }
+
+        List<UsuarioResponseDto> data = result.getContent().stream()
+                .map(this::toResponse)
+                .toList();
+
+        return new PagedResult<>(data, page, perPage, (int) result.getTotalElements());
+    }
+
+    @Override
+    public List<UsuarioResponseDto> findAllOptions() {
+        return usuarioRepository.findAll().stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    // Convierte 0981123456 en 595981123456 (formato internacional sin +).
+    private static String normalizarTelefono(String telefono) {
+        return "595" + telefono.trim().substring(1);
+    }
+
+    private UsuarioResponseDto toResponse(Usuario usuario) {
+        return new UsuarioResponseDto(
+                usuario.getId(),
+                usuario.getNombre(),
+                usuario.getApellido(),
+                usuario.getEmail(),
+                usuario.getUsuario(),
+                usuario.getTelefono(),
+                usuario.getRol().getId(),
+                usuario.getRol().getNombre(),
+                usuario.getDireccion().getId(),
+                usuario.getDireccion().getCalle(),
+                usuario.getActivo(),
+                usuario.getCreatedAt(),
+                usuario.getUpdatedAt()
+        );
+    }
+}

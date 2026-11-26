@@ -1,10 +1,16 @@
 package com.marketplace.marketplace_backend.modules.rol;
 
+import com.marketplace.marketplace_backend.modules.usuario.UsuarioRepository;
 import com.marketplace.marketplace_backend.common.PagedResult;
+import com.marketplace.marketplace_backend.modules.permiso.Permiso;
+import com.marketplace.marketplace_backend.modules.permiso.PermisoRepository;
+import com.marketplace.marketplace_backend.modules.rol.dto.RolConPermisosRequestDto;
 import com.marketplace.marketplace_backend.modules.rol.dto.RolCreateRequestDto;
 import com.marketplace.marketplace_backend.modules.rol.dto.RolFilterDto;
 import com.marketplace.marketplace_backend.modules.rol.dto.RolResponseDto;
 import com.marketplace.marketplace_backend.modules.rol.dto.RolUpdateRequestDto;
+import com.marketplace.marketplace_backend.modules.rolpermiso.RolPermiso;
+import com.marketplace.marketplace_backend.modules.rolpermiso.RolPermisoRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -21,7 +27,15 @@ import java.util.List;
 // Implementación de la lógica de negocio para gestionar roles
 public class RolServiceImpl implements RolService {
 
+    // El sistema busca estos roles por nombre: el registro asigna Cliente, aceptar una
+    // solicitud asigna VendedorPrincipal y el equipo de la tienda VendedorSecundario.
+    private static final List<String> ROLES_DEL_SISTEMA =
+            List.of("Administrador", "Cliente", "VendedorPrincipal", "VendedorSecundario");
+
     private final RolRepository rolRepository;
+    private final RolPermisoRepository rolPermisoRepository;
+    private final PermisoRepository permisoRepository;
+    private final UsuarioRepository usuarioRepository;
 
     @Override
     @Transactional
@@ -48,6 +62,8 @@ public class RolServiceImpl implements RolService {
             throw new IllegalArgumentException("Debe enviar al menos un campo a actualizar.");
         }
 
+        protegerRolDelSistema(rol, request.getNombre(), request.getActivo());
+
         if (request.getNombre() != null) {
             rol.setNombre(request.getNombre());
         }
@@ -73,8 +89,15 @@ public class RolServiceImpl implements RolService {
         Rol rol = rolRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Rol no encontrado con ID: " + id));
 
-        // Cuando exista el módulo usuario (SABA-37/55), validar que el rol
-        // no esté asignado a ningún usuario antes de permitir el borrado.
+        if (esRolDelSistema(rol)) {
+            throw new IllegalStateException("No se puede eliminar el rol " + rol.getNombre() + ": lo usa el sistema.");
+        }
+        // Los usuarios con ese rol no podrian iniciar sesion: sus permisos se leen del rol.
+        long usuarios = usuarioRepository.countByRol_Id(id);
+        if (usuarios > 0) {
+            throw new IllegalStateException("No se puede eliminar el rol: lo tienen " + usuarios
+                    + (usuarios == 1 ? " usuario" : " usuarios") + ". Asignales otro rol primero.");
+        }
         rol.setDeletedAt(LocalDateTime.now());
         rolRepository.save(rol);
     }
@@ -123,6 +146,67 @@ public class RolServiceImpl implements RolService {
                 .toList();
     }
 
+    @Override
+    @Transactional
+    public RolResponseDto crearConPermisos(RolConPermisosRequestDto request) {
+        rolRepository.findByNombreAndDeletedAtIsNull(request.getNombre())
+                .ifPresent(r -> {
+                    throw new IllegalStateException("Ya existe un rol activo con ese nombre");
+                });
+
+        Rol rol = new Rol();
+        rol.setNombre(request.getNombre());
+        rol.setActivo(request.getActivo() != null ? request.getActivo() : true);
+        Rol saved = rolRepository.save(rol);
+
+        aplicarCambiosPermisos(saved, request.getPermisoIdsAgregar(), request.getPermisoIdsQuitar());
+
+        return toResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public RolResponseDto actualizarConPermisos(Long id, RolConPermisosRequestDto request) {
+        Rol rol = rolRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Rol no encontrado con ID: " + id));
+
+        protegerRolDelSistema(rol, request.getNombre(), request.getActivo());
+
+        rol.setNombre(request.getNombre());
+        if (request.getActivo() != null) {
+            rol.setActivo(request.getActivo());
+        }
+        Rol updated = rolRepository.save(rol);
+
+        aplicarCambiosPermisos(updated, request.getPermisoIdsAgregar(), request.getPermisoIdsQuitar());
+
+        return toResponse(updated);
+    }
+
+    // Aplica, en la misma transacción que el alta/edición del rol, los permisos
+    // a agregar y a quitar. Evita que el guardado del rol quede desincronizado
+    // de sus permisos si algo falla a mitad de camino.
+    private void aplicarCambiosPermisos(Rol rol, List<Long> permisoIdsAgregar, List<Long> permisoIdsQuitar) {
+        if (permisoIdsQuitar != null) {
+            for (Long permisoId : permisoIdsQuitar) {
+                rolPermisoRepository.deleteByRol_IdAndPermiso_Id(rol.getId(), permisoId);
+            }
+        }
+
+        if (permisoIdsAgregar != null) {
+            for (Long permisoId : permisoIdsAgregar) {
+                if (rolPermisoRepository.existsByRol_IdAndPermiso_Id(rol.getId(), permisoId)) {
+                    continue;
+                }
+
+                Permiso permiso = permisoRepository.findById(permisoId)
+                        .orElseThrow(() -> new EntityNotFoundException("Permiso no encontrado con ID: " + permisoId));
+
+                rolPermisoRepository.save(new RolPermiso(rol, permiso));
+            }
+        }
+    }
+
     private RolResponseDto toResponse(Rol rol) {
         return new RolResponseDto(
                 rol.getId(),
@@ -131,5 +215,25 @@ public class RolServiceImpl implements RolService {
                 rol.getCreatedAt(),
                 rol.getUpdatedAt()
         );
+    }
+
+    private static boolean esRolDelSistema(Rol rol) {
+        return ROLES_DEL_SISTEMA.stream().anyMatch(nombre -> nombre.equalsIgnoreCase(rol.getNombre()));
+    }
+
+    // Un rol del sistema no se puede desactivar (sus usuarios quedarian sin permisos; con
+    // Administrador, nadie podria volver a activarlo desde la aplicacion) ni renombrar
+    // (el sistema dejaria de encontrarlo). Sus permisos si se pueden cambiar.
+    private static void protegerRolDelSistema(Rol rol, String nombreNuevo, Boolean activoNuevo) {
+        if (!esRolDelSistema(rol)) {
+            return;
+        }
+        if (Boolean.FALSE.equals(activoNuevo)) {
+            throw new IllegalStateException("No se puede desactivar el rol " + rol.getNombre() + ": lo usa el sistema.");
+        }
+        // Exacto, sin ignorar mayusculas: la busqueda por nombre las distingue.
+        if (nombreNuevo != null && !nombreNuevo.trim().equals(rol.getNombre())) {
+            throw new IllegalStateException("No se puede cambiar el nombre del rol " + rol.getNombre() + ": lo usa el sistema.");
+        }
     }
 }

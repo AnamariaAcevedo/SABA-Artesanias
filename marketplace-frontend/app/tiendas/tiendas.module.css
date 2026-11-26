@@ -1,0 +1,468 @@
+.content {
+  padding: 36px 45px 64px;
+}
+
+.pageTitle {
+  margin: 0 0 24px;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 30px;
+  font-weight: 400;
+  color: #3d1607;
+}
+
+.statusMessage {
+  margin: 0 0 20px;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 19px;
+  color: #6b5444;
+}
+
+/* ========================================
+   ENCABEZADO DE PÁGINA (Tiendas, Canal)
+======================================== */
+
+.encabezado {
+  margin-bottom: 32px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid rgba(99, 36, 14, 0.12);
+  position: relative;
+}
+
+/* Trazo arcilla bajo el encabezado, como en las secciones del catálogo. */
+.encabezado::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 48px;
+  height: 2px;
+  background: #b0714a;
+}
+
+.encabezadoCentrado {
+  max-width: 680px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #9a6446;
+}
+
+.eyebrow::before {
+  content: "";
+  width: 28px;
+  height: 1.5px;
+  background: #b0714a;
+}
+
+.encabezado .pageTitle {
+  margin: 0;
+  font-size: 40px;
+  line-height: 1.1;
+}
+
+.bajada {
+  margin: 10px 0 0;
+  max-width: 560px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: #6b5444;
+}
+
+/* ========================================
+   LISTADO DE TIENDAS (grilla de tarjetas)
+======================================== */
+
+.tiendasGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 28px;
+}
+
+.tiendaCard {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #fffaf3;
+  border: 1px solid #ebdcc6;
+  border-radius: 10px;
+  color: #3d1607;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tiendaCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 34px rgba(99, 36, 14, 0.12);
+}
+
+.tiendaCard:focus-visible {
+  outline: 2px solid #b0714a;
+  outline-offset: 3px;
+}
+
+/* Portada en mosaico: se acomoda según cuántas fotos tenga la tienda. */
+.tiendaPortada {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 2px;
+  height: 180px;
+  background:
+    repeating-linear-gradient(135deg, rgba(99, 36, 14, 0.04) 0 10px, transparent 10px 20px),
+    #f1e2c9;
+}
+
+.tiendaPortada img {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.5s ease;
+}
+
+.tiendaCard:hover .tiendaPortada img {
+  transform: scale(1.04);
+}
+
+.tiendaPortada[data-fotos="1"] img { grid-column: 1 / -1; grid-row: 1 / -1; }
+.tiendaPortada[data-fotos="2"] img { grid-row: 1 / -1; }
+.tiendaPortada[data-fotos="3"] img:first-child { grid-row: 1 / -1; }
+
+.tiendaCuerpo {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 38px 24px 20px;
+}
+
+/* Avatar con la inicial, montado sobre el borde de la portada. */
+.tiendaAvatar {
+  position: absolute;
+  top: -30px;
+  left: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border: 3px solid #fffaf3;
+  border-radius: 50%;
+  background: #e3cba6;
+  color: #3d1607;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 26px;
+  box-shadow: 0 4px 12px rgba(99, 36, 14, 0.12);
+}
+
+.tiendaNombre {
+  margin: 0;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1.2;
+  color: #3d1607;
+}
+
+.tiendaDescripcion {
+  margin: 6px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #6b5444;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.tiendaDireccion {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: #8a6a52;
+}
+
+.tiendaDireccion svg {
+  flex-shrink: 0;
+  color: #b0714a;
+}
+
+.tiendaPie {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 18px;
+}
+
+.tiendaPiezas {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #9a6446;
+}
+
+.tiendaVer {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 500;
+  color: #63240e;
+  transition: gap 0.15s ease;
+}
+
+.tiendaCard:hover .tiendaVer {
+  gap: 10px;
+}
+
+/* Dirección en el banner del detalle de tienda (tiendas/[id]). */
+.storeCardAddress {
+  display: block;
+  margin-bottom: 14px;
+  font-size: 12px;
+  color: #8a6a52;
+}
+
+/* Cupón de la tienda: etiqueta con borde punteado, como un vale recortable. */
+.obtenerButton {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  border: 1px dashed #b0714a;
+  border-radius: 6px;
+  background: #f6ead8;
+  color: #9a6446;
+  font-family: var(--font-sans), Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.obtenerButton:hover {
+  background: #efdfc6;
+  color: #63240e;
+}
+
+.obtenerButton:focus-visible {
+  outline: 2px solid #b0714a;
+  outline-offset: 2px;
+}
+
+/* ========================================
+   PERFIL DE LA TIENDA (detalle)
+======================================== */
+
+.perfilTienda {
+  margin-bottom: 28px;
+  overflow: hidden;
+  background: #fffaf3;
+  border: 1px solid #ebdcc6;
+  border-radius: 10px;
+}
+
+/* Portada: mosaico con las fotos de sus productos (o una trama si no hay). */
+.perfilPortada {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 2px;
+  height: 240px;
+  background:
+    repeating-linear-gradient(135deg, rgba(99, 36, 14, 0.04) 0 10px, transparent 10px 20px),
+    #f1e2c9;
+}
+
+.perfilPortada img {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: cover;
+  display: block;
+}
+
+/* La primera foto ocupa el bloque grande de la izquierda. */
+.perfilPortada img:first-child { grid-column: span 2; grid-row: span 2; }
+.perfilPortada[data-fotos="1"] img { grid-column: 1 / -1; }
+.perfilPortada[data-fotos="2"] img { grid-column: span 2; grid-row: span 2; }
+.perfilPortada[data-fotos="3"] img:not(:first-child) { grid-column: span 2; }
+
+.perfilCuerpo {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  padding: 0 32px 28px;
+}
+
+.perfilAvatar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 112px;
+  height: 112px;
+  margin-top: -48px;
+  border: 4px solid #fffaf3;
+  border-radius: 50%;
+  background: #e3cba6;
+  color: #3d1607;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 46px;
+  box-shadow: 0 6px 18px rgba(99, 36, 14, 0.14);
+}
+
+.perfilInfo {
+  flex: 1;
+  min-width: 0;
+  padding-top: 20px;
+}
+
+.perfilInfo .eyebrow {
+  margin-bottom: 6px;
+}
+
+.perfilNombre {
+  margin: 0;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 34px;
+  font-weight: 400;
+  line-height: 1.1;
+  color: #3d1607;
+}
+
+.perfilDescripcion {
+  margin: 10px 0 0;
+  max-width: 640px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: #6b5444;
+}
+
+.perfilDatos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  margin-top: 14px;
+  font-size: 13px;
+  color: #8a6a52;
+}
+
+.perfilDatos span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.perfilDatos svg {
+  flex-shrink: 0;
+  color: #b0714a;
+}
+
+/* Pestañas Productos / Publicaciones: subrayado arcilla como en el resto del sistema. */
+.secciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid #e3d3bd;
+}
+
+.seccion {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px 11px;
+  margin-bottom: -1px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #6b5444;
+  font-family: var(--font-sans), Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.seccion:hover {
+  color: #3d1607;
+  border-bottom-color: #e3d3bd;
+}
+
+.seccion[aria-selected="true"] {
+  color: #3d1607;
+  border-bottom-color: #b0714a;
+}
+
+.seccion:focus-visible {
+  outline: 2px solid #b0714a;
+  outline-offset: -2px;
+}
+
+.seccionContador {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #f1e2c9;
+  color: #63240e;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  .content {
+    padding: 24px;
+  }
+
+  .tiendasGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .encabezado .pageTitle {
+    font-size: 32px;
+  }
+
+  .perfilPortada {
+    height: 170px;
+  }
+
+  .perfilCuerpo {
+    flex-direction: column;
+    gap: 0;
+    padding: 0 20px 22px;
+  }
+
+  .perfilAvatar {
+    width: 88px;
+    height: 88px;
+    margin-top: -44px;
+    font-size: 36px;
+  }
+
+  .perfilInfo {
+    padding-top: 12px;
+  }
+
+  .perfilNombre {
+    font-size: 28px;
+  }
+}
